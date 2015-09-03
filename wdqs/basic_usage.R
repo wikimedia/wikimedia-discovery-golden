@@ -1,7 +1,7 @@
 # Per-file config:
 base_path <- "/a/aggregate-datasets/wdqs/"
 
-source("../common.R")
+source("common.R")
 
 # Retrieves data for the WDQS stuff we care about, drops it in the aggregate-datasets directory. Should be run on stat1002, /not/ on the datavis machine.
 

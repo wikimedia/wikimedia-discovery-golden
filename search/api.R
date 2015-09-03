@@ -1,7 +1,7 @@
 # Per-file config:
 base_path <- "/a/aggregate-datasets/search/"
 
-source("../common.R")
+source("common.R")
 
 # Central function
 main <- function(date = NULL){

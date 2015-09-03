@@ -1,7 +1,7 @@
 # Per-file config:
 base_path <- "/a/aggregate-datasets/search/"
 
-source("../common.R")
+source("common.R")
 
 # Retrieves data for the mobile web stuff we care about, drops it in the public-datasets directory. Should be run on stat1002, /not/ on the datavis machine.
 
