@@ -10,11 +10,11 @@ main <- function(date = NULL){
   if(is.null(date)){
     date <- Sys.Date() - 1
   }
-  subquery <- paste0(" WHERE year = ", lubridate::year(date),
-                     " AND month = ", lubridate::month(date),
-                     " AND day = ", lubridate::day(date), " ")
+  
+  # Date subquery
+  subquery <- date_clause(date)
 
-  # Write query and dump to file
+  # Write query and run it
   query <- paste0("ADD JAR /srv/deployment/analytics/refinery/artifacts/refinery-hive.jar;
                    CREATE TEMPORARY FUNCTION search_classify AS
                   'org.wikimedia.analytics.refinery.hive.SearchClassifierUDF';
@@ -25,14 +25,7 @@ main <- function(date = NULL){
                   ", subquery,
                   "AND webrequest_source IN('text','mobile') AND http_status = '200'
                    GROUP BY year, month, day, search_classify(uri_path, uri_query);")
-  query_dump <- tempfile()
-  cat(query, file = query_dump)
-
-  # Query
-  results_dump <- tempfile()
-  system(paste0("export HADOOP_HEAPSIZE=1024 && hive -f ", query_dump, " > ", results_dump))
-  results <- read.delim(results_dump, sep = "\t", quote = "", as.is = TRUE, header = TRUE)
-  file.remove(query_dump, results_dump)
+  results <- query_hive(query)
 
   # Filter and reformat
   results <- results[complete.cases(results),]

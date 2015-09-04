@@ -16,11 +16,9 @@ main <- function(date = NULL) {
   if(is.null(date)) {
     date <- Sys.Date() - 1
   }
-  subquery <- paste0(" WHERE year = ", lubridate::year(date),
-                     " AND month = ", lubridate::month(date),
-                     " AND day = ", lubridate::day(date), " ")
+  subquery <- date_clause(date)
 
-  # Write query and dump to file
+  # Write query and run it
   query <- paste0("USE wmf;
                    SELECT year, month, day, uri_path,
                    UPPER(http_status IN('200','304')) as success,
@@ -32,15 +30,7 @@ main <- function(date = NULL) {
                    AND uri_path IN('/', '/bigdata/namespace/wdq/sparql')
                    GROUP BY year, month, day, uri_path,
                    UPPER(http_status IN('200','304'));")
-                   
-  query_dump <- tempfile()
-  cat(query, file = query_dump)
-
-  # Query
-  results_dump <- tempfile()
-  system(paste0("export HADOOP_HEAPSIZE=1024 && hive -f ", query_dump, " > ", results_dump))
-  results <- read.delim(results_dump, sep = "\t", quote = "", as.is = TRUE, header = TRUE)
-  file.remove(query_dump, results_dump)
+  results <- query_hive(query)
 
   output <- data.frame(timestamp = as.Date(paste(results$year, results$month, results$day, sep = "-")),
                        path = results$uri_path,
