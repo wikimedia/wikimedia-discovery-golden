@@ -34,7 +34,7 @@ main <- function(date = NULL) {
 
   output <- data.frame(timestamp = as.Date(paste(results$year, results$month, results$day, sep = "-")),
                        path = results$uri_path,
-                       http_status = results$http_category,
+                       http_success = results$success,
                        events = results$n,
                        stringsAsFactors = FALSE)
 
@@ -45,7 +45,7 @@ main <- function(date = NULL) {
 
 # backlog <- function(days) {
 #   for (i in days:1) try(main(Sys.Date() - i), silent = TRUE)
-# }; backlog(30)
+# }; backlog(20)
 
 # Run and kill
 main()
