@@ -23,7 +23,7 @@ main <- function(date = NULL) {
   # Write query and dump to file
   query <- paste0("USE wmf;
                    SELECT year, month, day, uri_path,
-                   (floor(cast(http_status as int) / 100) * 100) AS http_category,
+                   UPPER(http_status IN('200','304')) as success,
                    COUNT(*) AS n
                    FROM webrequest",
                    subquery,
@@ -31,7 +31,7 @@ main <- function(date = NULL) {
                    AND uri_host = 'query.wikidata.org'
                    AND uri_path IN('/', '/bigdata/namespace/wdq/sparql')
                    GROUP BY year, month, day, uri_path,
-                   floor(cast(http_status as int) / 100) * 100;")
+                   UPPER(http_status IN('200','304'));")
                    
   query_dump <- tempfile()
   cat(query, file = query_dump)
@@ -53,11 +53,10 @@ main <- function(date = NULL) {
 
 }
 
-# Backlog (start date: 2015-07-28):
-backlog <- function(days) {
-  for (i in days:1) try(main(Sys.Date() - i), silent = TRUE)
-}; backlog(30) # as of 2015-08-27In the 
+# backlog <- function(days) {
+#   for (i in days:1) try(main(Sys.Date() - i), silent = TRUE)
+# }; backlog(30)
 
 # Run and kill
-# main()
-# q(save = "no")
+main()
+q(save = "no")
