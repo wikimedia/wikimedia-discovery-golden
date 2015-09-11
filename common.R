@@ -6,7 +6,7 @@ library(olivr)
 suppressPackageStartupMessages(library(data.table))
 
 # Query building function
-query_func <- function(fields, table, ts_field, date = NULL, conditionals){
+query_func <- function(fields, table, ts_field, date = NULL, conditionals = NULL){
   
   # Ensure we have a date and deconstruct it into a MW-friendly format
   if(is.null(date)){
@@ -15,7 +15,8 @@ query_func <- function(fields, table, ts_field, date = NULL, conditionals){
   date <- gsub(x = date, pattern = "-", replacement = "")
   
   # Build the query proper (this will work for EL schemas where the field is always 'timestamp')
-  query <- paste(fields, "FROM", table, "WHERE LEFT(timestamp,8) =", date, "AND", conditionals)
+  query <- paste(fields, "FROM", table, "WHERE LEFT(timestamp,8) =", date,
+                 ifelse(is.null(conditionals), "", "AND"), conditionals)
   
   results <- data.table::as.data.table(olivr::mysql_read(query, "log"))
   return(results)
