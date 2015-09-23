@@ -25,9 +25,9 @@ query_func <- function(fields, table, ts_field, date = NULL, conditionals = NULL
 # Conditional write; if the file exists, add x to the end. If it doesn't, write an entirely new file.
 conditional_write <- function(x, file){
   if(file.exists(file)){
-    write.table(x, file, append = TRUE, sep = "\t", row.names = FALSE, col.names = FALSE)
+    write.table(x, file, append = TRUE, sep = "\t", row.names = FALSE, col.names = FALSE, quote = FALSE)
   } else {
-    write.table(x, file, append = FALSE, sep = "\t", row.names = FALSE)
+    write.table(x, file, append = FALSE, sep = "\t", row.names = FALSE, quote = FALSE)
   }
 }
 
