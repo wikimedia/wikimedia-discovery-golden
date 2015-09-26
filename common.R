@@ -49,8 +49,10 @@ query_hive <- function(query){
   results_dump <- tempfile()
   
   # Query and read in the results
-  system(paste0("export HADOOP_HEAPSIZE=1024 && hive -f ", query_dump, " > ", results_dump))
-  results <- read.delim(results_dump, sep = "\t", quote = "", as.is = TRUE, header = TRUE)
+  try({
+    system(paste0("export HADOOP_HEAPSIZE=1024 && hive -S -f ", query_dump, " > ", results_dump))
+    results <- read.delim(results_dump, sep = "\t", quote = "", as.is = TRUE, header = TRUE)
+  })
   
   # Clean up and return
   file.remove(query_dump, results_dump)
