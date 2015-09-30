@@ -68,7 +68,7 @@ main <- function(date = NULL) {
 #                              AND http_status IN('200','304')
 #                              AND uri_path RLIKE '^/([^/]+)/([0-9]{1,2})/(-?[0-9]+)/(-?[0-9]+)(@([0-9]\\.?[0-9]?)x)?\\.([a-z]+)$'")
 # lapply(seq(as.Date(earliest_ts[1, 1]),Sys.Date()-1, "day"), main)
-# ^ equivalent to: lapply(seq(as.Date("2015-08-11"), Sys.Date() - 1, "day"), main)
+# ^ equivalent to: lapply(seq(as.Date("2015-08-28"), Sys.Date() - 1, "day"), main)
 
 # Run and kill
 main()
