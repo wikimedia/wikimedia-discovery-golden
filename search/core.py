@@ -16,9 +16,11 @@ execution_id_regex = re.compile("by executor (\d{9,})$")
 
 #File paths for output
 output_daily = "/home/ironholds/zero_results/"
-aggregate_filepath = "/a/aggregate-datasets/search/cirrus_query_aggregates.tsv"
-breakdown_filepath = "/a/aggregate-datasets/search/cirrus_query_breakdowns.tsv"
-suggest_filepath = "/a/aggregate-datasets/search/cirrus_suggestion_breakdown.tsv"
+base_path = "/a/aggregate-datasets/search/"
+
+aggregate_filepath = base_path + "cirrus_query_aggregates.tsv"
+breakdown_filepath = base_path + "cirrus_query_breakdowns.tsv"
+suggest_filepath = base_path + "cirrus_suggestion_breakdown.tsv"
 
 class BoundedRelatedStatCollector(object):
   '''
@@ -30,12 +32,12 @@ class BoundedRelatedStatCollector(object):
     self.callback = callback
     self.bounds = bounds if bounds else datetime.timedelta(seconds=120)
     self.visited = 0
-
+  
   def push(self, group_by, line, timestamp):
     if group_by == None:
       self.callback([line])
       return
-
+    
     if group_by in self.data:
       values, maxTimestamp = self.data[group_by]
       # delete the key so it moves to the end of the list
@@ -46,14 +48,14 @@ class BoundedRelatedStatCollector(object):
     else:
       values = [line]
       maxTimestamp = timestamp
-
+    
     self.data[group_by] = (values, maxTimestamp)
-
+    
     self.visited += 1
     if self.visited % 1000 == 0:
       flush_up_to = maxTimestamp - self.bounds;
       self.flush(flush_up_to)
-
+  
   def flush(self, max_timestamp=None):
     for group_by in self.data:
       values, timestamp = self.data[group_by]
@@ -121,7 +123,7 @@ def parse_file(filename):
         stats['suggested_queries'] += 1
         if check.check_zero(line):
           stats['suggested_zero'] += 1
-
+  
   collector = BoundedRelatedStatCollector(count_query)
   connection = gzip.open(filename)
   for line in connection:
@@ -129,10 +131,10 @@ def parse_file(filename):
     if timestamp is not None:
       execution_id = extract_execution_id(line)
       collector.push(execution_id, line, timestamp)
-
+  
   connection.close()
   collector.flush()
-
+  
   zero_result_queries = Counter(stats['zero_result_queries']).most_common(100)
   high_level_stats = Counter({"Search Queries": stats['queries'],
     "Zero Result Queries": stats['prefix_zero'] + stats['full_zero']
@@ -141,17 +143,27 @@ def parse_file(filename):
     "Full-Text Search": float(stats['full_zero'])/stats['full_queries'],
     "Prefix Search": float(stats['prefix_zero'])/stats['prefix_queries']
   })
-
+  
   suggestion_stats = Counter({
     "Searches with Suggestions": float(stats['suggested_zero'])/stats['suggested_queries']
   })
   return(high_level_stats, breakdown_stats, suggestion_stats, zero_result_queries)
 
-#Run and write out
-filepath, date = misc.get_filepath()
-high_level, breakdown, suggests, zero_results = parse_file(filepath)
-misc.write_counter(high_level, date, aggregate_filepath)
-misc.write_counter(breakdown, date, breakdown_filepath)
-misc.write_counter(suggests, date, suggest_filepath)
-daily_write(date, zero_results)
+def main(date = None):
+  filepath, date = misc.get_filepath(date)
+  high_level, breakdown, suggests, zero_results = parse_file(filepath)
+  misc.write_counter(high_level, date, aggregate_filepath)
+  misc.write_counter(breakdown, date, breakdown_filepath)
+  misc.write_counter(suggests, date, suggest_filepath)
+  daily_write(date, zero_results)
+
+main()
 exit()
+
+# to backfill:
+# start = datetime.datetime.strptime("2015-10-03", "%Y-%m-%d")
+# end = datetime.datetime.strptime("2015-10-06", "%Y-%m-%d")
+# step = datetime.timedelta(days=1)
+# while start <= end:
+#    main(start.date())
+#    start += step
