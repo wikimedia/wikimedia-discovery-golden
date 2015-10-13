@@ -1,6 +1,4 @@
-base_path <- "/a/aggregate-datasets/maps/"
-
-source("common.R")
+base_path <- paste0(write_root, "maps/")
 
 # Gathers very basic data for Maps.
 main <- function(date = NULL, table = "GeoFeatures_12914994"){
@@ -23,10 +21,6 @@ main <- function(date = NULL, table = "GeoFeatures_12914994"){
   
   return(invisible())
 }
-
-# Run and kill
-main()
-q(save = "no")
 
 # Good data starts on 20150804, so for backfilling...
 # lapply(seq(as.Date("2015-08-04"),Sys.Date()-1, "day"), main) 

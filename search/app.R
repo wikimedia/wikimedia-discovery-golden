@@ -1,7 +1,5 @@
 # Per-file config:
-base_path <- "/a/aggregate-datasets/search/"
-
-source("common.R")
+base_path <- paste0(write_root, "search/")
 
 # Retrieves data for the mobile web stuff we care about, drops it in the aggregate-datasets directory. Should be run on stat1002, /not/ on the datavis machine.
 
@@ -43,7 +41,3 @@ main <- function(date = NULL, table = "MobileWikiAppSearch_10641988"){
   conditional_write(load_times, file.path(base_path, "app_load_times.tsv"))
 
 }
-
-# Run and kill
-main()
-q(save = "no")

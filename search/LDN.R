@@ -1,13 +1,7 @@
 ## Calculates the median lethal dose (LD50) and other.
 ## LD50 = the time point at which we have lost 50% of our users.
 
-base_path <- "/a/aggregate-datasets/search/"
-
-source("common.R")
-
-library(plyr)
-library(magrittr)
-library(survival)
+base_path <- paste0(write_root, "search/")
 
 main <- function(date = NULL, table = "TestSearchSatisfaction2_13223897") {
   
@@ -52,8 +46,5 @@ main <- function(date = NULL, table = "TestSearchSatisfaction2_13223897") {
   conditional_write(output, file.path(base_path, "sample_page_visit_ld.tsv"))
   
 }
-
-main()
-q(save = "no")
 
 # backfill: lapply(seq(as.Date("2015-09-02"),Sys.Date() - 1, "day"), main)

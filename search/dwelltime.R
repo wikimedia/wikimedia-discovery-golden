@@ -1,9 +1,5 @@
 # Per-file config:
-base_path <- "/a/aggregate-datasets/search/"
-library(ortiz)
-
-# Common dependencies
-source("common.R")
+base_path <- paste0(write_root, "search/")
 
 main <- function(date = NULL, table = "TestSearchSatisfaction2_13223897"){
   
@@ -29,7 +25,3 @@ main <- function(date = NULL, table = "TestSearchSatisfaction2_13223897"){
                        threshold_pass = sum(dwell_data)/length(dwell_data))
   conditional_write(output, file = file.path(base_path, "search_threshold_pass_rate.tsv"))
 }
-
-# Run and kill
-main()
-q(save = "no")

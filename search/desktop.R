@@ -1,10 +1,8 @@
 # Per-file config:
-base_path <- "/a/aggregate-datasets/search/"
+base_path <- paste0(write_root, "search/")
 
-source("common.R")
-
-# Retrieves data for the desktop stuff we care about, drops it in the aggregate-datasets directory. Should be run on stat1002, /not/ on the datavis machine.
-
+# Retrieves data for the desktop stuff we care about, drops it in the aggregate-datasets directory.
+# Should be run on stat1002, /not/ on the datavis machine.
 main <- function(date = NULL, table = "Search_12057910"){
   
   # Get data and format
@@ -44,6 +42,3 @@ main <- function(date = NULL, table = "Search_12057910"){
   conditional_write(load_times, file.path(base_path, "desktop_load_times.tsv"))
   return(invisible())
 }
-
-main()
-q(save = "no")

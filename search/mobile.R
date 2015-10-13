@@ -1,10 +1,8 @@
 # Per-file config:
-base_path <- "/a/aggregate-datasets/search/"
+base_path <- paste0(write_root, "search/")
 
-source("common.R")
-
-# Retrieves data for the mobile web stuff we care about, drops it in the public-datasets directory. Should be run on stat1002, /not/ on the datavis machine.
-
+# Retrieves data for the mobile web stuff we care about, drops it in the public-datasets directory.
+# Should be run on stat1002, /not/ on the datavis machine.
 main <- function(date = NULL, table = "MobileWebSearch_12054448"){
   
   # Get data and format the timestamps
@@ -44,8 +42,5 @@ main <- function(date = NULL, table = "MobileWebSearch_12054448"){
   conditional_write(load_times, file.path(base_path, "mobile_load_times.tsv"))
   return(invisible())
 }
-
-main()
-q(save = "no")
 
 # dates <- seq(as.Date("2015-06-11"), as.Date("2015-06-17"), by = "date")

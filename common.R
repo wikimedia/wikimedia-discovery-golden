@@ -1,9 +1,12 @@
 source("config.R")
 
-# Dependencies
-library(lubridate)
-library(olivr)
-suppressPackageStartupMessages(library(data.table))
+# Directory creation function
+check_dir <- function(dir){
+  if(!file.exists(dir)) {
+    dir.create(path = dir)
+  }
+  return(invisible())
+}
 
 # Query building function
 query_func <- function(fields, table, ts_field, date = NULL, conditionals = NULL){

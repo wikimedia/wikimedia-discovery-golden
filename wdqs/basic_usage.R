@@ -1,9 +1,8 @@
 # Per-file config:
-base_path <- "/a/aggregate-datasets/wdqs/"
+base_path <- paste0(write_root, "wdqs/")
 
-source("common.R")
-
-# Retrieves data for the WDQS stuff we care about, drops it in the aggregate-datasets directory. Should be run on stat1002, /not/ on the datavis machine.
+# Retrieves data for the WDQS stuff we care about, drops it in the aggregate-datasets directory.
+# Should be run on stat1002, /not/ on the datavis machine.
 
 # Create a script that would produce raw data on usage of
 # - query.wikidata.org
@@ -46,7 +45,3 @@ main <- function(date = NULL) {
 # backlog <- function(days) {
 #   for (i in days:1) try(main(Sys.Date() - i), silent = TRUE)
 # }; backlog(20)
-
-# Run and kill
-main()
-q(save = "no")

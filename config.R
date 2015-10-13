@@ -1,9 +1,17 @@
-# Config variables and setup:
-options(scipen = 500, q = "no")
+# Config variables and setup
+options(scipen = 500, save = "no")
 
-# base_path : This is set on a per-script level
-#               (before sourcing common.R)
+# Core paths
+write_root <- "/a/aggregate-datasets/"
+dirs <- c("maps","wdqs", "search")
+write_dirs <- paste0(write_root, dirs)
 
-if(!file.exists(base_path)) {
-  dir.create(path = base_path)
-}
+# Dependencies
+library(lubridate)
+library(olivr)
+suppressPackageStartupMessages(library(data.table))
+library(readr)
+library(ortiz)
+library(plyr)
+library(magrittr)
+library(survival)

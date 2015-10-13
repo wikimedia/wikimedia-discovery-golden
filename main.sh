@@ -1,11 +1,3 @@
-R CMD BATCH ./search/desktop.R
-R CMD BATCH ./search/mobile.R
-R CMD BATCH ./search/app.R
-R CMD BATCH ./search/api.R
-R CMD BATCH ./search/dwelltime.R
-R CMD BATCH ./search/LDN.R
-R CMD BATCH ./wdqs/basic_usage.R
-R CMD BATCH ./maps/usage.R
-R CMD BATCH ./maps/tiles.R
+R CMD BATCH run.R
 python ./search/core.py
 rm -rf .RData

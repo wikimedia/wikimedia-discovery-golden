@@ -1,7 +1,5 @@
 # Per-file config:
-base_path <- "/a/aggregate-datasets/maps/"
-
-source("common.R")
+base_path <- paste0(write_root, "maps/")
 
 ## This script extracts Vagrant logs and processes them to summarize server-side maps usage.
 # Specifically, it generates a dataset containing summaries (avg, median, percentiles) of:
@@ -10,7 +8,7 @@ source("common.R")
 # - tile requests per style per zoom, e.g. "osm-z10", "osm-z11", ...
 
 main <- function(date = NULL) {
-
+  
   # Date handling
   if(is.null(date)) {
     date <- Sys.Date() - 1
@@ -69,7 +67,3 @@ main <- function(date = NULL) {
 #                              AND uri_path RLIKE '^/([^/]+)/([0-9]{1,2})/(-?[0-9]+)/(-?[0-9]+)(@([0-9]\\.?[0-9]?)x)?\\.([a-z]+)$'")
 # lapply(seq(as.Date(earliest_ts[1, 1]),Sys.Date()-1, "day"), main)
 # ^ equivalent to: lapply(seq(as.Date("2015-08-28"), Sys.Date() - 1, "day"), main)
-
-# Run and kill
-main()
-q(save = "no")

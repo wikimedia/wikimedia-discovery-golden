@@ -1,7 +1,5 @@
 # Per-file config:
-base_path <- "/a/aggregate-datasets/search/"
-
-source("common.R")
+base_path <- paste0(write_root, "search/")
 
 # Central function
 main <- function(date = NULL){
@@ -38,7 +36,3 @@ main <- function(date = NULL){
   # Write out
   conditional_write(output, file.path(base_path, "search_api_aggregates.tsv"))
 }
-
-#Run and kill
-main()
-q(save = "no")
