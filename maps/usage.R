@@ -12,11 +12,13 @@ main <- function(date = NULL, table = "GeoFeatures_12914994"){
   # Roll up for high-level numbers on unique users per tool
   unique_per_tool <- data[, j=list(users = length(unique(event_userToken))*100), by = c("timestamp","event_feature")]
   setnames(unique_per_tool, 2:3, c("variable","value"))
-  conditional_write(unique_per_tool, file.path(base_path, "users_per_feature.tsv"))
   
   # Generate low-level actions per tool.
   actions_per_tool <- data[, j = list(value = .N), by = c("timestamp","event_feature","event_action")]
   setnames(actions_per_tool, 2:4, c("feature","variable","value"))
+
+  # Write out
+  conditional_write(unique_per_tool, file.path(base_path, "users_per_feature.tsv"))
   conditional_write(actions_per_tool, file.path(base_path, "actions_per_tool.tsv"))
   
   return(invisible())

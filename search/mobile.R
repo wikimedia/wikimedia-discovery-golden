@@ -22,11 +22,10 @@ main <- function(date = NULL, table = "MobileWebSearch_12054448"){
                      conditionals = "event_action IN ('click-result','session-start','impression-results')")
   data$timestamp <- as.Date(olivr::from_mediawiki(data$timestamp))
   
-  # Convert it into event aggregates and write out
+  # Convert it into event aggregates
   mobile_results <- data[,j = list(events = .N), by = c("timestamp","action")]
-  conditional_write(mobile_results, file.path(base_path, "mobile_event_counts.tsv"))
   
-  # Process load times and write out
+  # Process load times
   load_times <- data[data$action == "Result pages opened",{
     output <- numeric(3)
     quantiles <- quantile(load_time,probs=seq(0,1,0.01))
@@ -39,6 +38,9 @@ main <- function(date = NULL, table = "MobileWebSearch_12054448"){
     names(output) <- c("Median","95th percentile","99th Percentile")
     output
   }, by = "timestamp"]
+  
+  # Write out and return
+  conditional_write(mobile_results, file.path(base_path, "mobile_event_counts.tsv"))
   conditional_write(load_times, file.path(base_path, "mobile_load_times.tsv"))
   return(invisible())
 }

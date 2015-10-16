@@ -21,9 +21,8 @@ main <- function(date = NULL, table = "MobileWikiAppSearch_10641988"){
   data$platform[is.na(data$platform)] <- "iOS"
   data <- data[,userAgent := NULL,]
 
-  # Generate aggregates and save
+  # Generate aggregates
   app_results <- data[,j = list(events = .N), by = c("timestamp","action", "platform")]
-  conditional_write(app_results, file.path(base_path, "app_event_counts.tsv"))
 
   # Produce load time data
   load_times <- data[data$action == "Result pages opened",{
@@ -38,6 +37,9 @@ main <- function(date = NULL, table = "MobileWikiAppSearch_10641988"){
     names(output) <- c("Median","95th percentile","99th Percentile")
     output
   }, by = c("timestamp","platform")]
+  
+  # Write out
+  conditional_write(app_results, file.path(base_path, "app_event_counts.tsv"))
   conditional_write(load_times, file.path(base_path, "app_load_times.tsv"))
 
 }

@@ -23,9 +23,8 @@ main <- function(date = NULL, table = "Search_12057910"){
                      conditionals = "event_action IN ('click-result','session-start','impression-results', 'submit-form')")
   data$timestamp <- as.Date(olivr::from_mediawiki(data$timestamp))
   
-  # Generate aggregates and save
-  results <- data[,j = list(events = .N), by = c("timestamp","action")]
-  conditional_write(results, file.path(base_path, "desktop_event_counts.tsv"))
+  # Generate aggregates
+  event_data <- data[,j = list(events = .N), by = c("timestamp","action")]
   
   # Generate load time data and save that
   load_times <- data[data$action == "Result pages opened",{
@@ -39,6 +38,10 @@ main <- function(date = NULL, table = "Search_12057910"){
     names(output) <- c("Median","95th percentile","99th Percentile")
     output
   }, by = "timestamp"]
+  
+  # Write out
+  conditional_write(event_data, file.path(base_path, "desktop_event_counts.tsv"))
   conditional_write(load_times, file.path(base_path, "desktop_load_times.tsv"))
+  
   return(invisible())
 }

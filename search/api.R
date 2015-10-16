@@ -35,4 +35,5 @@ main <- function(date = NULL){
 
   # Write out
   conditional_write(output, file.path(base_path, "search_api_aggregates.tsv"))
+  return(invisible())
 }

@@ -50,10 +50,12 @@ main <- function(date = NULL) {
           percentile95 = ceiling(quantile(x$n, 0.95)),
           percentile99 = ceiling(quantile(x$n, 0.99)))
   })
+  
   # Clean up those results:
   results <- results[order(results$style, results$zoom, results$scale, results$format, results$cache), ]
   results$date <- date
   output <- results[, union('date', names(results))]
+  
   # Write out
   conditional_write(output, file.path(base_path, "tile_aggregates.tsv"))
 
