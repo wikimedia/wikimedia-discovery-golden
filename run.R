@@ -1,5 +1,4 @@
-source("config.R")
-source("common.R")
+source("common.R") # config.R is sourced by common.R anyway
 
 # Central function
 run <- function(dates = NULL){
@@ -18,7 +17,7 @@ run <- function(dates = NULL){
         main()
       }, error = function(e){
         print(x)
-        stop(e)
+        print(e$message)
       })
 
     })
