@@ -10,7 +10,7 @@ run <- function(dates = NULL){
   
   # If the user has not provided dates, just run each file.
   if(!length(dates)){
-    lapply(source_files, function(x){
+    file_status <- unlist(lapply(source_files, function(x){
       tryCatch({
         source(x)
         check_dir(base_path)
@@ -18,9 +18,10 @@ run <- function(dates = NULL){
       }, error = function(e){
         print(x)
         print(e$message)
+        return(FALSE)
       })
-
-    })
+      return(TRUE)
+    }))
   } else {
     # If the user has provided dates, we need to do more clever stuff.
     data_files <- list.files(write_dirs, full.names = TRUE, pattern = "\\.tsv$")
