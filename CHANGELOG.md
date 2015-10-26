@@ -1,6 +1,9 @@
 # Change Log (Patch Notes)
 All notable changes to this project will be documented in this file.
 
+## 2015/10/26
+- Switches Varnish-querying script from Hive CLI (deprecated) to Beeline
+
 ## 2015/10/22
 - Fixes LDN (survival) code
 
