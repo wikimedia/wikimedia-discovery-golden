@@ -3,7 +3,9 @@ base_path <- paste0(write_root, "search/")
 
 # Retrieves data for the desktop stuff we care about, drops it in the aggregate-datasets directory.
 # Should be run on stat1002, /not/ on the datavis machine.
-main <- function(date = NULL, table = "Search_12057910"){
+main <- function(date = NULL, table = "Search_14361785"){
+  # - Search_12057910 stopped collecting data on October 2nd
+  # - Use Search_14361785 as of October 28th
   
   # Get data and format
   data <- query_func(fields = "
