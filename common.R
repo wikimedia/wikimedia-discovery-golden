@@ -53,14 +53,7 @@ query_hive <- function(query){
   
   # Query and read in the results
   try({
-    system(paste("export HADOOP_HEAPSIZE=1024 && beeline",
-                 "--showHeader=true", # show column names in query results
-                 "--verbose=false", # show verbose error messages and debug info
-                 "--silent=true", # be more silent
-                 "--outputformat=tsv2", # format mode for result display
-                 "-u jdbc:hive2://", # very important! this is how you connect!
-                 "-f", query_dump, # script file that should be executed
-                 ">", results_dump))
+    system(paste0("export HADOOP_HEAPSIZE=1024 && hive -S -f ", query_dump, " > ", results_dump))
     results <- read.delim(results_dump, sep = "\t", quote = "", as.is = TRUE, header = TRUE)
   })
   
