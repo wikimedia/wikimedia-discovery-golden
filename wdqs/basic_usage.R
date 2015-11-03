@@ -31,7 +31,7 @@ main <- function(date = NULL) {
                    UPPER(http_status IN('200','304'));")
   results <- query_hive(query)
 
-  output <- data.frame(timestamp = as.Date(paste(results$year, results$month, results$day, sep = "-")),
+  output <- data.frame(date = as.Date(paste(results$year, results$month, results$day, sep = "-")),
                        path = results$uri_path,
                        http_success = results$success,
                        events = results$n,
@@ -41,7 +41,3 @@ main <- function(date = NULL) {
   conditional_write(output, file.path(base_path, "wdqs_aggregates.tsv"))
 
 }
-
-# backlog <- function(days) {
-#   for (i in days:1) try(main(Sys.Date() - i), silent = TRUE)
-# }; backlog(20)

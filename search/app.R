@@ -6,8 +6,7 @@ base_path <- paste0(write_root, "search/")
 main <- function(date = NULL, table = "MobileWikiAppSearch_10641988"){
 
   # Retrieve data using the query builder in ./common.R
-  data <- query_func(fields = "
-                     SELECT timestamp,
+  data <- query_func(fields = "SELECT SUBSTRING(timestamp, 1, 8) AS date,
                      CASE event_action WHEN 'click' THEN 'clickthroughs'
                      WHEN 'start' THEN 'search sessions'
                      WHEN 'results' THEN 'Result pages opened' END AS action,
@@ -16,30 +15,24 @@ main <- function(date = NULL, table = "MobileWikiAppSearch_10641988"){
                      date = date,
                      table = table,
                      conditionals = "event_action IN ('click','start','results')")
-  data$timestamp <- as.Date(olivr::from_mediawiki(data$timestamp))
+  data$date <- lubridate::ymd(data$date)
   data$platform[grepl(x = data$userAgent, pattern = "Android", fixed = TRUE)] <- "Android"
   data$platform[is.na(data$platform)] <- "iOS"
   data <- data[,userAgent := NULL,]
 
   # Generate aggregates
-  app_results <- data[,j = list(events = .N), by = c("timestamp","action", "platform")]
+  app_results <- data[,j = list(events = .N), by = c("date", "action", "platform")]
 
   # Produce load time data
-  load_times <- data[data$action == "Result pages opened",{
-    output <- numeric(3)
-    quantiles <- quantile(load_time,probs=seq(0,1,0.01))
-
-    output[1] <- round(median(load_time))
-    output[2] <- quantiles[95]
-    output[3] <- quantiles[99]
-
-    output <- data.frame(t(output))
-    names(output) <- c("Median","95th percentile","99th Percentile")
+  load_times <- data[data$action == "Result pages opened", {
+    output <- data.frame(t(quantile(load_time, c(0.5, 0.95, 0.99))))
+    names(output) <- c("Median", "95th percentile", "99th Percentile")
     output
-  }, by = c("timestamp","platform")]
+  }, by = c("date", "platform")]
   
   # Write out
   conditional_write(app_results, file.path(base_path, "app_event_counts.tsv"))
   conditional_write(load_times, file.path(base_path, "app_load_times.tsv"))
-
+  
+  return(invisible())
 }

@@ -8,38 +8,30 @@ main <- function(date = NULL, table = "Search_14361785"){
   # - Use Search_14361785 as of October 28th
   
   # Get data and format
-  data <- query_func(fields = "
-                    SELECT timestamp,
-                    CASE event_action WHEN 'click-result' THEN 'clickthroughs'
-                    WHEN 'session-start' THEN 'search sessions'
-                    WHEN 'impression-results' THEN 'Result pages opened'
-                    WHEN 'submit-form' THEN 'Form submissions' END AS action,
-                    event_clickIndex AS click_index,
-                    event_numberOfResults AS result_count,
-                    event_resultSetType as result_type,
-                    event_timeOffsetSinceStart AS time_offset,
-                    event_timeToDisplayResults AS load_time
-                    ",
+  data <- query_func(fields = "SELECT SUBSTRING(timestamp, 1, 8) AS date,
+                     CASE event_action WHEN 'click-result' THEN 'clickthroughs'
+                     WHEN 'session-start' THEN 'search sessions'
+                     WHEN 'impression-results' THEN 'Result pages opened'
+                     WHEN 'submit-form' THEN 'Form submissions' END AS action,
+                     event_clickIndex AS click_index,
+                     event_numberOfResults AS result_count,
+                     event_resultSetType as result_type,
+                     event_timeOffsetSinceStart AS time_offset,
+                     event_timeToDisplayResults AS load_time",
                      date = date,
                      table = table,
                      conditionals = "event_action IN ('click-result','session-start','impression-results', 'submit-form')")
-  data$timestamp <- as.Date(olivr::from_mediawiki(data$timestamp))
+  data$date <- lubridate::ymd(data$date)
   
   # Generate aggregates
-  event_data <- data[,j = list(events = .N), by = c("timestamp","action")]
+  event_data <- data[,j = list(events = .N), by = c("date", "action")]
   
   # Generate load time data and save that
-  load_times <- data[data$action == "Result pages opened",{
-    output <- numeric(3)
-    quantiles <- quantile(load_time,probs=seq(0,1,0.01))
-    output[1] <- round(median(load_time))
-    output[2] <- quantiles[95]
-    output[3] <- quantiles[99]
-    
-    output <- data.frame(t(output))
-    names(output) <- c("Median","95th percentile","99th Percentile")
+  load_times <- data[data$action == "Result pages opened", {
+    output <- data.frame(t(quantile(load_time, c(0.5, 0.95, 0.99))))
+    names(output) <- c("Median", "95th percentile", "99th Percentile")
     output
-  }, by = "timestamp"]
+  }, by = "date"]
   
   # Write out
   conditional_write(event_data, file.path(base_path, "desktop_event_counts.tsv"))

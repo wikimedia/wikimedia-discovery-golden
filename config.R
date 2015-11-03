@@ -1,5 +1,5 @@
 # Config variables and setup
-options(scipen = 500, save = "no")
+options(scipen = 500)
 
 # Core paths
 write_root <- "/a/aggregate-datasets/"

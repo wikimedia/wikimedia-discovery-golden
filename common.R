@@ -2,7 +2,7 @@ source("config.R")
 
 # Directory creation function
 check_dir <- function(dir){
-  if(!file.exists(dir)) {
+  if (!file.exists(dir)) {
     dir.create(path = dir)
   }
   return(invisible())
@@ -12,8 +12,8 @@ check_dir <- function(dir){
 query_func <- function(fields, table, ts_field, date = NULL, conditionals = NULL){
   
   # Ensure we have a date and deconstruct it into a MW-friendly format
-  if(is.null(date)){
-    date <- Sys.Date()-1
+  if (is.null(date)) {
+    date <- Sys.Date() - 1
   }
   date <- gsub(x = date, pattern = "-", replacement = "")
   
@@ -35,11 +35,14 @@ conditional_write <- function(x, file){
 }
 
 # date_clause; provided with a date it generates an appropriate set of WHERE clauses for HDFS partitioning.
-date_clause <- function(date){
+date_clause <- function(date) {
+  if (is.null(date)) {
+    date <- Sys.Date() - 1
+  }
   return(paste0(" WHERE year = ", lubridate::year(date),
                 " AND month = ", lubridate::month(date),
                 " AND day = ", lubridate::day(date), " "))
-  
+  # If we're including spaces in the strings, we should just use paste instead of paste0
 }
 
 # query_hive; provided with a hive query it writes it out to file and then calls Hive over said file, reading the results

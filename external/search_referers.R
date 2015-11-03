@@ -37,11 +37,13 @@ main <- function(date = NULL){
   
   # Sanitise the resulting data
   results <- results[!is.na(results$month),]
-  results$timestamp <- as.Date(paste(results$year, results$month, results$day, sep = "-"))
-  results <- results[, c("timestamp", "is_search", "referer_class", "search_engine", "access_method","pageviews")]
+  results$date <- as.Date(paste(results$year, results$month, results$day, sep = "-"))
+  results <- results[, c("date", "is_search", "referer_class", "search_engine", "access_method","pageviews")]
   results$is_search <- ifelse(results$is_search == "true", TRUE, FALSE)
   
   # Write out
   conditional_write(results, file.path(base_path, "referer_data.tsv"))
+  
+  return(invisible())
 }
 

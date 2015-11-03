@@ -4,18 +4,17 @@ base_path <- paste0(write_root, "maps/")
 main <- function(date = NULL, table = "GeoFeatures_12914994"){
   
   # Retrieve data
-  data <- query_func(fields = "SELECT timestamp, event_action, event_feature, event_userToken",
-                     date = date,
-                     table = table)
-  data$timestamp <- as.Date(olivr::from_mediawiki(data$timestamp))
+  data <- query_func(fields = "SELECT SUBSTRING(timestamp, 1, 8) AS date, event_action, event_feature, event_userToken",
+                     date = date, table = table)
+  data$date <- lubridate::ymd(data$timestamp)
   
   # Roll up for high-level numbers on unique users per tool
-  unique_per_tool <- data[, j=list(users = length(unique(event_userToken))*100), by = c("timestamp","event_feature")]
-  setnames(unique_per_tool, 2:3, c("variable","value"))
+  unique_per_tool <- data[, j = list(users = length(unique(event_userToken))*100), by = c("date", "event_feature")]
+  setnames(unique_per_tool, 2:3, c("variable", "value"))
   
   # Generate low-level actions per tool.
-  actions_per_tool <- data[, j = list(value = .N), by = c("timestamp","event_feature","event_action")]
-  setnames(actions_per_tool, 2:4, c("feature","variable","value"))
+  actions_per_tool <- data[, j = list(value = .N), by = c("date", "event_feature", "event_action")]
+  setnames(actions_per_tool, 2:4, c("feature", "variable", "value"))
 
   # Write out
   conditional_write(unique_per_tool, file.path(base_path, "users_per_feature.tsv"))
@@ -23,6 +22,3 @@ main <- function(date = NULL, table = "GeoFeatures_12914994"){
   
   return(invisible())
 }
-
-# Good data starts on 20150804, so for backfilling...
-# lapply(seq(as.Date("2015-08-04"),Sys.Date()-1, "day"), main) 

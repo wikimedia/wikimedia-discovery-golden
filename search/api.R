@@ -28,12 +28,13 @@ main <- function(date = NULL){
   # Filter and reformat
   results <- results[complete.cases(results),]
   results <- results[results$event_type %in% c("language","cirrus","prefix","geo","open"),]
-  output <- data.frame(timestamp = as.Date(paste(results$year, results$month, results$day, sep = "-")),
+  output <- data.frame(date = as.Date(paste(results$year, results$month, results$day, sep = "-")),
                        event_type = results$event_type,
                        events = results$search_events,
                        stringsAsFactors = FALSE)
 
   # Write out
   conditional_write(output, file.path(base_path, "search_api_aggregates.tsv"))
+  
   return(invisible())
 }

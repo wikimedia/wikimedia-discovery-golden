@@ -25,8 +25,7 @@ main <- function(date = NULL) {
   }
   
   # Get data and format:
-  data <- query_func(fields = "SELECT * ",
-                     date = date, table = table)
+  data <- query_func(fields = "SELECT * ", date = date, table = table)
   data$timestamp <- lubridate::ymd_hms(data$timestamp)
   # Backwards-compatibility:
   if ( table == "TestSearchSatisfaction2_13223897" ) {
@@ -59,10 +58,8 @@ main <- function(date = NULL) {
   fit <- survfit(surv ~ 1)
   output <- data.frame(date = date, rbind(quantile(fit, probs = c(0.10, 0.25, 0.50, 0.75, 0.90, 0.95, 0.99))$quantile))
   colnames(output) <- c('date', 'LD10', 'LD25', 'LD50', 'LD75', 'LD90', 'LD95', 'LD99')
+  
   conditional_write(output, file.path(base_path, "sample_page_visit_ld.tsv"))
   
   return(invisible())
-  
 }
-
-# backfill: lapply(seq(as.Date("2015-09-02"),Sys.Date() - 1, "day"), main)

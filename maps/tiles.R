@@ -60,12 +60,3 @@ main <- function(date = NULL) {
   conditional_write(output, file.path(base_path, "tile_aggregates.tsv"))
 
 }
-
-## Backfill:
-# earliest_ts <- query_hive("SELECT min(ts) AS earliest_timestamp
-#                            FROM wmf.webrequest
-#                            WHERE webrequest_source = 'maps' AND year = 2015 AND month = 8
-#                              AND http_status IN('200','304')
-#                              AND uri_path RLIKE '^/([^/]+)/([0-9]{1,2})/(-?[0-9]+)/(-?[0-9]+)(@([0-9]\\.?[0-9]?)x)?\\.([a-z]+)$'")
-# lapply(seq(as.Date(earliest_ts[1, 1]),Sys.Date()-1, "day"), main)
-# ^ equivalent to: lapply(seq(as.Date("2015-08-28"), Sys.Date() - 1, "day"), main)

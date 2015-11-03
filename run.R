@@ -59,4 +59,3 @@ run <- function(dates = NULL){
 }
 
 run()
-q()
