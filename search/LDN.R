@@ -18,10 +18,14 @@ main <- function(date = NULL) {
   if ( date < as.Date('2015-09-02') ) {
     warning('No data exists prior to 09/02/2015')
     return(invisible())
-  } else if ( date >= as.Date('2015-09-02') && date < as.Date('2015-10-13') ) {
+  }
+  
+  if(date >= as.Date('2015-09-02') && date < as.Date('2015-10-13')){
     table <- "TestSearchSatisfaction2_13223897"
-  } else { # date >= 2015-10-13
+  } else if(date >= as.Date("2015-10-13") && date < as.Date("2015-10-26")){
     table <- "TestSearchSatisfaction2_14098806"
+  } else {
+    table <- "TestSearchSatisfaction2_14318467"
   }
   
   # Get data and format:
