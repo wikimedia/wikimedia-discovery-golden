@@ -1,6 +1,21 @@
 # Change Log (Patch Notes)
 All notable changes to this project will be documented in this file.
 
+## 2015/11/05
+- Reset default tables for user satisfaction metrics
+- Fix LDN bug
+
+## 2015/11/03
+- Changes 'timestamp' to 'date'
+- Cleans out some unnecessary code
+- Refactors some operations
+
+## 2015/11/02
+- Revert the beeline switch
+
+## 2015/10/26
+- Switch from hive cli to beeline
+
 ## 2015/10/22
 - Fixes LDN (survival) code
 

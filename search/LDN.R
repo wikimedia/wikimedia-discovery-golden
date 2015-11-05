@@ -32,12 +32,12 @@ main <- function(date = NULL) {
   data <- query_func(fields = "SELECT * ", date = date, table = table)
   data$timestamp <- lubridate::ymd_hms(data$timestamp)
   # Backwards-compatibility:
-  if ( table == "TestSearchSatisfaction2_13223897" ) {
-    names(data) <- sub('event_pageId', 'event_pageViewId', names(data))
+  if ( table == "TestSearchSatisfaction2_14098806" ) {
+    names(data) <- sub('event_pageViewId', 'event_pageId', names(data))
   }
   # Treat each individual search session as its own thing, rather than belonging
   #   to a set of other search sessions by the same user.
-  page_visits <- ddply(data, .(event_searchSessionId, event_pageViewId),
+  page_visits <- ddply(data, .(event_searchSessionId, event_pageId),
                     function(session) {
                       if (!all(c('visitPage', 'checkin') %in% session$event_action)) {
                         return(NULL)
