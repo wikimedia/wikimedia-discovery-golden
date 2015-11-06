@@ -6,7 +6,7 @@ main <- function(date = NULL, table = "GeoFeatures_12914994"){
   # Retrieve data
   data <- query_func(fields = "SELECT SUBSTRING(timestamp, 1, 8) AS date, event_action, event_feature, event_userToken",
                      date = date, table = table)
-  data$date <- lubridate::ymd(data$timestamp)
+  data$date <- lubridate::ymd(data$date)
   
   # Roll up for high-level numbers on unique users per tool
   unique_per_tool <- data[, j = list(users = length(unique(event_userToken))*100), by = c("date", "event_feature")]
