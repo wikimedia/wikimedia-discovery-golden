@@ -8,7 +8,7 @@ base_path <- paste0(write_root, "maps/")
 # - tile requests per style per zoom, e.g. "osm-z10", "osm-z11", ...
 
 main <- function(date = NULL) {
-  
+
   # Date handling
   if(is.null(date)) {
     date <- Sys.Date() - 1
@@ -29,6 +29,7 @@ main <- function(date = NULL) {
                        AND webrequest_source = 'maps'
                        AND http_status IN('200','304')
                        AND uri_path RLIKE '^/([^/]+)/([0-9]{1,2})/(-?[0-9]+)/(-?[0-9]+)(@([0-9]\\.?[0-9]?)x)?\\.([a-z]+)$'
+                       AND uri_query <> '?loadtesting'
                    ) prepared
                    GROUP BY style, zoom, scale, format, user_id, cache;")
   results <- query_hive(query)
@@ -50,12 +51,12 @@ main <- function(date = NULL) {
           percentile95 = ceiling(quantile(x$n, 0.95)),
           percentile99 = ceiling(quantile(x$n, 0.99)))
   })
-  
+
   # Clean up those results:
   results <- results[order(results$style, results$zoom, results$scale, results$format, results$cache), ]
   results$date <- date
   output <- results[, union('date', names(results))]
-  
+
   # Write out
   conditional_write(output, file.path(base_path, "tile_aggregates.tsv"))
 
