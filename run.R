@@ -41,7 +41,7 @@ run <- function(dates = NULL){
                                                pattern = split_name[length(split_name)], fixed = TRUE)])
         source(file_to_run)
         tryCatch({
-          main(missing_dates)
+          sapply(missing_dates, main)
         }, error = function(e){ # On error, return the error message and the file that errored, but don't stop.
           print(e$message)
           print(file_to_run)
