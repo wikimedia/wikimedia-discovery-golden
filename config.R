@@ -3,7 +3,7 @@ options(scipen = 500)
 
 # Core paths
 write_root <- "/a/aggregate-datasets/"
-dirs <- c("maps","wdqs", "search", "external_traffic")
+dirs <- c("maps","wdqs", "search", "external_traffic", "portal")
 write_dirs <- paste0(write_root, dirs)
 
 # Dependencies
