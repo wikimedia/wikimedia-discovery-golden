@@ -9,7 +9,7 @@ main <- function(date = NULL, table = "TestSearchSatisfaction2_14098806"){
                         timestamp",
                         date = date,
                         table = table,
-                        conditionals = "event_action IN('searchResultPage','visitPage')"))
+                        conditionals = "event_action IN('searchResultPage','visitPage') AND event_subTest IS NULL"))
   data$timestamp <- lubridate::ymd_hms(data$timestamp)
   
   # Generate the data
