@@ -4,7 +4,7 @@
 # Per-file config:
 base_path <- paste0(write_root, "search/")
 
-main <- function(date = NULL) {
+main <- function(date = NULL, table = "TestSearchSatisfaction2_14098806") {
   
   checkins <- c(0, 10, 20, 30, 40, 50, 60, 90, 120, 150, 180, 210, 240, 300, 360, 420)
   # ^ this will be used for figuring out the interval bounds for each check-in
@@ -18,14 +18,6 @@ main <- function(date = NULL) {
   if ( date < as.Date('2015-09-02') ) {
     warning('No data exists prior to 09/02/2015')
     return(invisible())
-  }
-  
-  if(date >= as.Date('2015-09-02') && date < as.Date('2015-10-13')){
-    table <- "TestSearchSatisfaction2_13223897"
-  } else if(date >= as.Date("2015-10-13") && date < as.Date("2015-10-26")){
-    table <- "TestSearchSatisfaction2_14098806"
-  } else {
-    table <- "TestSearchSatisfaction2_14318467"
   }
   
   # Get data and format:

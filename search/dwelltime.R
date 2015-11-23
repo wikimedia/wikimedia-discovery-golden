@@ -1,7 +1,7 @@
 # Per-file config:
 base_path <- paste0(write_root, "search/")
 
-main <- function(date = NULL, table = "TestSearchSatisfaction2_14318467"){
+main <- function(date = NULL, table = "TestSearchSatisfaction2_14098806"){
   
   # Retrieve data
   data <- as.data.frame(query_func(fields = "
