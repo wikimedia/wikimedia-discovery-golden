@@ -7,10 +7,11 @@ main <- function(date = NULL, table = "WikipediaPortal_14377354"){
                      event_session_id AS session,
                      event_destination AS destination,
                      event_event_type AS type,
-                     event_section_used AS section_used",
+                     event_section_used AS section_used,
+                     event_cohort",
                      date = date,
                      table = table,
-                     conditionals = "event_cohort IS NULL")
+                     conditionals = "((event_cohort IS NULL) OR (event_cohort = 'null'))")
   
   # Sanitise
   data$section_used[is.na(data$section_used)] <- "no action"
