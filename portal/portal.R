@@ -27,10 +27,12 @@ main <- function(date = NULL, table = "WikipediaPortal_14377354"){
     } else {
       NULL
     }
-  }, by = "session"]
+  }, by = c("date","session")]
   
   dwell_output <- data.frame(t(quantile(dwell_metric$V1, c(0.5, 0.95, 0.99))))
-  names(dwell_output) <- c("Median", "95th percentile", "99th Percentile")
+  dwell_output$date <- dwell_metric$date[1]
+  names(dwell_output) <- c("Median", "95th percentile", "99th Percentile", "date")
+  dwell_output <- dwell_output[,c(4,1:3)]
   
   # Generate clickthrough rate data
   clickthrough_data <- data[,j=list(events=.N),by = c("date","type")]
