@@ -8,15 +8,29 @@ main <- function(date = NULL, table = "WikipediaPortal_14377354"){
                      event_destination AS destination,
                      event_event_type AS type,
                      event_section_used AS section_used,
-                     event_cohort",
+                     timestamp AS ts",
                      date = date,
                      table = table,
                      conditionals = "((event_cohort IS NULL) OR (event_cohort = 'null'))")
   
   # Sanitise
   data$section_used[is.na(data$section_used)] <- "no action"
-  data$date <- as.Date(ymd(data$date))
+  data$date <- as.Date(lubridate::ymd(data$date))
   data <- as.data.table(data)
+  
+  # Generate dwell time
+  data$ts <- lubridate::ymd_hms(data$ts)
+  dwell_metric <- data[,j = {
+    if(.N > 1){
+      sorted_ts <- as.numeric(.SD$ts[order(.SD$ts, decreasing = TRUE)])
+      sorted_ts[1] - sorted_ts[2]
+    } else {
+      NULL
+    }
+  }, by = "session"]
+  
+  dwell_output <- data.frame(t(quantile(dwell_metric$V1, c(0.5, 0.95, 0.99))))
+  names(dwell_output) <- c("Median", "95th percentile", "99th Percentile")
   
   # Generate clickthrough rate data
   clickthrough_data <- data[,j=list(events=.N),by = c("date","type")]
@@ -28,6 +42,8 @@ main <- function(date = NULL, table = "WikipediaPortal_14377354"){
   
   conditional_write(clickthrough_data, file.path(base_path, "clickthrough_rate.tsv"))
   conditional_write(breakdown_data, file.path(base_path, "clickthrough_breakdown.tsv"))
+  conditional_write(dwell_output, file.path(base_path, "dwell_metrics.tsv"))
   
+  # Generate dwell time metric
   return(invisible())
 }
