@@ -21,23 +21,25 @@ main <- function(date = NULL) {
   query <- paste0("USE wmf;
                    SELECT year, month, day, uri_path,
                    UPPER(http_status IN('200','304')) as success,
+                   CASE WHEN agent_type = 'spider' THEN 'TRUE' ELSE 'FALSE' END AS is_automata,
                    COUNT(*) AS n
                    FROM webrequest",
                    subquery,
                   "AND webrequest_source = 'misc'
                    AND uri_host = 'query.wikidata.org'
                    AND uri_path IN('/', '/bigdata/namespace/wdq/sparql')
-                   GROUP BY year, month, day, uri_path,
-                   UPPER(http_status IN('200','304'));")
+                   GROUP BY year, month, day, uri_path, UPPER(http_status IN('200','304')),
+                   CASE WHEN agent_type = 'spider' THEN 'TRUE' ELSE 'FALSE' END;")
   results <- query_hive(query)
 
   output <- data.frame(date = as.Date(paste(results$year, results$month, results$day, sep = "-")),
                        path = results$uri_path,
                        http_success = results$success,
+                       is_automata = results$is_automata,
                        events = results$n,
                        stringsAsFactors = FALSE)
 
   # Write out
-  conditional_write(output, file.path(base_path, "wdqs_aggregates.tsv"))
+  conditional_write(output, file.path(base_path, "wdqs_aggregates_new.tsv"))
 
 }
