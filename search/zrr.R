@@ -60,24 +60,23 @@ main <- function(date = NULL){
   data$has_suggestion <- (data$has_suggestion == "true")
   
   # Bind in the date
-  data <- as.data.table(cbind(data.frame(date = rep(date,nrow(data))),
-                              data))
+  data <- as.data.table(cbind(data.frame(date = rep(date, nrow(data))), data))
   
   # Data by type
-  by_type_with_automata <- data[,list(rate = round(sum(total)/sum(zero_results), 2)), by = c("date", "query_type")]
+  by_type_with_automata <- data[,list(rate = round(sum(zero_results)/sum(total), 2)), by = c("date", "query_type")]
   by_type_no_automata <- data[data$is_automata == FALSE,
-                              list(rate = round(sum(total)/sum(zero_results), 2)), by = c("date", "query_type")]
+                              list(rate = round(sum(zero_results)/sum(total), 2)), by = c("date", "query_type")]
   
   # Overall data
-  overall_data_with_automata <- data[,list(rate = round(sum(total)/sum(zero_results), 2)), by = c("date")]
+  overall_data_with_automata <- data[,list(rate = round(sum(zero_results)/sum(total), 2)), by = c("date")]
   overall_data_no_automata <- data[data$is_automata == FALSE,
-                                   list(rate = round(sum(total)/sum(zero_results), 2)), by = c("date")]
+                                   list(rate = round(sum(zero_results)/sum(total), 2)), by = c("date")]
   
   # Suggestion data
   suggestion_data <- data[data$has_suggestion == TRUE,]
-  suggestion_data_with_automata <- suggestion_data[,list(rate = round(sum(total)/sum(zero_results), 2)), by = c("date")]
+  suggestion_data_with_automata <- suggestion_data[,list(rate = round(sum(zero_results)/sum(total), 2)), by = c("date")]
   suggestion_data_no_automata <- suggestion_data[suggestion_data$is_automata == FALSE,
-                                                 list(rate = round(sum(total)/sum(zero_results), 2)), by = c("date")]
+                                                 list(rate = round(sum(zero_results)/sum(total), 2)), by = c("date")]
   
 
   conditional_write(by_type_with_automata, file.path(base_path, "cirrus_query_breakdowns_with_automata.tsv"))
