@@ -64,18 +64,29 @@ main <- function(date = NULL){
                               data))
   
   # Data by type
-  by_type <- data[,list(total = sum(total), zero_results = sum(zero_results)), by = c("date", "query_type", "is_automata")]
-  by_type$rate <- NA
+  by_type_with_automata <- data[,list(rate = round(sum(total)/sum(zero_results), 2)), by = c("date", "query_type")]
+  by_type_no_automata <- data[data$is_automata == FALSE,
+                              list(rate = round(sum(total)/sum(zero_results), 2)), by = c("date", "query_type")]
   
   # Overall data
-  overall_data <- data[,list(total = sum(total), zero_results = sum(zero_results)), by = c("date", "is_automata")]
+  overall_data_with_automata <- data[,list(rate = round(sum(total)/sum(zero_results), 2)), by = c("date")]
+  overall_data_no_automata <- data[data$is_automata == FALSE,
+                                   list(rate = round(sum(total)/sum(zero_results), 2)), by = c("date")]
   
   # Suggestion data
-  suggestion_data <- data[data$has_suggestion == TRUE, list(total = sum(total), zero_results = sum(zero_results)),
-                          by = c("date", "is_automata")]
-  suggestion_data$rate <- NA
+  suggestion_data <- data[data$has_suggestion == TRUE,]
+  suggestion_data_with_automata <- suggestion_data[,list(rate = round(sum(total)/sum(zero_results), 2)), by = c("date")]
+  suggestion_data_no_automata <- suggestion_data[suggestion_data$is_automata == FALSE,
+                                                 list(rate = round(sum(total)/sum(zero_results), 2)), by = c("date")]
   
-  conditional_write(by_type, file.path(base_path, "cirrus_query_breakdowns_new.tsv"))
-  conditional_write(overall_data, file.path(base_path, "cirrus_query_aggregates_new.tsv"))
-  conditional_write(suggestion_data, file.path(base_path, "cirrus_suggestion_breakdown_new.tsv"))
+
+  conditional_write(by_type_with_automata, file.path(base_path, "cirrus_query_breakdowns_with_automata.tsv"))
+  conditional_write(by_type_no_automata, file.path(base_path, "cirrus_query_breakdowns_no_automata.tsv"))
+  
+  conditional_write(overall_data_with_automata, file.path(base_path, "cirrus_query_aggregates_with_automata.tsv"))
+  conditional_write(overall_data_no_automata, file.path(base_path, "cirrus_query_aggregates_no_automata.tsv"))
+  
+  conditional_write(suggestion_data_with_automata, file.path(base_path, "cirrus_suggestion_breakdown_with_automata.tsv"))
+  conditional_write(suggestion_data_no_automata, file.path(base_path, "cirrus_suggestion_breakdown_no_automata.tsv"))
+  
 }
