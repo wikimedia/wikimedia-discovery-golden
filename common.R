@@ -64,3 +64,11 @@ query_hive <- function(query){
   file.remove(query_dump, results_dump)
   return(results)
 }
+
+# Stop with a more informative message when there are no elements returned from the db
+stop_on_empty <- function(data){
+  if(nrow(data) == 0){
+    stop("No rows were returned from the database")
+  }
+  return(invisible())
+}
