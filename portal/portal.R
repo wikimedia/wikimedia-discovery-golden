@@ -12,7 +12,7 @@ main <- function(date = NULL, table = "WikipediaPortal_14377354"){
                      timestamp AS ts",
                      date = date,
                      table = table,
-                     conditionals = "((event_cohort IS NULL) OR (event_cohort = 'null'))")
+                     conditionals = "((event_cohort IS NULL) OR (event_cohort IN ('null','baseline')))")
   stop_on_empty(data)
   
   # Sanitise
