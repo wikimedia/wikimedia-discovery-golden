@@ -1,5 +1,14 @@
 source("config.R")
 
+# Stop with a more informative message when there are no elements returned from the db
+stop_on_empty <- function(data){
+  if(nrow(data) == 0){
+    stop("No rows were returned from the database")
+  }
+  return(invisible())
+}
+
+
 # Directory creation function
 check_dir <- function(dir){
   if (!file.exists(dir)) {
@@ -22,6 +31,7 @@ query_func <- function(fields, table, ts_field, date = NULL, conditionals = NULL
                  ifelse(is.null(conditionals), "", "AND"), conditionals)
   
   results <- data.table::as.data.table(olivr::mysql_read(query, "log"))
+  stop_on_empty(results)
   return(results)
 }
 
@@ -62,13 +72,6 @@ query_hive <- function(query){
   
   # Clean up and return
   file.remove(query_dump, results_dump)
+  stop_on_empty(results)
   return(results)
-}
-
-# Stop with a more informative message when there are no elements returned from the db
-stop_on_empty <- function(data){
-  if(nrow(data) == 0){
-    stop("No rows were returned from the database")
-  }
-  return(invisible())
 }

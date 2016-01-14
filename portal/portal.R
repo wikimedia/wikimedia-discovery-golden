@@ -13,8 +13,7 @@ main <- function(date = NULL, table = "WikipediaPortal_14377354"){
                      date = date,
                      table = table,
                      conditionals = "((event_cohort IS NULL) OR (event_cohort IN ('null','baseline')))")
-  stop_on_empty(data)
-  
+
   # Sanitise
   data$section_used[is.na(data$section_used)] <- "no action"
   data$date <- as.Date(lubridate::ymd(data$date))
