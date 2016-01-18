@@ -1,4 +1,13 @@
+args <- commandArgs(trailingOnly = TRUE)
 source("common.R") # config.R is sourced by common.R anyway
+
+# Usage: Rscript run.R [start_date [end_date]]
+#
+#   - To backfill data from a specific date (inclusive) to Sys.Date()-1:
+#     $> Rscript run.R YYYY-MM-DD
+#
+#   - To backfill data from a specific date range (inclusive):
+#     $> Rscript run.R YYYY-MM-DD YYYY-MM-DD
 
 # Central function
 run <- function(dates = NULL){
@@ -58,4 +67,23 @@ run <- function(dates = NULL){
 
 }
 
-run()
+switch(as.character(length(args)),
+       "0" = {
+         message("Assuming user wants previous day's data.")
+         run()
+       },
+       "1" = {
+         start_date <- as.Date(args[1])
+         end_date <- Sys.Date() - 1
+         message("Backfilling data from", start_date, "to", end_date)
+         run(seq(start_date, end_date, "day"))
+       },
+       "2" = {
+         start_date <- as.Date(args[1])
+         end_date <- as.Date(args[2])
+         if (start_date < end_date) {
+           message("Backfilling data from", start_date, "to", end_date)
+           run(seq(start_date, end_date, "day"))
+         }
+         print("Backfilling start date must be before the end date.")
+       })

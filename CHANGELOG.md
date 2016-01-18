@@ -1,6 +1,12 @@
 # Change Log (Patch Notes)
 All notable changes to this project will be documented in this file.
 
+## 2016/01/18
+- Adds quick backfilling through system command line
+
+## 2016/01/15
+- Adds a check for empty dataset returned
+
 ## 2015/11/05
 - Reset default tables for user satisfaction metrics
 - Fix LDN bug
