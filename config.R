@@ -16,4 +16,5 @@ suppressMessages({
   library(plyr)
   library(magrittr)
   library(survival)
+  library(uaparser)
 })

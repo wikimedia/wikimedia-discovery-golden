@@ -9,7 +9,8 @@ main <- function(date = NULL, table = "WikipediaPortal_14377354"){
                      event_destination AS destination,
                      event_event_type AS type,
                      event_section_used AS section_used,
-                     timestamp AS ts",
+                     timestamp AS ts,
+                     userAgent AS user_agent",
                      date = date,
                      table = table,
                      conditionals = "((event_cohort IS NULL) OR (event_cohort IN ('null','baseline')))")
@@ -55,10 +56,21 @@ main <- function(date = NULL, table = "WikipediaPortal_14377354"){
                             "United Kingdom", "France", "Germany", "China", "Canada", 
                             "Australia")
   
+  # Get user agent data
+  olivr::set_proxies() # To allow for the latest YAML to be retrieved.
+  uaparser::update_regexes()
+  ua_data <- as.data.table(uaparser::parse_agents(data$user_agent, fields = c("browser","browser_major")))
+  ua_data <- ua_data[,j=list(amount = .N), by = c("browser","browser_major")]
+  ua_data$date <- data$date[1]
+  ua_data$percent <- round((ua_data$amount/sum(ua_data$amount))*100, 2)
+  ua_data <- ua_data[ua_data$percent >= 0.5, c("date", "browser", "browser_major", "percent"), with = FALSE]
+  setnames(ua_data, 3, "version")
+  
   conditional_write(clickthrough_data, file.path(base_path, "clickthrough_rate.tsv"))
   conditional_write(breakdown_data, file.path(base_path, "clickthrough_breakdown.tsv"))
   conditional_write(dwell_output, file.path(base_path, "dwell_metrics.tsv"))
   conditional_write(country_data, file.path(base_path, "country_data.tsv"))
+  conditional_write(ua_data, file.path(base_path, "user_agent_data.tsv"))
   
   return(invisible())
 }
