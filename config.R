@@ -17,4 +17,5 @@ suppressMessages({
   library(magrittr)
   library(survival)
   library(uaparser)
+  library(polloi)
 })

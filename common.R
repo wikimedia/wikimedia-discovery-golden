@@ -44,6 +44,20 @@ conditional_write <- function(x, file){
   }
 }
 
+# Conditional write with a time window; like conditional_write but only keeps last N days of data.
+conditional_rewrite <- function(x, file, n_days = 30) {
+  if (file.exists(file)) {
+    y <- readr::read_tsv(file)
+    y <- y[order(y$date, decreasing = FALSE), ]
+    if ((Sys.Date() - min(y$date)) > (n_days + 1)) {
+      z <- rbind(y[y$date >= (Sys.Date() - 1 - n_days), ], x)
+      write.table(z, file, append = FALSE, sep = "\t", row.names = FALSE, quote = FALSE)
+      return(invisible())
+    }
+  }
+  conditional_write(x, file)
+}
+
 # date_clause; provided with a date it generates an appropriate set of WHERE clauses for HDFS partitioning.
 date_clause <- function(date) {
   if (is.null(date)) {

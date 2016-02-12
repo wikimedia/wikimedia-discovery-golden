@@ -15,6 +15,7 @@ main <- function(date = NULL){
           CREATE TEMPORARY FUNCTION array_sum AS 'org.wikimedia.analytics.refinery.hive.ArraySumUDF';
           CREATE TEMPORARY FUNCTION is_spider as 'org.wikimedia.analytics.refinery.hive.IsSpiderUDF';
           CREATE TEMPORARY FUNCTION ua_parser as 'org.wikimedia.analytics.refinery.hive.UAParserUDF';
+          CREATE TEMPORARY FUNCTION is_wikimedia as 'org.wikimedia.analytics.refinery.hive.IsWikimediaBotUDF';
           USE wmf_raw;
           SELECT
               wiki_id,
@@ -34,13 +35,10 @@ main <- function(date = NULL){
                   requests[size(requests)-1].querytype AS query_type,
                   array_sum(requests.hitstotal, -1) = 0 AS zero_result,
                   CASE
-                    WHEN ((ua_parser(useragent)['device_family'] = 'Spider') OR (is_spider(useragent))) THEN 'TRUE'
+                    WHEN ((ua_parser(useragent)['device_family'] = 'Spider') OR is_spider(useragent) OR is_wikimedia(useragent)) THEN 'TRUE'
                     ELSE 'FALSE' END AS is_automata
               FROM
-                  cirrussearchrequestset",
-                 subquery,
-                 "
-          ) data_source
+                  cirrussearchrequestset", subquery, ") data_source
           GROUP BY
               wiki_id,
               source,
@@ -63,29 +61,49 @@ main <- function(date = NULL){
   data <- as.data.table(cbind(data.frame(date = rep(date, nrow(data))), data))
   
   # Data by type
-  by_type_with_automata <- data[,list(rate = round(sum(zero_results)/sum(total), 2)), by = c("date", "query_type")]
+  by_type_with_automata <- data[, list(rate = round(sum(zero_results)/sum(total), 2)),
+                                  by = c("date", "query_type")]
   by_type_no_automata <- data[data$is_automata == FALSE,
-                              list(rate = round(sum(zero_results)/sum(total), 2)), by = c("date", "query_type")]
-  
+                              list(rate = round(sum(zero_results)/sum(total), 2)),
+                              by = c("date", "query_type")]
+
   # Overall data
-  overall_data_with_automata <- data[,list(rate = round(sum(zero_results)/sum(total), 2)), by = c("date")]
+  overall_data_with_automata <- data[, list(rate = round(sum(zero_results)/sum(total), 2)),
+                                       by = c("date")]
   overall_data_no_automata <- data[data$is_automata == FALSE,
-                                   list(rate = round(sum(zero_results)/sum(total), 2)), by = c("date")]
-  
+                                   list(rate = round(sum(zero_results)/sum(total), 2)),
+                                   by = c("date")]
+
   # Suggestion data
   suggestion_data <- data[data$has_suggestion == TRUE,]
-  suggestion_data_with_automata <- suggestion_data[,list(rate = round(sum(zero_results)/sum(total), 2)), by = c("date")]
+  suggestion_data_with_automata <- suggestion_data[, list(rate = round(sum(zero_results)/sum(total), 2)),
+                                                     by = c("date")]
   suggestion_data_no_automata <- suggestion_data[suggestion_data$is_automata == FALSE,
-                                                 list(rate = round(sum(zero_results)/sum(total), 2)), by = c("date")]
-  
+                                                 list(rate = round(sum(zero_results)/sum(total), 2)),
+                                                 by = c("date")]
 
   conditional_write(by_type_with_automata, file.path(base_path, "cirrus_query_breakdowns_with_automata.tsv"))
   conditional_write(by_type_no_automata, file.path(base_path, "cirrus_query_breakdowns_no_automata.tsv"))
-  
+
   conditional_write(overall_data_with_automata, file.path(base_path, "cirrus_query_aggregates_with_automata.tsv"))
   conditional_write(overall_data_no_automata, file.path(base_path, "cirrus_query_aggregates_no_automata.tsv"))
-  
+
   conditional_write(suggestion_data_with_automata, file.path(base_path, "cirrus_suggestion_breakdown_with_automata.tsv"))
   conditional_write(suggestion_data_no_automata, file.path(base_path, "cirrus_suggestion_breakdown_no_automata.tsv"))
+
+  # Breakdown by Language and Project
+  lang_proj <- polloi::parse_wikiid(data$wiki_id)
+  data <- cbind(data, lang_proj)
+  data <- data[!is.na(data$project), , ]
+  data_by_langproj_with_automata <- data[, list(zero_results = sum(zero_results),
+                                                total = sum(total)),
+                                           by = c("date", "language", "project")]
+  data_by_langproj_no_automata <- data[data$is_automata == FALSE,
+                                       list(zero_results = sum(zero_results),
+                                            total = sum(total)),
+                                       by = c("date", "language", "project")]
+  days_to_keep <- 30
+  conditional_rewrite(data_by_langproj_with_automata, file.path(base_path, "cirrus_langproj_breakdown_with_automata.tsv"), days_to_keep)
+  conditional_rewrite(data_by_langproj_no_automata, file.path(base_path, "cirrus_langproj_breakdown_no_automata.tsv"), days_to_keep)
   
 }
