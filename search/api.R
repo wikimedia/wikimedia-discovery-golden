@@ -21,7 +21,7 @@ main <- function(date = NULL){
                    COUNT(*) AS search_events
                    FROM webrequest
                   ", subquery,
-                  "AND webrequest_source IN('text','mobile') AND http_status = '200'
+                  "AND webrequest_source = 'text' AND http_status = '200'
                    GROUP BY year, month, day, search_classify(uri_path, uri_query);")
   results <- query_hive(query)
 

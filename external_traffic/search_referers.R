@@ -29,7 +29,7 @@ main <- function(date = NULL){
                    COUNT(*) AS pageviews
                    FROM webrequest
                   ", subquery,
-                  "AND webrequest_source IN('text','mobile') AND is_pageview = true
+                  "AND webrequest_source = 'text' AND is_pageview = true
                   AND access_method IN('desktop','mobile web')
                   GROUP BY year, month, day, is_external_search(referer), classify_referer(referer),
                   get_engine(referer), access_method;")
