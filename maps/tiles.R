@@ -10,13 +10,13 @@ base_path <- paste0(write_root, "maps/")
 main <- function(date = NULL) {
 
   # Date handling
-  if(is.null(date)) {
-    date <- Sys.Date() - 1
+  if(is.null(date)){
+    date <- Sys.Date()-1
   }
   subquery <- date_clause(date)
 
   # Get the per-user tile usage:
-  query <- paste0("SELECT style, zoom, scale, format, user_id, cache, is_automata, COUNT(1) AS n
+  query <- paste0("SELECT style, zoom, scale, format, user_id, cache, is_automata, country, COUNT(1) AS n
                    FROM (
                      SELECT
                        REGEXP_EXTRACT(uri_path, '^/([^/]+)/([0-9]{1,2})/(-?[0-9]+)/(-?[0-9]+)(@([0-9]\\.?[0-9]?)x)?\\.([a-z]+)$', 1) AS style,
@@ -25,6 +25,7 @@ main <- function(date = NULL) {
                        REGEXP_EXTRACT(uri_path, '^/([^/]+)/([0-9]{1,2})/(-?[0-9]+)/(-?[0-9]+)(@([0-9]\\.?[0-9]?)x)?\\.([a-z]+)$', 7) AS format,
                        CONCAT(user_agent, client_ip) AS user_id,
                        cache_status AS cache,
+                       geocoded_data['country_code'] AS country,
                        CASE WHEN agent_type = 'spider' THEN 'TRUE' ELSE 'FALSE' END AS is_automata
                      FROM wmf.webrequest", subquery, "
                        AND webrequest_source = 'maps'
@@ -33,7 +34,7 @@ main <- function(date = NULL) {
                        AND uri_query <> '?loadtesting'
                    ) prepared
                    WHERE zoom != '' AND style != ''
-                   GROUP BY style, zoom, scale, format, user_id, cache, is_automata;")
+                   GROUP BY style, zoom, scale, format, user_id, cache, is_automata, country;")
   results <- query_hive(query)
   
   # The zoom sometimes exceeds what we actually allow (18). Yuri said that's acceptable but we
@@ -48,8 +49,17 @@ main <- function(date = NULL) {
                                     list(users = length(user_id), total=sum(n), average = round(mean(n)), median = ceiling(median(n)),
                                     percentile95 = ceiling(quantile(n, 0.95)), percentile99 = ceiling(quantile(n, 0.99))),
                                     by= setdiff(names(output),c("n","user_id", "is_automata"))]
+  
+  # Work out unique users on a per-country basis
+  unique_users <- output[, j = list(users = length(unique(user_id))), by = c("date","country")]
+  unique_users <- unique_users[order(unique_users$users, decreasing = TRUE),]
+  user_output <- rbind(unique_users[1:9,],
+                       data.table(date = date, country = "Other", users = sum(unique_users$users[10:nrow(unique_users)])))
+  user_output$users <- round(user_output$users/sum(user_output$users), 2)
+  
   # Write out
   conditional_write(with_automata_output, file.path(base_path, "tile_aggregates_with_automata.tsv"))
   conditional_write(without_automata_output, file.path(base_path, "tile_aggregates_no_automata.tsv"))
+  conditional_write(user_output, file.path(base_path, "users_by_country.tsv"))
   
 }
