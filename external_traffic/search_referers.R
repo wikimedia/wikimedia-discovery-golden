@@ -21,25 +21,25 @@ main <- function(date = NULL){
                    CREATE TEMPORARY FUNCTION get_engine AS
                   'org.wikimedia.analytics.refinery.hive.IdentifySearchEngineUDF';
                    USE wmf;
-                   SELECT year, month, day,
-                   is_external_search(referer) AS is_search,
-                   classify_referer(referer) AS referer_class,
-                   get_engine(referer) as search_engine,
-                   access_method,
-                   COUNT(*) AS pageviews
-                   FROM webrequest
-                  ", subquery,
-                  "AND webrequest_source = 'text' AND is_pageview = true
-                  AND access_method IN('desktop','mobile web')
-                  GROUP BY year, month, day, is_external_search(referer), classify_referer(referer),
-                  get_engine(referer), access_method;")
+                   SELECT
+                     is_external_search(referer) AS is_search,
+                     classify_referer(referer) AS referer_class,
+                     get_engine(referer) as search_engine,
+                     access_method,
+                     COUNT(*) AS pageviews
+                   FROM webrequest", subquery, "
+                     AND webrequest_source = 'text' AND is_pageview = true
+                     AND access_method IN('desktop','mobile web')
+                   GROUP BY
+                     is_external_search(referer), classify_referer(referer),
+                     get_engine(referer), access_method;")
   results <- query_hive(query)
   
   # Sanitise the resulting data
-  results <- results[!is.na(results$month),]
-  results$date <- as.Date(paste(results$year, results$month, results$day, sep = "-"))
+  results <- results[!is.na(results$pageviews), ]
+  results$date <- date
   results <- results[, c("date", "is_search", "referer_class", "search_engine", "access_method","pageviews")]
-  results$is_search <- ifelse(results$is_search == "true", TRUE, FALSE)
+  results$is_search <- results$is_search == "true"
   
   # Write out
   conditional_write(results, file.path(base_path, "referer_data.tsv"))
