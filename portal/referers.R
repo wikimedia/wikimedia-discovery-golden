@@ -27,7 +27,7 @@ main <- function(date = NULL){
                     get_engine(referer) as search_engine,
                     COUNT(*) AS pageviews
                   FROM webrequest", subquery, "
-                    AND webrequest_source IN('text','mobile')
+                    AND webrequest_source = 'text'
                     AND content_type RLIKE('^text/html')
                     AND uri_host IN('www.wikipedia.org','wikipedia.org')
                   GROUP BY
