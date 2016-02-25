@@ -25,36 +25,25 @@ main <- function(date = NULL){
                     is_external_search(referer) AS is_search,
                     classify_referer(referer) AS referer_class,
                     get_engine(referer) as search_engine,
-                    access_method,
                     COUNT(*) AS pageviews
                   FROM webrequest", subquery, "
                     AND webrequest_source IN('text','mobile')
                     AND content_type RLIKE('^text/html')
                     AND uri_host IN('www.wikipedia.org','wikipedia.org')
-                    AND access_method IN('desktop','mobile web')
                   GROUP BY
                     is_external_search(referer),
                     classify_referer(referer),
-                    get_engine(referer),
-                    access_method;")
+                    get_engine(referer);")
   results <- query_hive(query)
   
   # Sanitise the resulting data
   results <- results[!is.na(results$pageviews), ]
   results$date <- date
-  results <- results[, c("date", "is_search", "referer_class", "search_engine", "access_method", "pageviews")]
+  results <- results[, c("date", "is_search", "referer_class", "search_engine", "pageviews")]
   results$is_search <- results$is_search == "true"
   
   # Write out
   conditional_write(results, file.path(base_path, "portal_referer_data.tsv"))
-  
-  # Mobile vs Desktop Visitors
-  results <- data.table(results)
-  results_by_platform <- results[, j = list(pageviews = sum(pageviews)),
-                                   by = c("date", "access_method")]
-  
-  # Write out
-  conditional_write(results, file.path(base_path, "portal_platform_data.tsv"))
   
   return(invisible())
 }
