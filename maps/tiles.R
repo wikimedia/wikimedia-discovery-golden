@@ -51,10 +51,11 @@ main <- function(date = NULL) {
                                     by= setdiff(names(output),c("n","user_id", "is_automata"))]
   
   # Work out unique users on a per-country basis
+  top_countries <- c("RU", "IT", "US", "UA", "FR", "IN", "DE", "ES", "GB")
   unique_users <- output[, j = list(users = length(unique(user_id))), by = c("date","country")]
   unique_users <- unique_users[order(unique_users$users, decreasing = TRUE),]
-  user_output <- rbind(unique_users[1:9,],
-                       data.table(date = date, country = "Other", users = sum(unique_users$users[10:nrow(unique_users)])))
+  user_output <- rbind(unique_users[unique_users$country %in% top_countries,],
+                       data.table(date = date, country = "Other", users = sum(unique_users$users[!unique_users$country %in% top_countries])))
   user_output$users <- round(user_output$users/sum(user_output$users), 2)
   
   # Write out
