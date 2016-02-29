@@ -43,12 +43,12 @@ main <- function(date = NULL) {
   output <- as.data.table(results[, union('date', names(results))])
   with_automata_output <- output[,list(users = length(user_id), total=sum(n), average = round(mean(n)), median = ceiling(median(n)),
                                        percentile95 = ceiling(quantile(n, 0.95)), percentile99 = ceiling(quantile(n, 0.99))),
-                                 by= setdiff(names(output),c("n","user_id", "is_automata"))]
+                                 by= setdiff(names(output),c("n","user_id", "is_automata", "country"))]
   
   without_automata_output <- output[output$is_automata == FALSE,
                                     list(users = length(user_id), total=sum(n), average = round(mean(n)), median = ceiling(median(n)),
                                     percentile95 = ceiling(quantile(n, 0.95)), percentile99 = ceiling(quantile(n, 0.99))),
-                                    by= setdiff(names(output),c("n","user_id", "is_automata"))]
+                                    by= setdiff(names(output),c("n","user_id", "is_automata", "country"))]
   
   # Work out unique users on a per-country basis
   top_countries <- c("RU", "IT", "US", "UA", "FR", "IN", "DE", "ES", "GB")
@@ -63,4 +63,7 @@ main <- function(date = NULL) {
   conditional_write(without_automata_output, file.path(base_path, "tile_aggregates_no_automata.tsv"))
   conditional_write(user_output, file.path(base_path, "users_by_country.tsv"))
   
+  # Handle rolling window
+  conditional_rewrite(with_automata_output, file.path(base_path, "tile_aggregates_with_automata_rolling.tsv"))
+  conditional_rewrite(without_automata_output, file.path(base_path, "tile_aggregates_no_automata_rolling.tsv"))
 }
