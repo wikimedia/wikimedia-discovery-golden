@@ -57,7 +57,7 @@ main <- function(date = NULL, table = "WikipediaPortal_14377354"){
                             "Australia")
   
   # Get user agent data
-  olivr::set_proxies() # To allow for the latest YAML to be retrieved.
+  wmf::set_proxies() # To allow for the latest YAML to be retrieved.
   uaparser::update_regexes()
   ua_data <- as.data.table(uaparser::parse_agents(data$user_agent, fields = c("browser","browser_major")))
   ua_data <- ua_data[,j=list(amount = .N), by = c("browser","browser_major")]
