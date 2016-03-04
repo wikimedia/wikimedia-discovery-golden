@@ -6,15 +6,16 @@ base_path <- paste0(write_root, "search/")
 main <- function(date = NULL, table = "MobileWikiAppSearch_10641988"){
 
   # Retrieve data using the query builder in ./common.R
-  data <- query_func(fields = "SELECT SUBSTRING(timestamp, 1, 8) AS date,
-                     CASE event_action WHEN 'click' THEN 'clickthroughs'
-                     WHEN 'start' THEN 'search sessions'
-                     WHEN 'results' THEN 'Result pages opened' END AS action,
-                     event_timeToDisplayResults AS load_time,
-                     userAgent",
-                     date = date,
-                     table = table,
-                     conditionals = "event_action IN ('click','start','results')")
+  data <- wmf::build_query(fields = "SELECT SUBSTRING(timestamp, 1, 8) AS date,
+                           CASE event_action WHEN 'click' THEN 'clickthroughs'
+                           WHEN 'start' THEN 'search sessions'
+                           WHEN 'results' THEN 'Result pages opened' END AS action,
+                           event_timeToDisplayResults AS load_time,
+                           userAgent",
+                           date = date,
+                           table = table,
+                           conditionals = "event_action IN ('click','start','results')")
+  data <- data.table::as.data.table(data)
   data$date <- lubridate::ymd(data$date)
   data$platform[grepl(x = data$userAgent, pattern = "Android", fixed = TRUE)] <- "Android"
   data$platform[is.na(data$platform)] <- "iOS"
@@ -31,8 +32,8 @@ main <- function(date = NULL, table = "MobileWikiAppSearch_10641988"){
   }, by = c("date", "platform")]
   
   # Write out
-  conditional_write(app_results, file.path(base_path, "app_event_counts.tsv"))
-  conditional_write(load_times, file.path(base_path, "app_load_times.tsv"))
+  wmf::write_conditional(app_results, file.path(base_path, "app_event_counts.tsv"))
+  wmf::write_conditional(load_times, file.path(base_path, "app_load_times.tsv"))
   
   return(invisible())
 }

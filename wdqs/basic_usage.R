@@ -11,11 +11,8 @@ base_path <- paste0(write_root, "wdqs/")
 # Central function
 main <- function(date = NULL) {
 
-  # Date handling
-  if(is.null(date)) {
-    date <- Sys.Date() - 1
-  }
-  subquery <- date_clause(date)
+  # Date subquery
+  clause_data <- wmf::date_clause(date)
 
   # Write query and run it
   query <- paste0("USE wmf;
@@ -24,13 +21,13 @@ main <- function(date = NULL) {
                    CASE WHEN agent_type = 'spider' THEN 'TRUE' ELSE 'FALSE' END AS is_automata,
                    COUNT(*) AS n
                    FROM webrequest",
-                   subquery,
+                  clause_data$date_clause,
                   "AND webrequest_source = 'misc'
                    AND uri_host = 'query.wikidata.org'
                    AND uri_path IN('/', '/bigdata/namespace/wdq/sparql')
                    GROUP BY year, month, day, uri_path, UPPER(http_status IN('200','304')),
                    CASE WHEN agent_type = 'spider' THEN 'TRUE' ELSE 'FALSE' END;")
-  results <- query_hive(query)
+  results <- wmf::query_hive(query)
 
   output <- data.frame(date = as.Date(paste(results$year, results$month, results$day, sep = "-")),
                        path = results$uri_path,
@@ -40,6 +37,6 @@ main <- function(date = NULL) {
                        stringsAsFactors = FALSE)
 
   # Write out
-  conditional_write(output, file.path(base_path, "wdqs_aggregates_new.tsv"))
+  wmf::write_conditional(output, file.path(base_path, "wdqs_aggregates_new.tsv"))
 
 }

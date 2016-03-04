@@ -21,43 +21,44 @@ main <- function(date = NULL, table = "TestSearchSatisfaction2_14098806") {
   }
   
   # Get data and format:
-  data <- query_func(fields = "SELECT * ", date = date, table = table)
+  data <- wmf::build_query(fields = "SELECT * ", date = date, table = table)
+  data <- data.table::as.data.table(data)
   data$timestamp <- lubridate::ymd_hms(data$timestamp)
   
   # Backwards-compatibility:
   if ( table == "TestSearchSatisfaction2_14098806" ) {
-    setnames(data, "event_pageViewId", "event_pageId")
+    data.table::setnames(data, "event_pageViewId", "event_pageId")
   }
   
   # Treat each individual search session as its own thing, rather than belonging
   #   to a set of other search sessions by the same user.
-  page_visits <- ddply(data, .(event_searchSessionId, event_pageId),
-                    function(session) {
-                      if (!all(c('visitPage', 'checkin') %in% session$event_action)) {
-                        return(NULL)
-                      }
-                      temp <- session[all(c('visitPage', 'checkin') %in% session$event_action), ]
-                      last_checkin <- max(temp$event_checkin, na.rm = TRUE)
-                      idx <- which(checkins > last_checkin)
-                      if (length(idx) == 0) idx <- 16 # length(checkins) = 16
-                      next_checkin <- checkins[min(idx)]
-                      status <- ifelse(last_checkin == 420, 0, 3)
-                      return(c(`last check-in` = last_checkin,
-                               `next check-in` = next_checkin,
-                               status = status))
+  page_visits <- plyr::ddply(data, .(event_searchSessionId, event_pageId),
+                             function(session) {
+                               if (!all(c('visitPage', 'checkin') %in% session$event_action)) {
+                                 return(NULL)
+                               }
+                               temp <- session[all(c('visitPage', 'checkin') %in% session$event_action), ]
+                               last_checkin <- max(temp$event_checkin, na.rm = TRUE)
+                               idx <- which(checkins > last_checkin)
+                               if (length(idx) == 0) idx <- 16 # length(checkins) = 16
+                               next_checkin <- checkins[min(idx)]
+                               status <- ifelse(last_checkin == 420, 0, 3)
+                               return(c(`last check-in` = last_checkin,
+                                        `next check-in` = next_checkin,
+                                        status = status))
                     }) # %>%
     # Some sessions may have multiple visited pages, let's pick 1 at random:
     # ddply(.(user_id, event_searchSessionId), olivr::sample_dataframe, size = 1)
   
-  surv <- Surv(time = page_visits$`last check-in`,
-               time2 = page_visits$`next check-in`,
-               event = page_visits$status,
-               type = "interval")
-  fit <- survfit(surv ~ 1)
+  surv <- survival::Surv(time = page_visits$`last check-in`,
+                         time2 = page_visits$`next check-in`,
+                         event = page_visits$status,
+                         type = "interval")
+  fit <- survival::survfit(surv ~ 1)
   output <- data.frame(date = date, rbind(quantile(fit, probs = c(0.10, 0.25, 0.50, 0.75, 0.90, 0.95, 0.99))$quantile))
   colnames(output) <- c('date', 'LD10', 'LD25', 'LD50', 'LD75', 'LD90', 'LD95', 'LD99')
   
-  conditional_write(output, file.path(base_path, "sample_page_visit_ld.tsv"))
+  wmf::write_conditional(output, file.path(base_path, "sample_page_visit_ld.tsv"))
   
   return(invisible())
 }

@@ -6,19 +6,20 @@ base_path <- paste0(write_root, "search/")
 main <- function(date = NULL, table = "MobileWebSearch_12054448"){
   
   # Get data and format the timestamps
-  data <- query_func(fields = "SELECT SUBSTRING(timestamp, 1, 8) AS date,
-                     CASE event_action WHEN 'click-result' THEN 'clickthroughs'
-                     WHEN 'session-start' THEN 'search sessions'
-                     WHEN 'impression-results' THEN 'Result pages opened' END AS action,
-                     event_clickIndex AS click_index,
-                     event_numberOfResults AS result_count,
-                     event_resultSetType as result_type,
-                     event_timeOffsetSinceStart AS time_offset,
-                     event_timeToDisplayResults AS load_time,
-                     event_platformVersion AS version",
-                     date = date,
-                     table = table,
-                     conditionals = "event_action IN ('click-result','session-start','impression-results')")
+  data <- wmf::build_query(fields = "SELECT SUBSTRING(timestamp, 1, 8) AS date,
+                           CASE event_action WHEN 'click-result' THEN 'clickthroughs'
+                           WHEN 'session-start' THEN 'search sessions'
+                           WHEN 'impression-results' THEN 'Result pages opened' END AS action,
+                           event_clickIndex AS click_index,
+                           event_numberOfResults AS result_count,
+                           event_resultSetType as result_type,
+                           event_timeOffsetSinceStart AS time_offset,
+                           event_timeToDisplayResults AS load_time,
+                           event_platformVersion AS version",
+                           date = date,
+                           table = table,
+                           conditionals = "event_action IN ('click-result','session-start','impression-results')")
+  data <- data.table::as.data.table(data)
   data$date <- lubridate::ymd(data$date)
   
   # Convert it into event aggregates
@@ -32,8 +33,8 @@ main <- function(date = NULL, table = "MobileWebSearch_12054448"){
   }, by = "date"]
   
   # Write out and return
-  conditional_write(mobile_results, file.path(base_path, "mobile_event_counts.tsv"))
-  conditional_write(load_times, file.path(base_path, "mobile_load_times.tsv"))
+  wmf::write_conditional(mobile_results, file.path(base_path, "mobile_event_counts.tsv"))
+  wmf::write_conditional(load_times, file.path(base_path, "mobile_load_times.tsv"))
   
   return(invisible())
 }

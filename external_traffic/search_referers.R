@@ -4,14 +4,9 @@ check_dir(base_path)
 
 main <- function(date = NULL){
   
-  # Date handling
-  if(is.null(date)){
-    date <- Sys.Date() - 1
-  }
-  
   # Date subquery
-  subquery <- date_clause(date)
-  
+  clause_data <- wmf::date_clause(date)
+
   # Write query and run it
   query <- paste0("ADD JAR /home/ironholds/refinery-hive-0.0.21-SNAPSHOT.jar;
                    CREATE TEMPORARY FUNCTION is_external_search AS
@@ -27,22 +22,22 @@ main <- function(date = NULL){
                      get_engine(referer) as search_engine,
                      access_method,
                      COUNT(*) AS pageviews
-                   FROM webrequest", subquery, "
+                   FROM webrequest", clause_data$date_clause, "
                      AND webrequest_source = 'text' AND is_pageview = true
                      AND access_method IN('desktop','mobile web')
                    GROUP BY
                      is_external_search(referer), classify_referer(referer),
                      get_engine(referer), access_method;")
-  results <- query_hive(query)
+  results <- wmf::query_hive(query)
   
   # Sanitise the resulting data
   results <- results[!is.na(results$pageviews), ]
-  results$date <- date
+  results$date <- clause_data$date
   results <- results[, c("date", "is_search", "referer_class", "search_engine", "access_method","pageviews")]
   results$is_search <- results$is_search == "true"
   
   # Write out
-  conditional_write(results, file.path(base_path, "referer_data.tsv"))
+  wmf::write_conditional(results, file.path(base_path, "referer_data.tsv"))
   
   return(invisible())
 }

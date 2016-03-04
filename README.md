@@ -11,7 +11,7 @@ This repository contains aggregation/acquisition scripts for extracting data fro
 
 ```
 install.packages(c('lubridate', 'devtools'))
-devtools::install_github('Ironholds/olivr')
+devtools::install_github("wikimedia/wikimedia-discovery-wmf")
 ```
 
 ## Additional Information

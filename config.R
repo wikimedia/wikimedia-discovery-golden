@@ -10,7 +10,7 @@ write_dirs <- paste0(write_root, dirs)
 suppressPackageStartupMessages(library(data.table))
 suppressMessages({
   library(lubridate)
-  library(olivr)
+  library(wmf)
   library(readr)
   library(ortiz)
   library(plyr)

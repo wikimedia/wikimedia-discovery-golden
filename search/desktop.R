@@ -8,22 +8,23 @@ main <- function(date = NULL, table = "Search_14361785"){
   # - Use Search_14361785 as of October 28th
   
   # Get data and format
-  data <- query_func(fields = "SELECT SUBSTRING(timestamp, 1, 8) AS date,
-                     CASE event_action WHEN 'click-result' THEN 'clickthroughs'
-                     WHEN 'session-start' THEN 'search sessions'
-                     WHEN 'impression-results' THEN 'Result pages opened'
-                     WHEN 'submit-form' THEN 'Form submissions' END AS action,
-                     event_clickIndex AS click_index,
-                     event_numberOfResults AS result_count,
-                     event_resultSetType as result_type,
-                     event_timeOffsetSinceStart AS time_offset,
-                     event_timeToDisplayResults AS load_time",
-                     date = date,
-                     table = table,
-                     conditionals = "event_action IN ('click-result','session-start','impression-results', 'submit-form')")
+  data <- wmf::build_query(fields = "SELECT SUBSTRING(timestamp, 1, 8) AS date,
+                           CASE event_action WHEN 'click-result' THEN 'clickthroughs'
+                           WHEN 'session-start' THEN 'search sessions'
+                           WHEN 'impression-results' THEN 'Result pages opened'
+                           WHEN 'submit-form' THEN 'Form submissions' END AS action,
+                           event_clickIndex AS click_index,
+                           event_numberOfResults AS result_count,
+                           event_resultSetType as result_type,
+                           event_timeOffsetSinceStart AS time_offset,
+                           event_timeToDisplayResults AS load_time",
+                           date = date,
+                           table = table,
+                           conditionals = "event_action IN ('click-result','session-start','impression-results', 'submit-form')")
   data$date <- lubridate::ymd(data$date)
   
   # Generate aggregates
+  data <- data.table::as.data.table(data)
   event_data <- data[,j = list(events = .N), by = c("date", "action")]
   
   # Generate load time data and save that
@@ -34,8 +35,8 @@ main <- function(date = NULL, table = "Search_14361785"){
   }, by = "date"]
   
   # Write out
-  conditional_write(event_data, file.path(base_path, "desktop_event_counts.tsv"))
-  conditional_write(load_times, file.path(base_path, "desktop_load_times.tsv"))
+  wmf::write_conditional(event_data, file.path(base_path, "desktop_event_counts.tsv"))
+  wmf::write_conditional(load_times, file.path(base_path, "desktop_load_times.tsv"))
   
   return(invisible())
 }

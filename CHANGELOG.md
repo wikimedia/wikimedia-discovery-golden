@@ -1,6 +1,10 @@
 # Change Log (Patch Notes)
 All notable changes to this project will be documented in this file.
 
+## 2016/03/07
+- Refactor to rely exclusively on the "wmf" library for internally developed code rather than
+"olivr"
+
 ## 2016/01/18
 - Adds quick backfilling through system command line
 

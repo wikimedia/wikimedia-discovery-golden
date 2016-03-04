@@ -4,12 +4,9 @@ base_path <- paste0(write_root, "search/")
 # Core functionality
 main <- function(date = NULL){
   
-  # Identify date and construct date clause
-  if(is.null(date)){
-    date <- Sys.Date() - 1
-  }
-  subquery <- date_clause(date)
-  
+  # Date subquery
+  clause_data <- wmf::date_clause(date)
+
   # Construct main query and run
   query <- paste("ADD JAR /home/ebernhardson/refinery-hive-0.0.21-SNAPSHOT.jar;
           CREATE TEMPORARY FUNCTION array_sum AS 'org.wikimedia.analytics.refinery.hive.ArraySumUDF';
@@ -38,7 +35,7 @@ main <- function(date = NULL){
                     WHEN ((ua_parser(useragent)['device_family'] = 'Spider') OR is_spider(useragent) OR is_wikimedia(useragent)) THEN 'TRUE'
                     ELSE 'FALSE' END AS is_automata
               FROM
-                  cirrussearchrequestset", subquery, ") data_source
+                  cirrussearchrequestset", clause_data$date_clause, ") data_source
           GROUP BY
               wiki_id,
               source,
@@ -46,7 +43,7 @@ main <- function(date = NULL){
               requested_suggestion,
               query_type,
               is_automata;")
-  data <- query_hive(query)
+  data <- wmf::query_hive(query)
   
   # Remove silly rows
   data <- data[!is.na(data$total),]
@@ -58,7 +55,7 @@ main <- function(date = NULL){
   data$has_suggestion <- (data$has_suggestion == "true")
   
   # Bind in the date
-  data <- as.data.table(cbind(data.frame(date = rep(date, nrow(data))), data))
+  data <- data.table::as.data.table(cbind(data.frame(date = rep(clause_data$date, nrow(data))), data))
   
   # Data by type
   by_type_with_automata <- data[, list(rate = round(sum(zero_results)/sum(total), 2)),
@@ -82,14 +79,14 @@ main <- function(date = NULL){
                                                  list(rate = round(sum(zero_results)/sum(total), 2)),
                                                  by = c("date")]
 
-  conditional_write(by_type_with_automata, file.path(base_path, "cirrus_query_breakdowns_with_automata.tsv"))
-  conditional_write(by_type_no_automata, file.path(base_path, "cirrus_query_breakdowns_no_automata.tsv"))
+  wmf::write_conditional(by_type_with_automata, file.path(base_path, "cirrus_query_breakdowns_with_automata.tsv"))
+  wmf::write_conditional(by_type_no_automata, file.path(base_path, "cirrus_query_breakdowns_no_automata.tsv"))
 
-  conditional_write(overall_data_with_automata, file.path(base_path, "cirrus_query_aggregates_with_automata.tsv"))
-  conditional_write(overall_data_no_automata, file.path(base_path, "cirrus_query_aggregates_no_automata.tsv"))
+  wmf::write_conditional(overall_data_with_automata, file.path(base_path, "cirrus_query_aggregates_with_automata.tsv"))
+  wmf::write_conditional(overall_data_no_automata, file.path(base_path, "cirrus_query_aggregates_no_automata.tsv"))
 
-  conditional_write(suggestion_data_with_automata, file.path(base_path, "cirrus_suggestion_breakdown_with_automata.tsv"))
-  conditional_write(suggestion_data_no_automata, file.path(base_path, "cirrus_suggestion_breakdown_no_automata.tsv"))
+  wmf::write_conditional(suggestion_data_with_automata, file.path(base_path, "cirrus_suggestion_breakdown_with_automata.tsv"))
+  wmf::write_conditional(suggestion_data_no_automata, file.path(base_path, "cirrus_suggestion_breakdown_no_automata.tsv"))
 
   # Breakdown by Language and Project
   lang_proj <- polloi::parse_wikiid(data$wiki_id)
@@ -103,7 +100,11 @@ main <- function(date = NULL){
                                             total = sum(total)),
                                        by = c("date", "language", "project")]
   days_to_keep <- 30
-  conditional_rewrite(data_by_langproj_with_automata, file.path(base_path, "cirrus_langproj_breakdown_with_automata.tsv"), days_to_keep)
-  conditional_rewrite(data_by_langproj_no_automata, file.path(base_path, "cirrus_langproj_breakdown_no_automata.tsv"), days_to_keep)
+  wmf::write_conditional(data_by_langproj_with_automata,
+                         file.path(base_path, "cirrus_langproj_breakdown_with_automata.tsv"),
+                         days_to_keep)
+  wmf::write_conditional(data_by_langproj_no_automata,
+                         file.path(base_path, "cirrus_langproj_breakdown_no_automata.tsv"),
+                         days_to_keep)
   
 }

@@ -9,11 +9,8 @@ base_path <- paste0(write_root, "maps/")
 
 main <- function(date = NULL) {
 
-  # Date handling
-  if(is.null(date)){
-    date <- Sys.Date()-1
-  }
-  subquery <- date_clause(date)
+  # Date subquery
+  clause_data <- wmf::date_clause(date)
 
   # Get the per-user tile usage:
   query <- paste0("SELECT style, zoom, scale, format, user_id, cache, is_automata, country, COUNT(1) AS n
@@ -27,7 +24,7 @@ main <- function(date = NULL) {
                        cache_status AS cache,
                        geocoded_data['country_code'] AS country,
                        CASE WHEN agent_type = 'spider' THEN 'TRUE' ELSE 'FALSE' END AS is_automata
-                     FROM wmf.webrequest", subquery, "
+                     FROM wmf.webrequest", clause_data$date_clause, "
                        AND webrequest_source = 'maps'
                        AND http_status IN('200','304')
                        AND uri_path RLIKE '^/([^/]+)/([0-9]{1,2})/(-?[0-9]+)/(-?[0-9]+)(@([0-9]\\.?[0-9]?)x)?\\.([a-z]+)$'
@@ -35,12 +32,12 @@ main <- function(date = NULL) {
                    ) prepared
                    WHERE zoom != '' AND style != ''
                    GROUP BY style, zoom, scale, format, user_id, cache, is_automata, country;")
-  results <- query_hive(query)
+  results <- wmf::query_hive(query)
   
   # The zoom sometimes exceeds what we actually allow (18). Yuri said that's acceptable but we
   # enlarge the images, so they're not actually getting zoom level 21-26 tiles.
-  results$date <- date
-  output <- as.data.table(results[, union('date', names(results))])
+  results$date <- clause_data$date
+  output <- data.table::as.data.table(results[, union('date', names(results))])
   with_automata_output <- output[,list(users = length(user_id), total=sum(n), average = round(mean(n)), median = ceiling(median(n)),
                                        percentile95 = ceiling(quantile(n, 0.95)), percentile99 = ceiling(quantile(n, 0.99))),
                                  by= setdiff(names(output),c("n","user_id", "is_automata", "country"))]
@@ -59,11 +56,11 @@ main <- function(date = NULL) {
   user_output$users <- round(user_output$users/sum(user_output$users), 2)
   
   # Write out
-  conditional_write(with_automata_output, file.path(base_path, "tile_aggregates_with_automata.tsv"))
-  conditional_write(without_automata_output, file.path(base_path, "tile_aggregates_no_automata.tsv"))
-  conditional_write(user_output, file.path(base_path, "users_by_country.tsv"))
+  wmf::write_conditional(with_automata_output, file.path(base_path, "tile_aggregates_with_automata.tsv"))
+  wmf::write_conditional(without_automata_output, file.path(base_path, "tile_aggregates_no_automata.tsv"))
+  wmf::write_conditional(user_output, file.path(base_path, "users_by_country.tsv"))
   
   # Handle rolling window
-  conditional_rewrite(with_automata_output, file.path(base_path, "tile_aggregates_with_automata_rolling.tsv"))
-  conditional_rewrite(without_automata_output, file.path(base_path, "tile_aggregates_no_automata_rolling.tsv"))
+  wmf::rewrite_conditional(with_automata_output, file.path(base_path, "tile_aggregates_with_automata_rolling.tsv"))
+  wmf::rewrite_conditional(without_automata_output, file.path(base_path, "tile_aggregates_no_automata_rolling.tsv"))
 }
