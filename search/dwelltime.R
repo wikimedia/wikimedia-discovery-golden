@@ -17,7 +17,7 @@ main <- function(date = NULL, table = "TestSearchSatisfaction2_14098806"){
     date <- as.Date(data$timestamp[1])
   }
 
-  dwell_data <- ortiz::dwell_time(data = data, ids = "session_id", timestamps = "timestamp", dwell_threshold = 10)
+  dwell_data <- ortiz::dwell_time(data = data, id_col = "session_id", ts_col = "timestamp", dwell_threshold = 10)
   
   # Turn it into a data.frame we can write out conditionally, and then do that
   output <- data.frame(date = date, threshold_pass = sum(dwell_data)/length(dwell_data))
