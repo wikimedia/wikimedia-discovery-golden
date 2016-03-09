@@ -9,19 +9,11 @@ main <- function(date = NULL, table = "TestSearchSatisfaction2_14098806") {
   checkins <- c(0, 10, 20, 30, 40, 50, 60, 90, 120, 150, 180, 210, 240, 300, 360, 420)
   # ^ this will be used for figuring out the interval bounds for each check-in
   
-  # Ensure we have a date:
-  if(is.null(date)) {
-    date <- Sys.Date() - 1
-  }
-  
-  # Decide which table to query depending on the date:
-  if ( date < as.Date('2015-09-02') ) {
-    warning('No data exists prior to 09/02/2015')
-    return(invisible())
-  }
-  
   # Get data and format:
-  data <- wmf::build_query(fields = "SELECT * ", date = date, table = table)
+  data <- wmf::build_query(fields = "SELECT * ",
+                           date = date,
+                           table = table,
+                           conditionals = "event_subTest IS NULL")
   data <- data.table::as.data.table(data)
   data$timestamp <- lubridate::ymd_hms(data$timestamp)
   
