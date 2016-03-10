@@ -1,7 +1,7 @@
 # Per-file config:
 base_path <- paste0(write_root, "search/")
 
-main <- function(date = NULL, table = "TestSearchSatisfaction2_14098806"){
+main <- function(date = NULL, table = "TestSearchSatisfaction2_15357244"){
   
   # Retrieve data
   data <- wmf::build_query(fields = "
@@ -9,8 +9,11 @@ main <- function(date = NULL, table = "TestSearchSatisfaction2_14098806"){
                            timestamp",
                            date = date,
                            table = table,
-                           conditionals = "event_action IN('searchResultPage','visitPage') AND event_subTest IS NULL")
+                           conditionals = "event_action IN('searchResultPage','visitPage')
+                                           AND event_subTest IS NULL
+                                           AND event_source = 'fulltext'")
   data$timestamp <- lubridate::ymd_hms(data$timestamp)
+  data <- data[order(data$session_id, data$timestamp), ]
   
   # Generate the data
   if(is.null(date)){

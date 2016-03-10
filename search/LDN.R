@@ -4,7 +4,7 @@
 # Per-file config:
 base_path <- paste0(write_root, "search/")
 
-main <- function(date = NULL, table = "TestSearchSatisfaction2_14098806") {
+main <- function(date = NULL, table = "TestSearchSatisfaction2_15357244") {
   
   checkins <- c(0, 10, 20, 30, 40, 50, 60, 90, 120, 150, 180, 210, 240, 300, 360, 420)
   # ^ this will be used for figuring out the interval bounds for each check-in
@@ -13,18 +13,14 @@ main <- function(date = NULL, table = "TestSearchSatisfaction2_14098806") {
   data <- wmf::build_query(fields = "SELECT * ",
                            date = date,
                            table = table,
-                           conditionals = "event_subTest IS NULL")
+                           conditionals = "event_subTest IS NULL
+                                           AND event_source = 'fulltext'")
   data <- data.table::as.data.table(data)
   data$timestamp <- lubridate::ymd_hms(data$timestamp)
   
-  # Backwards-compatibility:
-  if ( table == "TestSearchSatisfaction2_14098806" ) {
-    data.table::setnames(data, "event_pageViewId", "event_pageId")
-  }
-  
   # Treat each individual search session as its own thing, rather than belonging
   #   to a set of other search sessions by the same user.
-  page_visits <- plyr::ddply(data, .(event_searchSessionId, event_pageId),
+  page_visits <- plyr::ddply(data, .(event_searchSessionId, event_pageViewId),
                              function(session) {
                                if (!all(c('visitPage', 'checkin') %in% session$event_action)) {
                                  return(NULL)
