@@ -8,11 +8,11 @@ main <- function(date = NULL){
   clause_data <- wmf::date_clause(date)
 
   # Write query and run it
-  query <- paste0("ADD JAR /home/ironholds/refinery-hive-0.0.21-SNAPSHOT.jar;
+  query <- paste0("ADD JAR /home/bearloga/Code/analytics-refinery-jars/refinery-hive.jar;
                   CREATE TEMPORARY FUNCTION is_external_search AS
                   'org.wikimedia.analytics.refinery.hive.IsExternalSearchUDF';
                   CREATE TEMPORARY FUNCTION classify_referer AS
-                  'org.wikimedia.analytics.refinery.hive.RefererClassifyUDF';
+                  'org.wikimedia.analytics.refinery.hive.SmartReferrerClassifierUDF';
                   CREATE TEMPORARY FUNCTION get_engine AS
                   'org.wikimedia.analytics.refinery.hive.IdentifySearchEngineUDF';
                   USE wmf;
@@ -32,7 +32,8 @@ main <- function(date = NULL){
   results <- wmf::query_hive(query)
   
   # Sanitise the resulting data
-  results <- results[!is.na(results$pageviews), ]
+  results <- results[!is.na(results$pageviews) & results$search_engine != "unknown", ]
+  results <- results[!(results$referer_class == "external (search engine)" & results$search_engine == "none"), ]
   results$date <- clause_data$date
   results <- results[, c("date", "is_search", "referer_class", "search_engine", "pageviews")]
   results$is_search <- results$is_search == "true"
