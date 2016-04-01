@@ -21,7 +21,7 @@ main <- function(date = NULL){
                     classify_referer(referer) AS referer_class,
                     get_engine(referer) as search_engine,
                     COUNT(*) AS pageviews
-                  FROM webrequest", clause_data$date_clause, "
+                  FROM webrequest ", clause_data$date_clause, "
                     AND webrequest_source = 'text'
                     AND content_type RLIKE('^text/html')
                     AND uri_host IN('www.wikipedia.org','wikipedia.org')

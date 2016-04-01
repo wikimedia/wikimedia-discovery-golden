@@ -22,7 +22,7 @@ main <- function(date = NULL){
                      get_engine(referer) as search_engine,
                      access_method,
                      COUNT(*) AS pageviews
-                   FROM webrequest", clause_data$date_clause, "
+                   FROM webrequest ", clause_data$date_clause, "
                      AND webrequest_source = 'text' AND is_pageview = true
                      AND access_method IN('desktop','mobile web')
                    GROUP BY
