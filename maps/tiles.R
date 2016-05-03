@@ -13,7 +13,7 @@ main <- function(date = NULL) {
   clause_data <- wmf::date_clause(date)
 
   # Get the per-user tile usage:
-  query <- paste0("SELECT style, zoom, scale, format, user_id, cache, is_automata, country, COUNT(1) AS n
+  query <- paste("SELECT style, zoom, scale, format, user_id, cache, is_automata, country, COUNT(1) AS n
                    FROM (
                      SELECT
                        REGEXP_EXTRACT(uri_path, '^/([^/]+)/([0-9]{1,2})/(-?[0-9]+)/(-?[0-9]+)(@([0-9]\\.?[0-9]?)x)?\\.([a-z]+)$', 1) AS style,
