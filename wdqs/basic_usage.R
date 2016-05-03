@@ -15,18 +15,18 @@ main <- function(date = NULL) {
   clause_data <- wmf::date_clause(date)
 
   # Write query and run it
-  query <- paste0("USE wmf;
-                   SELECT year, month, day, uri_path,
-                   UPPER(http_status IN('200','304')) as success,
-                   CASE WHEN agent_type = 'spider' THEN 'TRUE' ELSE 'FALSE' END AS is_automata,
-                   COUNT(*) AS n
-                   FROM webrequest",
+  query <- paste("USE wmf;
+                  SELECT year, month, day, uri_path,
+                  UPPER(http_status IN('200','304')) as success,
+                  CASE WHEN agent_type = 'spider' THEN 'TRUE' ELSE 'FALSE' END AS is_automata,
+                  COUNT(*) AS n
+                  FROM webrequest",
                   clause_data$date_clause,
-                  "AND webrequest_source = 'misc'
-                   AND uri_host = 'query.wikidata.org'
-                   AND uri_path IN('/', '/bigdata/namespace/wdq/sparql')
-                   GROUP BY year, month, day, uri_path, UPPER(http_status IN('200','304')),
-                   CASE WHEN agent_type = 'spider' THEN 'TRUE' ELSE 'FALSE' END;")
+                 "AND webrequest_source = 'misc'
+                  AND uri_host = 'query.wikidata.org'
+                  AND uri_path IN('/', '/bigdata/namespace/wdq/sparql')
+                  GROUP BY year, month, day, uri_path, UPPER(http_status IN('200','304')),
+                  CASE WHEN agent_type = 'spider' THEN 'TRUE' ELSE 'FALSE' END;")
   results <- wmf::query_hive(query)
 
   output <- data.frame(date = as.Date(paste(results$year, results$month, results$day, sep = "-")),
