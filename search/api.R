@@ -8,16 +8,16 @@ main <- function(date = NULL){
   clause_data <- wmf::date_clause(date)
 
   # Write query and run it
-  query <- paste0("ADD JAR /srv/deployment/analytics/refinery/artifacts/refinery-hive.jar;
-                   CREATE TEMPORARY FUNCTION search_classify AS
-                  'org.wikimedia.analytics.refinery.hive.SearchClassifierUDF';
-                   USE wmf;
-                   SELECT year, month, day, search_classify(uri_path, uri_query) AS event_type,
-                   COUNT(*) AS search_events
-                   FROM webrequest
-                  ", clause_data$date_clause,
-                  "AND webrequest_source = 'text' AND http_status = '200'
-                   GROUP BY year, month, day, search_classify(uri_path, uri_query);")
+  query <- paste("ADD JAR /home/bearloga/Code/analytics-refinery-jars/refinery-hive.jar;
+                  CREATE TEMPORARY FUNCTION search_classify AS
+                    'org.wikimedia.analytics.refinery.hive.SearchClassifierUDF';
+                  USE wmf;
+                  SELECT year, month, day,
+                    search_classify(uri_path, uri_query) AS event_type,
+                    COUNT(*) AS search_events
+                  FROM webrequest", clause_data$date_clause, "
+                    AND webrequest_source = 'text' AND http_status = '200'
+                  GROUP BY year, month, day, search_classify(uri_path, uri_query);")
   results <- wmf::query_hive(query)
 
   # Filter and reformat
