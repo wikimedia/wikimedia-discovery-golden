@@ -8,7 +8,7 @@ main <- function(date = NULL){
   clause_data <- wmf::date_clause(date)
 
   # Write query and run it
-  query <- paste("ADD JAR /home/bearloga/Code/analytics-refinery-jars/refinery-hive.jar;
+  query <- paste("ADD JAR /home/bearloga/Code/analytics-refinery-jars/refinery-hive-0.0.31-SNAPSHOT.jar;
                   CREATE TEMPORARY FUNCTION search_classify AS
                     'org.wikimedia.analytics.refinery.hive.SearchClassifierUDF';
                   USE wmf;
