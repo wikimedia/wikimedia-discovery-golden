@@ -1,7 +1,7 @@
 # Per-file config:
 base_path <- paste0(write_root, "search/")
 
-main <- function(date = NULL, table = "TestSearchSatisfaction2_15357244"){
+main <- function(date = NULL, table = "TestSearchSatisfaction2_15700292"){
   
   # Retrieve data
   data <- wmf::build_query(fields = "SELECT timestamp,
