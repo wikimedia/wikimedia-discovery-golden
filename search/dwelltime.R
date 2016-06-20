@@ -5,6 +5,7 @@ main <- function(date = NULL, table = "TestSearchSatisfaction2_15700292"){
   
   # Retrieve data
   data <- wmf::build_query(fields = "SELECT timestamp,
+                             event_uniqueId AS event_id,
                              event_searchSessionId AS session_id,
                              event_pageViewId AS page_id,
                              event_action AS action,
@@ -12,8 +13,9 @@ main <- function(date = NULL, table = "TestSearchSatisfaction2_15700292"){
                            date = date,
                            table = table,
                            conditionals = "event_action IN('searchResultPage','visitPage', 'checkin', 'click')
-                                           AND event_subTest IS NULL
+                                           AND (event_subTest IS NULL OR event_subTest IN ('null','baseline'))
                                            AND event_source = 'fulltext'")
+  data <- data[duplicated(data$event_id, fromLast = FALSE), ]; data$event_id <- NULL
   data$timestamp <- lubridate::ymd_hms(data$timestamp)
   data$action_id <- ifelse(data$action == "searchResultPage", 0, 1)
   

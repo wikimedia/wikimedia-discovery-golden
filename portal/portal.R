@@ -41,7 +41,6 @@ main <- function(date = NULL, table = "WikipediaPortal_14377354"){
   
   # Generate click breakdown
   data <- data[order(data$type, decreasing = FALSE),]
-  data <- data[!duplicated(data$session),]
   breakdown_data <- data[,j=list(events=.N),by = c("date","section_used")]
   
   # Generate by-country breakdown
