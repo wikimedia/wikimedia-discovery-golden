@@ -30,31 +30,31 @@ main <- function(date = NULL, table = "WikipediaPortal_14377354"){
       NULL
     }
   }, by = c("date","session")]
-  
+
   dwell_output <- data.frame(t(quantile(dwell_metric$V1, c(0.5, 0.95, 0.99))))
   dwell_output$date <- dwell_metric$date[1]
   names(dwell_output) <- c("Median", "95th percentile", "99th Percentile", "date")
   dwell_output <- dwell_output[,c(4,1:3)]
   
   # Generate clickthrough rate data
-  clickthrough_data <- data[,j=list(events=.N),by = c("date","type")]
+  clickthrough_data <- data[, j = list(events = .N), by = c("date","type")]
   
   # Generate click breakdown
   data <- data[order(data$type, decreasing = FALSE),]
-  breakdown_data <- data[,j=list(events=.N),by = c("date","section_used")]
+  breakdown_data <- data[,j = list(events = .N), by = c("date","section_used")]
   
   # Generate by-country breakdown
   countries <- c("US", "GB", "CA", "DE", "IN", "AU", "CN", "RU", "PH", "FR")
-  country_breakdown <- data[,j=list(events=.N), by = c("date", "country")]
+  country_breakdown <- data[,j = list(events = .N), by = c("date", "country")]
   others <- data.table::data.table(date = date,
                                    country = "Other",
                                    events = sum(country_breakdown$events[!country_breakdown$country %in% countries]))
   country_data <- rbind(country_breakdown[country_breakdown$country %in% countries,], others)
   country_data <- country_data[order(country_data$country, decreasing = TRUE),]
   country_data$country <- c("United States", "Russia", "Philippines", "Other", "India",
-                            "United Kingdom", "France", "Germany", "China", "Canada", 
+                            "United Kingdom", "France", "Germany", "China", "Canada",
                             "Australia")
-  
+
   # Get user agent data
   wmf::set_proxies() # To allow for the latest YAML to be retrieved.
   uaparser::update_regexes()
@@ -64,11 +64,31 @@ main <- function(date = NULL, table = "WikipediaPortal_14377354"){
   ua_data$percent <- round((ua_data$amount/sum(ua_data$amount))*100, 2)
   ua_data <- ua_data[ua_data$percent >= 0.5, c("date", "browser", "browser_major", "percent"), with = FALSE]
   data.table::setnames(ua_data, 3, "version")
+
+  # First visit clickthrough rates
+  possible_sections <- data.frame(section_used = c("no action", "primary links", "search",
+                                                   "secondary links", "other languages", "other projects"),
+                                  stringsAsFactors = FALSE)
+  first_visits <- as.data.frame(data) %>%
+    dplyr::group_by(session) %>%
+    dplyr::arrange(ts) %>%
+    dplyr::mutate(visit = cumsum(type == "landing")) %>%
+    dplyr::filter(visit == 1) %>%
+    dplyr::group_by(section_used) %>%
+    dplyr::summarize(sessions = n()) %>%
+    dplyr::mutate(proportion = round(sessions/sum(sessions), 4)) %>%
+    dplyr::select(-sessions) %>%
+    dplyr::right_join(possible_sections, by = "section_used") %>%
+    dplyr::mutate(proportion = ifelse(is.na(proportion), 0, proportion)) %>%
+    tidyr::spread(section_used, proportion) %>%
+    dplyr::mutate(date = date) %>%
+    dplyr::select(c(date, `no action`, `primary links`, `search`, `secondary links`, `other languages`, `other projects`))
   
   wmf::write_conditional(clickthrough_data, file.path(base_path, "clickthrough_rate.tsv"))
   wmf::write_conditional(breakdown_data, file.path(base_path, "clickthrough_breakdown.tsv"))
   wmf::write_conditional(dwell_output, file.path(base_path, "dwell_metrics.tsv"))
   wmf::write_conditional(country_data, file.path(base_path, "country_data.tsv"))
+  wmf::write_conditional(first_visits, file.path(base_path, "clickthrough_firstvisit.tsv"))
   wmf::write_conditional(ua_data, file.path(base_path, "user_agent_data.tsv"))
   
   return(invisible())
