@@ -8,7 +8,7 @@ main <- function(date = NULL){
   clause_data <- wmf::date_clause(date)
 
   # Write query and run it
-  query <- paste0("ADD JAR /home/bearloga/Code/analytics-refinery-jars/refinery-hive.jar;
+  query <- paste("ADD JAR /home/bearloga/Code/analytics-refinery-jars/refinery-hive.jar;
                   CREATE TEMPORARY FUNCTION is_external_search AS
                   'org.wikimedia.analytics.refinery.hive.IsExternalSearchUDF';
                   CREATE TEMPORARY FUNCTION classify_referer AS
@@ -21,10 +21,17 @@ main <- function(date = NULL){
                     classify_referer(referer) AS referer_class,
                     get_engine(referer) as search_engine,
                     COUNT(*) AS pageviews
-                  FROM webrequest ", clause_data$date_clause, "
-                    AND webrequest_source = 'text'
+                  FROM webrequest",
+                  clause_data$date_clause,
+                 "  AND webrequest_source = 'text'
                     AND content_type RLIKE('^text/html')
-                    AND uri_host IN('www.wikipedia.org','wikipedia.org')
+                    AND uri_host RLIKE('^(www\\.)?wikipedia.org/*$')
+                    AND (
+                      INSTR(uri_path, 'search-redirect.php') = 0
+                      OR
+                      NOT referer RLIKE('^(https?://www\\.)?wikipedia.org/+search-redirect.php')
+                    )
+                    AND NOT referer RLIKE('^http://localhost')
                   GROUP BY
                     is_external_search(referer),
                     classify_referer(referer),
