@@ -3,17 +3,19 @@ base_path <- paste0(write_root, "portal/")
 main <- function(date = NULL, table = "WikipediaPortal_14377354"){
   
   # Read
-  data <- wmf::build_query(fields = "SELECT SUBSTRING(timestamp, 1, 8) AS date,
-                           event_session_id AS session,
-                           event_country AS country,
-                           event_destination AS destination,
-                           event_event_type AS type,
-                           event_section_used AS section_used,
-                           timestamp AS ts,
-                           userAgent AS user_agent",
+  data <- wmf::build_query(fields = "
+                           SELECT SUBSTRING(timestamp, 1, 8) AS date,
+                             event_session_id AS session,
+                             UPPER(event_country) AS country,
+                             event_destination AS destination,
+                             event_event_type AS type,
+                             event_section_used AS section_used,
+                             timestamp AS ts,
+                             userAgent AS user_agent",
                            date = date,
                            table = table,
-                           conditionals = "((event_cohort IS NULL) OR (event_cohort IN ('null','baseline')))")
+                           conditionals = "((event_cohort IS NULL) OR (event_cohort IN ('null','baseline')))
+                             AND event_country != 'US'")
 
   # Sanitise
   data$section_used[is.na(data$section_used)] <- "no action"
@@ -43,17 +45,35 @@ main <- function(date = NULL, table = "WikipediaPortal_14377354"){
   data <- data[order(data$type, decreasing = FALSE),]
   breakdown_data <- data[,j = list(events = .N), by = c("date","section_used")]
   
-  # Generate by-country breakdown
-  countries <- c("US", "GB", "CA", "DE", "IN", "AU", "CN", "RU", "PH", "FR")
-  country_breakdown <- data[,j = list(events = .N), by = c("date", "country")]
-  others <- data.table::data.table(date = date,
-                                   country = "Other",
-                                   events = sum(country_breakdown$events[!country_breakdown$country %in% countries]))
-  country_data <- rbind(country_breakdown[country_breakdown$country %in% countries,], others)
-  country_data <- country_data[order(country_data$country, decreasing = TRUE),]
-  country_data$country <- c("United States", "Russia", "Philippines", "Other", "India",
-                            "United Kingdom", "France", "Germany", "China", "Canada",
-                            "Australia")
+  # Generate by-country breakdown with regional data for US
+  regions <- data.frame(abb = paste0("US:", c(as.character(state.abb), "DC")),
+                        # ^ need to verify that District of Columbia shows up as DC and not another abbreviation
+                        region = paste0("U.S. (", c(as.character(state.region), "South"), ")"),
+                        state = c(state.name, "District of Columbia"),
+                        stringsAsFactors = FALSE)
+  regions$region[regions$region == "U.S. (North Central)"] <- "U.S. (Midwest)"
+  regions$region[state.division == "Pacific"] <- "U.S. (Pacific)" # see https://phabricator.wikimedia.org/T136257#2399411
+  countries <- data.frame(abb = c(regions$abb, "GB", "CA",
+                                  "DE", "IN", "AU", "CN",
+                                  "RU", "PH", "FR"),
+                          name = c(regions$region, "United Kingdom", "Canada",
+                                   "Germany", "India", "Australia", "China",
+                                   "Russia", "Philippines", "France"),
+                          stringsAsFactors = FALSE)
+  ## BEGIN PROTOTYPE
+  # # This can be used to test out the processing code before https://gerrit.wikimedia.org/r/#/c/295572/ is merged.
+  # data$country[data$country == "US" & !is.na(data$country)] <- sample(unique(regions$abb), sum(data$country == "US", na.rm = TRUE), replace = TRUE)
+  ## END PROTOTYPE
+  country_data <- as.data.frame(data) %>%
+    dplyr::mutate(country = ifelse(country %in% countries$abb, country, "Other")) %>%
+    dplyr::left_join(countries, by = c("country" = "abb")) %>%
+    dplyr::mutate(name = ifelse(is.na(name), "Other", name)) %>%
+    dplyr::select(-country) %>% dplyr::rename(country = name) %>%
+    dplyr::group_by(country) %>%
+    dplyr::summarize(events = n()) %>%
+    dplyr::mutate(date = date) %>%
+    dplyr::select(c(date, country, events)) %>%
+    dplyr::arrange(desc(country))
 
   # Get user agent data
   wmf::set_proxies() # To allow for the latest YAML to be retrieved.
