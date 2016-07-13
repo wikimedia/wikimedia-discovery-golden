@@ -43,9 +43,8 @@ main <- function(date = NULL, table = "TestSearchSatisfaction2_15700292"){
   clickthroughs <- data[data$action %in% c("searchResultPage", "click"), {
     data.frame(clickthrough = any(action == "click", na.rm = TRUE))
   }, by = c("session_id", "page_id")]
-  event_data <- data.frame(date = date,
+  event_data <- data.frame(timestamp = date,
                            clickthroughs = sum(clickthroughs$clickthrough),
-                           "Form submissions" = NA,
                            "Result pages opened" = nrow(clickthroughs),
                            "search sessions" = length(unique(clickthroughs$session_id)),
                            check.names = FALSE)
@@ -101,7 +100,8 @@ main <- function(date = NULL, table = "TestSearchSatisfaction2_15700292"){
   threshold_passing_rate <- data.frame(date = date, threshold_pass = sum(dwell_data)/length(dwell_data))
   
   # Write out the results
-  wmf::write_conditional(event_data, file.path(base_path, "desktop_event_counts.tsv"))
+  wmf::write_conditional(tidyr::gather(event_data, "action", "events", -timestamp),
+                         file.path(base_path, "desktop_event_counts.tsv"))
   wmf::write_conditional(load_times, file.path(base_path, "desktop_load_times.tsv"))
   wmf::write_conditional(page_visit_survivorship, file.path(base_path, "sample_page_visit_ld.tsv"))
   wmf::write_conditional(threshold_passing_rate, file = file.path(base_path, "search_threshold_pass_rate.tsv"))
