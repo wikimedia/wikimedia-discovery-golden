@@ -36,14 +36,15 @@ main <- function(date = NULL, table = "WikipediaPortal_14377354"){
   dwell_output <- data.frame(t(quantile(dwell_metric$V1, c(0.5, 0.95, 0.99))))
   dwell_output$date <- dwell_metric$date[1]
   names(dwell_output) <- c("Median", "95th percentile", "99th Percentile", "date")
-  dwell_output <- dwell_output[,c(4,1:3)]
+  dwell_output <- dwell_output[, c(4, 1:3)]
   
   # Generate clickthrough rate data
   clickthrough_data <- data[, j = list(events = .N), by = c("date","type")]
   
   # Generate click breakdown
-  data <- data[order(data$type, decreasing = FALSE),]
-  breakdown_data <- data[,j = list(events = .N), by = c("date","section_used")]
+  data <- data[order(data$type, decreasing = FALSE), ]
+  data <- data[!duplicated(data$session), ]
+  breakdown_data <- data[, j = list(events = .N), by = c("date", "section_used")]
   
   # Generate by-country breakdown with regional data for US
   regions <- data.frame(abb = paste0("US:", c(as.character(state.abb), "DC")),
@@ -61,7 +62,7 @@ main <- function(date = NULL, table = "WikipediaPortal_14377354"){
                                    "Russia", "Philippines", "France"),
                           stringsAsFactors = FALSE)
   ## BEGIN PROTOTYPE
-  # # This can be used to test out the processing code before https://gerrit.wikimedia.org/r/#/c/295572/ is merged.
+  # This can be used to test out the processing code before https://gerrit.wikimedia.org/r/#/c/295572/ is merged.
   # data$country[data$country == "US" & !is.na(data$country)] <- sample(unique(regions$abb), sum(data$country == "US", na.rm = TRUE), replace = TRUE)
   ## END PROTOTYPE
   country_data <- as.data.frame(data) %>%
@@ -103,13 +104,13 @@ main <- function(date = NULL, table = "WikipediaPortal_14377354"){
     tidyr::spread(section_used, proportion) %>%
     dplyr::mutate(date = date) %>%
     dplyr::select(c(date, `no action`, `primary links`, `search`, `secondary links`, `other languages`, `other projects`))
-  
+
   wmf::write_conditional(clickthrough_data, file.path(base_path, "clickthrough_rate.tsv"))
   wmf::write_conditional(breakdown_data, file.path(base_path, "clickthrough_breakdown.tsv"))
   wmf::write_conditional(dwell_output, file.path(base_path, "dwell_metrics.tsv"))
   wmf::write_conditional(country_data, file.path(base_path, "country_data.tsv"))
   wmf::write_conditional(first_visits, file.path(base_path, "clickthrough_firstvisit.tsv"))
   wmf::write_conditional(ua_data, file.path(base_path, "user_agent_data.tsv"))
-  
+
   return(invisible())
 }
