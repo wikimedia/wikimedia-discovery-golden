@@ -41,6 +41,40 @@ main <- function(date = NULL, table = "WikipediaPortal_14377354"){
   # Generate clickthrough rate data
   clickthrough_data <- data[, j = list(events = .N), by = c("date","type")]
   
+  # Most common section clicked
+  most_common <- as.data.frame(data) %>%
+    dplyr::arrange(session, ts) %>%
+    dplyr::group_by(session) %>%
+    dplyr::mutate(visit = cumsum(type == "landing")) %>%
+    dplyr::filter(visit == 1) %>%
+    dplyr::filter(type == "clickthrough") %>%
+    dplyr::group_by(date, session, visit, section_used) %>%
+    dplyr::tally() %>%
+    dplyr::top_n(1, n) %>%
+    dplyr::ungroup() %>%
+    dplyr::group_by(date, section_used) %>%
+    dplyr::summarize(sessions = n()) %>%
+    dplyr::ungroup()
+  
+  # First visit clickthrough rates
+  possible_sections <- data.frame(section_used = c("no action", "primary links", "search",
+                                                   "secondary links", "other languages", "other projects"),
+                                  stringsAsFactors = FALSE)
+  first_visits <- as.data.frame(data) %>%
+    dplyr::arrange(session, ts) %>%
+    dplyr::group_by(session) %>%
+    dplyr::mutate(visit = cumsum(type == "landing")) %>%
+    dplyr::filter(visit == 1) %>%
+    dplyr::group_by(section_used) %>%
+    dplyr::summarize(sessions = n()) %>%
+    dplyr::mutate(proportion = round(sessions/sum(sessions), 4)) %>%
+    dplyr::select(-sessions) %>%
+    dplyr::right_join(possible_sections, by = "section_used") %>%
+    dplyr::mutate(proportion = ifelse(is.na(proportion), 0, proportion)) %>%
+    tidyr::spread(section_used, proportion) %>%
+    dplyr::mutate(date = data$date[1]) %>%
+    dplyr::select(c(date, `no action`, `primary links`, `search`, `secondary links`, `other languages`, `other projects`))
+  
   # Generate click breakdown
   data <- data[order(data$type, decreasing = FALSE), ]
   data <- data[!duplicated(data$session), ]
@@ -86,30 +120,12 @@ main <- function(date = NULL, table = "WikipediaPortal_14377354"){
   ua_data <- ua_data[ua_data$percent >= 0.5, c("date", "browser", "browser_major", "percent"), with = FALSE]
   data.table::setnames(ua_data, 3, "version")
 
-  # First visit clickthrough rates
-  possible_sections <- data.frame(section_used = c("no action", "primary links", "search",
-                                                   "secondary links", "other languages", "other projects"),
-                                  stringsAsFactors = FALSE)
-  first_visits <- as.data.frame(data) %>%
-    dplyr::group_by(session) %>%
-    dplyr::arrange(ts) %>%
-    dplyr::mutate(visit = cumsum(type == "landing")) %>%
-    dplyr::filter(visit == 1) %>%
-    dplyr::group_by(section_used) %>%
-    dplyr::summarize(sessions = n()) %>%
-    dplyr::mutate(proportion = round(sessions/sum(sessions), 4)) %>%
-    dplyr::select(-sessions) %>%
-    dplyr::right_join(possible_sections, by = "section_used") %>%
-    dplyr::mutate(proportion = ifelse(is.na(proportion), 0, proportion)) %>%
-    tidyr::spread(section_used, proportion) %>%
-    dplyr::mutate(date = date) %>%
-    dplyr::select(c(date, `no action`, `primary links`, `search`, `secondary links`, `other languages`, `other projects`))
-
   wmf::write_conditional(clickthrough_data, file.path(base_path, "clickthrough_rate.tsv"))
+  wmf::write_conditional(most_common, file.path(base_path, "most_common_per_visit.tsv"))
+  wmf::write_conditional(first_visits, file.path(base_path, "clickthrough_firstvisit.tsv"))
   wmf::write_conditional(breakdown_data, file.path(base_path, "clickthrough_breakdown.tsv"))
   wmf::write_conditional(dwell_output, file.path(base_path, "dwell_metrics.tsv"))
   wmf::write_conditional(country_data, file.path(base_path, "country_data.tsv"))
-  wmf::write_conditional(first_visits, file.path(base_path, "clickthrough_firstvisit.tsv"))
   wmf::write_conditional(ua_data, file.path(base_path, "user_agent_data.tsv"))
 
   return(invisible())
