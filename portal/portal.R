@@ -53,7 +53,7 @@ main <- function(date = NULL, table = "WikipediaPortal_14377354"){
     dplyr::top_n(1, n) %>%
     dplyr::ungroup() %>%
     dplyr::group_by(date, section_used) %>%
-    dplyr::summarize(sessions = n()) %>%
+    dplyr::summarize(visits = n()) %>%
     dplyr::ungroup()
   
   # First visit clickthrough rates
