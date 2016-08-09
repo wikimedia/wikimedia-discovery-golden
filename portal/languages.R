@@ -30,6 +30,15 @@ main <- function(date = NULL, table = "WikipediaPortal_14377354"){
   # Extract the prefix
   data$prefix <- sub("^https?://(.*)\\.wikipedia\\.org.*", "\\1", data$destination)
   
+  # Update the internal dataset of prefixes and languages
+  if (lubridate::wday(lubridate::today(), label = TRUE, abbr = FALSE) == "Friday") {
+    polloi::update_prefixes()
+  }
+  
+  # Only keep the data with valid prefixes
+  data <- data[data$prefix %in% polloi::get_prefixes()$prefix,,]
+  
+  # Aggregate
   data <- data[order(data$date, data$prefix),
                list(
                  clicks = .N, sessions = length(unique(session)),
