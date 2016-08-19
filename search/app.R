@@ -3,18 +3,29 @@ base_path <- paste0(write_root, "search/")
 
 # Retrieves data for the mobile web stuff we care about, drops it in the aggregate-datasets directory. Should be run on stat1002, /not/ on the datavis machine.
 
-main <- function(date = NULL, table = "MobileWikiAppSearch_10641988"){
+main <- function(date = NULL){
 
   # Retrieve data using the query builder in ./common.R
-  data <- wmf::build_query(fields = "SELECT SUBSTRING(timestamp, 1, 8) AS date,
+  data <- rbind(wmf::build_query(fields = "SELECT SUBSTRING(timestamp, 1, 8) AS date,
                            CASE event_action WHEN 'click' THEN 'clickthroughs'
                            WHEN 'start' THEN 'search sessions'
                            WHEN 'results' THEN 'Result pages opened' END AS action,
                            event_timeToDisplayResults AS load_time,
                            userAgent",
                            date = date,
-                           table = table,
-                           conditionals = "event_action IN ('click','start','results')")
+                           table = "MobileWikiAppSearch_10641988",
+                           conditionals = "event_action IN ('click','start','results')"),
+                wmf::build_query(fields = "SELECT SUBSTRING(timestamp, 1, 8) AS date,
+                           CASE event_action WHEN 'click' THEN 'clickthroughs'
+                           WHEN 'start' THEN 'search sessions'
+                           WHEN 'results' THEN 'Result pages opened' END AS action,
+                           event_timeToDisplayResults AS load_time,
+                           userAgent",
+                           date = date,
+                           table = "MobileWikiAppSearch_15729321",
+                           conditionals = "event_action IN ('click','start','results')"))
+  # See https://phabricator.wikimedia.org/T143447 for more info on why we're combining
+  # events from these two different schema revisions.
   data <- data.table::as.data.table(data)
   data$date <- lubridate::ymd(data$date)
   data$platform[grepl(x = data$userAgent, pattern = "Android", fixed = TRUE)] <- "Android"
