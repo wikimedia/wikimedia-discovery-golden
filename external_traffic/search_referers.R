@@ -28,7 +28,7 @@ main <- function(date = NULL){
                    GROUP BY
                      is_external_search(referer), classify_referer(referer),
                      get_engine(referer), access_method;")
-  results <- wmf::query_hive(query)
+  results <- wmf::query_hive(query, override_jars = TRUE)
   
   # Sanitise the resulting data
   results <- results[!is.na(results$pageviews) & results$search_engine != "unknown", ]
@@ -36,6 +36,8 @@ main <- function(date = NULL){
   results$date <- clause_data$date
   results <- results[, c("date", "is_search", "referer_class", "search_engine", "access_method", "pageviews")]
   results$is_search <- results$is_search == "true"
+  results <- results[!(results$is_search & results$referer_class == "unknown"), ]
+  results <- results[order(!results$is_search, results$referer_class, results$search_engine, results$access_method), ]
   
   # Write out
   wmf::write_conditional(results, file.path(base_path, "referer_data.tsv"))

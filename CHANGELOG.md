@@ -1,6 +1,19 @@
 # Change Log (Patch Notes)
 All notable changes to this project will be documented in this file.
 
+## 2016/08/25
+- Uses the [new override_jars](https://gerrit.wikimedia.org/r/#/c/306720/) argument in `wmf::query_hive()` to ensure latest JARs are used
+- Removed former team member [Oliver Keyes](https://meta.wikimedia.org/wiki/User:Okeyes_(WMF)) as a maintainer
+
+## 2016/08/23
+- Updated Wikipedia.org Portal pageview definition
+
+## 2016/08/19
+- Combine MobileWikiAppSearch revisions
+
+## 2016/08/08
+- Count clicks by language (from Wikipedia.org Portal to Wikipedias)
+
 ## 2016/03/07
 - Refactor to rely exclusively on the "wmf" library for internally developed code rather than
 "olivr"
