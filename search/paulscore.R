@@ -30,7 +30,7 @@ GROUP BY date, event_source;") # cat(query) if you want to copy and paste into M
   data <- wmf::mysql_read(query, "log")
   
   # Report
-  wmf::write_conditional(paul_scores, file.path(base_path, "paulscore_approximations.tsv"))
+  wmf::write_conditional(data, file.path(base_path, "paulscore_approximations.tsv"))
   
   return(invisible())
 }
