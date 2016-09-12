@@ -28,6 +28,7 @@ FROM (
 GROUP BY date, event_source;") # cat(query) if you want to copy and paste into MySQL CLI
   # See https://phabricator.wikimedia.org/T144424 for more details.
   data <- wmf::mysql_read(query, "log")
+  data$date <- lubridate::ymd(data$date)
   
   # Report
   wmf::write_conditional(data, file.path(base_path, "paulscore_approximations.tsv"))
