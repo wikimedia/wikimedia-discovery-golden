@@ -20,7 +20,7 @@ main <- function(date = NULL){
                     is_external_search(referer) AS is_search,
                     classify_referer(referer) AS referer_class,
                     get_engine(referer) as search_engine,
-                    COUNT(*) AS pageviews
+                    COUNT(1) AS pageviews
                   FROM webrequest",
                   clause_data$date_clause,
                  "  AND webrequest_source = 'text'
@@ -32,6 +32,9 @@ main <- function(date = NULL){
                       NOT referer RLIKE('^(https?://www\\.)?wikipedia.org/+search-redirect.php')
                     )
                     AND NOT referer RLIKE('^http://localhost')
+                    AND agent_type = 'user'
+                    AND referer_class != 'unknown'
+                    AND http_status IN('200', '304')
                   GROUP BY
                     is_external_search(referer),
                     classify_referer(referer),
