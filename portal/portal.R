@@ -1,6 +1,6 @@
 base_path <- paste0(write_root, "portal/")
 
-main <- function(date = NULL, table = "WikipediaPortal_14377354"){
+main <- function(date = NULL, table = "WikipediaPortal_15890769"){
   
   # Read
   data <- wmf::build_query(fields = "
@@ -15,7 +15,7 @@ main <- function(date = NULL, table = "WikipediaPortal_14377354"){
                            date = date,
                            table = table,
                            conditionals = "((event_cohort IS NULL) OR (event_cohort IN ('null','baseline')))
-                             AND event_country != 'US'")
+                             AND event_country != 'US' AND event_event_type IN('landing', 'clickthrough')")
 
   # Sanitise
   data$section_used[is.na(data$section_used)] <- "no action"
