@@ -14,7 +14,7 @@ main <- function(date = NULL, table = "WikipediaPortal_15890769"){
                            table = table,
                            conditionals = "((event_cohort IS NULL) OR (event_cohort IN ('null','baseline')))
                            AND event_country != 'US'
-                           AND NOT INSTR(event_destination, 'translate.googleusercontent.com')")
+                           AND (NOT INSTR(event_destination, 'translate.googleusercontent.com') OR event_destination IS NULL)")
   
   # Sanitise
   data$date <- as.Date(lubridate::ymd(data$date))
@@ -24,7 +24,7 @@ main <- function(date = NULL, table = "WikipediaPortal_15890769"){
   
   # Extract the prefix
   data$prefix <- sub("^https?://(.*)\\.wikipedia\\.org.*", "\\1", data$destination)
-  data$prefix[data$section_used == "search" && grepl("search-redirect.php", data$destination, fixed = TRUE)] <- data$selected_language
+  data$prefix[data$section_used == "search" & grepl("search-redirect.php", data$destination, fixed = TRUE)] <- data$selected_language[data$section_used == "search" & grepl("search-redirect.php", data$destination, fixed = TRUE)]
   
   # Update the internal dataset of prefixes and languages
   if (lubridate::wday(lubridate::today(), label = TRUE, abbr = FALSE) == "Friday") {
