@@ -46,7 +46,6 @@ main <- function(date = NULL, table = "WikipediaPortal_15890769"){
     dplyr::arrange(session, ts) %>%
     dplyr::group_by(session) %>%
     dplyr::mutate(visit = cumsum(type == "landing")) %>%
-    dplyr::filter(visit == 1) %>%
     dplyr::filter(type == "clickthrough") %>%
     dplyr::group_by(date, session, visit, section_used) %>%
     dplyr::tally() %>%
@@ -75,19 +74,25 @@ main <- function(date = NULL, table = "WikipediaPortal_15890769"){
     dplyr::mutate(date = data$date[1]) %>%
     dplyr::select(c(date, `no action`, `primary links`, `search`, `secondary links`, `other languages`, `other projects`))
   
-  # Generate click breakdown
-  data <- data[order(data$type, decreasing = FALSE), ]
-  data <- data[!duplicated(data$session), ]
-  breakdown_data <- data[, j = list(events = .N), by = c("date", "section_used")]
+  # Generate click breakdown (last action)
+  breakdown_data <- data %>%
+    dplyr::arrange(ts) %>%
+    dplyr::filter(!duplicated(session, fromLast = TRUE)) %>%
+    dplyr::group_by(date, section_used) %>%
+    dplyr::summarize(events = n()) %>%
+    data.table::as.data.table()
   
   # Generate by-country breakdown with regional data for US
-  regions <- data.frame(abb = paste0("US:", c(as.character(state.abb), "DC")),
+  data("ISO_3166_1", package = "ISOcodes")
+  us_other_abb <- c("AS", "GU", "MP", "PR", "VI")
+  us_other_mask <- match(us_other_abb, ISO_3166_1$Alpha_2)
+  regions <- data.frame(abb = c(paste0("US:", c(as.character(state.abb), "DC")), us_other_abb),
                         # ^ need to verify that District of Columbia shows up as DC and not another abbreviation
-                        region = paste0("U.S. (", c(as.character(state.region), "South"), ")"),
-                        state = c(state.name, "District of Columbia"),
+                        region = paste0("U.S. (", c(as.character(state.region), "South", rep("Other",5)), ")"),
+                        state = c(state.name, "District of Columbia", ISO_3166_1$Name[us_other_mask]),
                         stringsAsFactors = FALSE)
   regions$region[regions$region == "U.S. (North Central)"] <- "U.S. (Midwest)"
-  regions$region[state.division == "Pacific"] <- "U.S. (Pacific)" # see https://phabricator.wikimedia.org/T136257#2399411
+  regions$region[c(state.division == "Pacific", rep(FALSE, 5))] <- "U.S. (Pacific)" # see https://phabricator.wikimedia.org/T136257#2399411
   countries <- data.frame(abb = c(regions$abb, "GB", "CA",
                                   "DE", "IN", "AU", "CN",
                                   "RU", "PH", "FR"),
@@ -110,6 +115,71 @@ main <- function(date = NULL, table = "WikipediaPortal_15890769"){
     dplyr::select(c(date, country, events)) %>%
     dplyr::arrange(desc(country))
 
+  # Experimental: Generate all countries breakdown
+  all_countries <- data.frame(abb = c(regions$abb, ISO_3166_1$Alpha_2[-us_other_mask]),
+                          name = c(regions$region, ISO_3166_1$Name[-us_other_mask]),
+                          stringsAsFactors = FALSE)
+  data_w_countryname <- as.data.frame(data) %>%
+    dplyr::mutate(country = ifelse(country %in% all_countries$abb, country, "Other")) %>%
+    dplyr::left_join(all_countries, by = c("country" = "abb")) %>%
+    dplyr::mutate(name = ifelse(is.na(name), "Other", name)) %>%
+    dplyr::select(-country) %>% dplyr::rename(country = name)
+
+  ctr_visit <- data_w_countryname %>%
+    dplyr::arrange(session, ts) %>%
+    dplyr::group_by(session) %>%
+    dplyr::mutate(visit = cumsum(type == "landing")) %>%
+    dplyr::group_by(date, country, session, visit) %>%
+    dplyr::summarize(dummy_clt = sum(type=="clickthrough")>1) %>%
+    dplyr::group_by(country) %>%
+    dplyr::summarize(n_visit = n(), ctr_visit = sum(dummy_clt)/n())
+  ctr_session <- data_w_countryname %>%
+    dplyr::group_by(date, country, session) %>%
+    dplyr::summarize(dummy_clt = sum(type=="clickthrough")>1) %>%
+    dplyr::group_by(country) %>%
+    dplyr::summarize(n_session = n(), ctr_session = sum(dummy_clt)/n()) 
+  all_country_data <- data_w_countryname %>%
+    dplyr::group_by(country) %>%
+    dplyr::summarize(events = n(), ctr = sum(type=="clickthrough")/n()) %>%
+    dplyr::mutate(date = date) %>%
+    dplyr::select(c(date, country, events, ctr)) %>%
+    dplyr::arrange(desc(country)) %>%
+    dplyr::left_join(ctr_visit, by="country") %>%
+    dplyr::left_join(ctr_session, by="country")
+  
+  # Last action by country
+  last_action_country <- data_w_countryname %>%
+    dplyr::arrange(ts) %>%
+    dplyr::filter(!duplicated(session, fromLast = TRUE)) %>%
+    dplyr::group_by(date, section_used, country) %>%
+    dplyr::summarize(events = n()) %>%
+    dplyr::mutate(prop = events/sum(events))
+
+  # Most common section clicked by country
+  most_common_country <- data_w_countryname %>%
+    dplyr::arrange(session, ts) %>%
+    dplyr::group_by(session) %>%
+    dplyr::mutate(visit = cumsum(type == "landing")) %>%
+    dplyr::filter(type == "clickthrough") %>%
+    dplyr::group_by(date, country, session, visit, section_used) %>%
+    dplyr::tally() %>%
+    dplyr::top_n(1, n) %>%
+    dplyr::ungroup() %>%
+    dplyr::group_by(date, section_used, country) %>%
+    dplyr::summarize(visits = n()) %>%
+    dplyr::mutate(prop = visits/sum(visits)) %>%
+    dplyr::ungroup()
+
+  # First visit clickthrough rates by country
+  first_visits_country <- data_w_countryname %>%
+    dplyr::arrange(session, ts) %>%
+    dplyr::group_by(session) %>%
+    dplyr::mutate(visit = cumsum(type == "landing")) %>%
+    dplyr::filter(visit == 1) %>%
+    dplyr::group_by(date, section_used, country) %>%
+    dplyr::summarize(sessions = n()) %>%
+    dplyr::mutate(proportion = sessions/sum(sessions))
+
   # Get user agent data
   wmf::set_proxies() # To allow for the latest YAML to be retrieved.
   uaparser::update_regexes()
@@ -127,6 +197,12 @@ main <- function(date = NULL, table = "WikipediaPortal_15890769"){
   wmf::write_conditional(dwell_output, file.path(base_path, "dwell_metrics.tsv"))
   wmf::write_conditional(country_data, file.path(base_path, "country_data.tsv"))
   wmf::write_conditional(ua_data, file.path(base_path, "user_agent_data.tsv"))
+
+  days_to_keep <- 60
+  wmf::rewrite_conditional(all_country_data, file.path(base_path, "all_country_data.tsv"), days_to_keep)
+  wmf::rewrite_conditional(last_action_country, file.path(base_path, "last_action_country.tsv"), days_to_keep)
+  wmf::rewrite_conditional(most_common_country, file.path(base_path, "most_common_country.tsv"), days_to_keep)
+  wmf::rewrite_conditional(first_visits_country, file.path(base_path, "first_visits_country.tsv"), days_to_keep)
 
   return(invisible())
 }
