@@ -132,12 +132,12 @@ main <- function(date = NULL, table = "WikipediaPortal_15890769"){
     dplyr::group_by(date, country, session, visit) %>%
     dplyr::summarize(dummy_clt = sum(type=="clickthrough")>1) %>%
     dplyr::group_by(country) %>%
-    dplyr::summarize(n_visit = n(), ctr_visit = sum(dummy_clt)/n())
+    dplyr::summarize(n_visit = n(), ctr_visit = round(sum(dummy_clt)/n(), 4))
   ctr_session <- data_w_countryname %>%
     dplyr::group_by(date, country, session) %>%
     dplyr::summarize(dummy_clt = sum(type=="clickthrough")>1) %>%
     dplyr::group_by(country) %>%
-    dplyr::summarize(n_session = n(), ctr_session = sum(dummy_clt)/n()) 
+    dplyr::summarize(n_session = n(), ctr_session = round(sum(dummy_clt)/n(), 4)) 
   all_country_data <- data_w_countryname %>%
     dplyr::group_by(country) %>%
     dplyr::summarize(events = n(), ctr = round(sum(type=="clickthrough")/n(), 4)) %>%
