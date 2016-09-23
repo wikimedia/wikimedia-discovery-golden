@@ -153,7 +153,8 @@ main <- function(date = NULL, table = "WikipediaPortal_15890769"){
     dplyr::filter(!duplicated(session, fromLast = TRUE)) %>%
     dplyr::group_by(date, section_used, country) %>%
     dplyr::summarize(events = n()) %>%
-    dplyr::mutate(proportion = round(events/sum(events), 4))
+    dplyr::mutate(proportion = round(events/sum(events), 4)) %>%
+    dplyr::ungroup()
 
   # Most common section clicked by country
   most_common_country <- data_w_countryname %>%
@@ -178,7 +179,8 @@ main <- function(date = NULL, table = "WikipediaPortal_15890769"){
     dplyr::filter(visit == 1) %>%
     dplyr::group_by(date, section_used, country) %>%
     dplyr::summarize(sessions = n()) %>%
-    dplyr::mutate(proportion = round(sessions/sum(sessions), 4))
+    dplyr::mutate(proportion = round(sessions/sum(sessions), 4)) %>%
+    dplyr::ungroup()
 
   # Get user agent data
   wmf::set_proxies() # To allow for the latest YAML to be retrieved.
