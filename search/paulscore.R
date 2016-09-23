@@ -18,7 +18,7 @@ FROM (
     event_source,
     event_searchSessionId,
     ", paste0("SUM(IF(event_action = 'click', POW(0.", 1:9, ", event_position), 0)) / SUM(IF(event_action = 'searchResultPage', 1, 0)) AS pow_", 1:9, collapse = ",\n    "), "
-  FROM TestSearchSatisfaction2_15700292
+  FROM TestSearchSatisfaction2_15922352
   WHERE
     LEFT(timestamp, 8) = '", date, "'
     AND event_action IN ('searchResultPage', 'click')
