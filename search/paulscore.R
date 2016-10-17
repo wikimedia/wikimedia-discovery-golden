@@ -10,23 +10,25 @@ main <- function(date = NULL) {
   date <- gsub(x = date, pattern = "-", replacement = "")
   
   query <- paste0("SELECT
-  date, event_source,
-  ", paste0("ROUND(SUM(pow_", 1:9,")/COUNT(1), 3) AS pow_", 1:9, collapse = ",\n  "), "
-FROM (
-  SELECT
-    LEFT(timestamp, 8) AS date,
-    event_source,
-    event_searchSessionId,
-    ", paste0("SUM(IF(event_action = 'click', POW(0.", 1:9, ", event_position), 0)) / SUM(IF(event_action = 'searchResultPage', 1, 0)) AS pow_", 1:9, collapse = ",\n    "), "
-  FROM TestSearchSatisfaction2_15922352
-  WHERE
-    LEFT(timestamp, 8) = '", date, "'
-    AND event_action IN ('searchResultPage', 'click')
-    AND (event_subTest IS NULL OR event_subTest IN ('null','baseline'))
-  GROUP BY date, event_source, event_searchSessionId
-) AS pows
-GROUP BY date, event_source;") # cat(query) if you want to copy and paste into MySQL CLI
+    date, event_source,
+    ", paste0("ROUND(SUM(pow_", 1:9,")/COUNT(1), 3) AS pow_", 1:9, collapse = ",\n  "), "
+    FROM (
+      SELECT
+        LEFT(timestamp, 8) as date,
+        event_searchSessionId,
+        event_source,
+        ", paste0("SUM(IF(event_action = 'click', POW(0.", 1:9, ", event_position), 0)) / SUM(IF(event_action = 'searchResultPage', 1, 0)) AS pow_", 1:9, collapse = ",\n    "), "
+      FROM TestSearchSatisfaction2_15922352
+      WHERE
+        LEFT(timestamp, 8) = '", date, "'
+        AND event_action IN ('searchResultPage', 'click')
+        AND IF(event_source = 'autocomplete', event_inputLocation = 'header', TRUE)
+        AND IF(event_source = 'autocomplete' AND event_action = 'click', event_position >= 0, TRUE)
+        GROUP BY date, event_searchSessionId, event_source
+    ) AS pows
+    GROUP BY date, event_source;") # cat(query) if you want to copy and paste into MySQL CLI
   # See https://phabricator.wikimedia.org/T144424 for more details.
+  
   data <- wmf::mysql_read(query, "log")
   data$date <- lubridate::ymd(data$date)
   
