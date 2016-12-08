@@ -1,6 +1,16 @@
 # Change Log (Patch Notes)
 All notable changes to this project will be documented in this file.
 
+## 2016/12/??
+- Migrated codebase to Analytics' [Reportupdater infrastructure](https://wikitech.wikimedia.org/wiki/Analytics/Reportupdater)
+  - Rewrote certain scripts to be pure SQL
+  - Rewrote certain R+Hive scripts to be shell+Hive scripts
+  - See [T150915](https://phabricator.wikimedia.org/T150915) for more details on the migration
+- Updated [Readme](README.md) with complete setup instructions and descriptions of modules
+- Updated [CoC](CONDUCT.md) to [Contributor Covenant v1.4.0](http://contributor-covenant.org/version/1/4)
+- Added forecasting modules
+- Added testing utility
+
 ## 2016/08/25
 - Uses the [new override_jars](https://gerrit.wikimedia.org/r/#/c/306720/) argument in `wmf::query_hive()` to ensure latest JARs are used
 - Removed former team member [Oliver Keyes](https://meta.wikimedia.org/wiki/User:Okeyes_(WMF)) as a maintainer
@@ -9,14 +19,13 @@ All notable changes to this project will be documented in this file.
 - Updated Wikipedia.org Portal pageview definition
 
 ## 2016/08/19
-- Combine MobileWikiAppSearch revisions
+- Combine [MobileWikiAppSearch](https://meta.wikimedia.org/wiki/Schema:MobileWikiAppSearch) revisions
 
 ## 2016/08/08
 - Count clicks by language (from Wikipedia.org Portal to Wikipedias)
 
 ## 2016/03/07
-- Refactor to rely exclusively on the "wmf" library for internally developed code rather than
-"olivr"
+- Refactor to rely exclusively on the "[wmf](https://phabricator.wikimedia.org/diffusion/1821/)" library for internally developed code rather than "olivr"
 
 ## 2016/01/18
 - Adds quick backfilling through system command line

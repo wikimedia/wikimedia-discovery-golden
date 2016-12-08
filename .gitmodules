@@ -1,0 +1,3 @@
+[submodule "reportupdater"]
+	path = reportupdater
+	url = https://gerrit.wikimedia.org/r/analytics/reportupdater

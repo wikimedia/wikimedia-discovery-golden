@@ -1,0 +1,36 @@
+#!/bin/bash
+
+export HADOOP_HEAPSIZE=1024 && hive -e "USE wmf;
+WITH maps_users AS (
+  SELECT DISTINCT
+    '$1' AS date,
+    CONCAT(user_agent, client_ip) AS user_id,
+      CASE WHEN geocoded_data['country_code'] IN('RU', 'IT', 'US', 'UA', 'FR', 'IN', 'DE', 'ES', 'GB') THEN geocoded_data['country_code']
+           ELSE 'Other' END AS country
+    FROM webrequest
+    WHERE
+      webrequest_source = 'maps'
+      AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) >= '$1'
+      AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) < '$2'
+      AND http_status IN('200','304')
+      AND uri_path RLIKE '^/([^/]+)/([0-9]{1,2})/(-?[0-9]+)/(-?[0-9]+)(@([0-9]\\.?[0-9]?)x)?\\.([a-z]+)$'
+      AND uri_query <> '?loadtesting'
+),
+user_counts AS (
+  SELECT date, country, COUNT(1) AS users
+  FROM maps_users
+  GROUP BY date, country
+),
+total_users AS (
+  SELECT date, SUM(users) AS total
+  FROM user_counts
+  GROUP BY date
+)
+SELECT
+  uc.date AS date,
+  uc.country AS country,
+  ROUND(uc.users/tu.total, 3) AS users
+FROM user_counts uc
+LEFT JOIN total_users tu
+ON uc.date = tu.date;
+" 2> /dev/null | grep -v parquet.hadoop | grep -v WARN:

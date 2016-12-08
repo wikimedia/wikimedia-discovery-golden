@@ -1,0 +1,17 @@
+reports:
+    api_cirrus_arima:
+        granularity: days
+        starts: 2016-11-01
+        type: script
+    api_cirrus_bsts:
+        granularity: days
+        starts: 2016-11-01
+        type: script
+    zrr_overall_arima:
+        granularity: days
+        starts: 2016-11-01
+        type: script
+    zrr_overall_bsts:
+        granularity: days
+        starts: 2016-11-01
+        type: script

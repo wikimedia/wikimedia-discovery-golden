@@ -1,0 +1,3 @@
+#!/bin/bash
+
+Rscript modules/metrics/search/sample_page_visit_ld.R -d $1

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+Rscript modules/forecasts/forecast.R --date=$1 --metric=search_api_cirrus --model=BSTS

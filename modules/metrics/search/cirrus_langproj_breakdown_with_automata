@@ -1,0 +1,3 @@
+#!/bin/bash
+
+Rscript modules/metrics/search/cirrus_aggregates.R -d $1 -o langproj --include_automata

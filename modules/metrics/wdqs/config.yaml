@@ -1,0 +1,7 @@
+reports:
+    basic_usage:
+        description: Homepage visits, SPARQL & LDF endpoint requests
+        granularity: days
+        starts: 2015-08-15
+        funnel: true
+        type: script

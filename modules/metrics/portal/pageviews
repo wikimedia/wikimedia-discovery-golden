@@ -1,0 +1,3 @@
+#!/bin/bash
+
+Rscript modules/metrics/portal/pageviews.R -d $1

@@ -1,0 +1,18 @@
+#!/bin/bash
+
+hive -S -e "ADD JAR hdfs:///wmf/refinery/current/artifacts/refinery-hive.jar;
+CREATE TEMPORARY FUNCTION search_classify AS 'org.wikimedia.analytics.refinery.hive.SearchClassifierUDF';
+USE wmf;
+SELECT
+  '$1' AS date,
+  search_classify(uri_path, uri_query) AS api,
+  COUNT(*) AS calls
+FROM webrequest
+WHERE
+  webrequest_source = 'text'
+  AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) >= '$1'
+  AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) < '$2'
+  AND http_status = '200'
+  AND search_classify(uri_path, uri_query) IN('language', 'cirrus', 'prefix', 'geo', 'open')
+GROUP BY '$1', search_classify(uri_path, uri_query);
+" 2> /dev/null | grep -v parquet.hadoop | grep -v WARN:

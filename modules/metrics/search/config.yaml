@@ -1,0 +1,123 @@
+databases:
+    el:
+        host: analytics-store.eqiad.wmnet
+        port: 3306
+        creds_file: /etc/mysql/conf.d/statistics-private-client.cnf
+        db: log
+defaults:
+    db: el
+reports:
+    app_event_counts:
+        description: Clicks and other events by users searching on Android and iOS apps
+        granularity: days
+        starts: 2014-12-05
+        funnel: true
+        type: sql
+    app_load_times:
+        description: User-perceived load times when searching on Android and iOS apps
+        granularity: days
+        starts: 2014-12-05
+        funnel: true
+        type: script
+    invoke_source_counts:
+        description: How the user initiated their search session on the Android app
+        granularity: days
+        starts: 2016-07-28
+        funnel: true
+        type: sql
+    click_position_counts:
+        description: The position of the clicked search result on the Android app
+        granularity: days
+        starts: 2016-07-28
+        funnel: true
+        type: sql
+    mobile_event_counts:
+        description: Clicks and other events by users searching on mobile web
+        granularity: days
+        starts: 2015-06-11
+        funnel: true
+        type: sql
+    mobile_load_times:
+        description: User-perceived load times when searching on mobile web
+        granularity: days
+        starts: 2015-06-11
+        type: script
+    desktop_event_counts:
+        description: Clicks and other events by users searching on desktop
+        granularity: days
+        starts: 2015-04-14
+        funnel: true
+        type: script
+    desktop_load_times:
+        description: User-perceived load times when searching on desktop
+        granularity: days
+        starts: 2015-04-14
+        type: script
+    paulscore_approximations:
+        description: Relevancy of our desktop search as measured by [PaulScore](https://www.mediawiki.org/wiki/Wikimedia_Discovery/Search/Glossary#PaulScore)
+        granularity: days
+        starts: 2016-10-25
+        funnel: true
+        type: sql
+    sample_page_visit_ld:
+        description: How long users last on pages they arrived at from the search results page, computed like [median lethal dose in toxicology](https://en.wikipedia.org/wiki/Median_lethal_dose)
+        granularity: days
+        starts: 2015-09-02
+        type: script
+    search_api_usage:
+        description: Counts of calls made to our various APIs
+        granularity: days
+        starts: 2015-05-01
+        funnel: true
+        type: script
+    search_threshold_pass_rate:
+        description: Proportion of users having search sessions longer than a predetermined threshold (10s)
+        granularity: days
+        starts: 2015-09-02
+        type: script
+    cirrus_query_aggregates_no_automata:
+        description: Zero results rate (ZRR), excluding known bots/tools
+        granularity: days
+        starts: 2015-12-11
+        type: script
+    cirrus_query_aggregates_with_automata:
+        description: Overall zero results rate (ZRR)
+        granularity: days
+        starts: 2015-12-11
+        type: script
+    cirrus_query_breakdowns_no_automata:
+        description: Zero results rate (ZRR) broken down by full-text vs. prefix searches, excluding known bots/tools
+        granularity: days
+        starts: 2015-12-11
+        funnel: true
+        type: script
+    cirrus_query_breakdowns_with_automata:
+        description: Zero results rate (ZRR) broken down by full-text vs. prefix searches
+        granularity: days
+        starts: 2015-12-11
+        funnel: true
+        type: script
+    cirrus_suggestion_breakdown_no_automata:
+        description: Zero results rate (ZRR) of searches with suggestions, excluding known bots/tools
+        granularity: days
+        starts: 2015-12-11
+        type: script
+    cirrus_suggestion_breakdown_with_automata:
+        description: Zero results rate (ZRR) of searches with suggestions
+        granularity: days
+        starts: 2015-12-11
+        type: script
+    cirrus_langproj_breakdown_no_automata:
+        description: Zero results and total searches broken down by language-project pairs (e.g. German Wikiquote ZRR vs. French Wikibooks ZRR), excluding known bots/tools
+        granularity: days
+        starts: 2016-11-01
+        funnel: true
+        max_data_points: 30
+        type: script
+    cirrus_langproj_breakdown_with_automata:
+        description: Zero results and total searches broken down by language-project pairs (e.g. German Wikiquote ZRR vs. French Wikibooks ZRR)
+        granularity: days
+        starts: 2016-11-01
+        funnel: true
+        max_data_points: 30
+        type: script

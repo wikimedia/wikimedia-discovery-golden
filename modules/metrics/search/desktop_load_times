@@ -1,0 +1,3 @@
+#!/bin/bash
+
+Rscript modules/metrics/search/load_times.R -d $1 -p desktop

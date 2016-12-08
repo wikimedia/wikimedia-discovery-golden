@@ -1,0 +1,17 @@
+reports:
+    homepage_traffic_arima:
+        granularity: days
+        starts: 2016-11-01
+        type: script
+    homepage_traffic_bsts:
+        granularity: days
+        starts: 2016-11-01
+        type: script
+    sparql_usage_arima:
+        granularity: days
+        starts: 2016-11-01
+        type: script
+    sparql_usage_bsts:
+        granularity: days
+        starts: 2016-11-01
+        type: script

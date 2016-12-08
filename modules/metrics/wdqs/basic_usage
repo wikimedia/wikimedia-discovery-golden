@@ -1,0 +1,50 @@
+#!/bin/bash
+
+hive -S -e "USE wmf;
+SELECT
+  '$1' AS date,
+  uri_path AS path,
+  UPPER(http_status IN('200','304')) as http_success,
+  CASE
+    WHEN (
+      agent_type = 'user' AND (
+        user_agent RLIKE 'https?://'
+        OR INSTR(user_agent, 'www.') > 0
+        OR INSTR(user_agent, 'github') > 0
+        OR LOWER(user_agent) RLIKE '([a-z0-9._%-]+@[a-z0-9.-]+\.(com|us|net|org|edu|gov|io|ly|co|uk))'
+        OR (
+          user_agent_map['browser_family'] = 'Other'
+          AND user_agent_map['device_family'] = 'Other'
+          AND user_agent_map['os_family'] = 'Other'
+          )
+        )
+    ) OR agent_type = 'spider' THEN 'TRUE'
+    ELSE 'FALSE' END AS is_automata,
+  COUNT(*) AS events
+FROM webrequest
+WHERE
+  webrequest_source = 'misc'
+  AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) >= '$1'
+  AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) < '$2'
+  AND uri_host = 'query.wikidata.org'
+  AND uri_path IN('/', '/bigdata/namespace/wdq/sparql', '/bigdata/ldf')
+GROUP BY
+  '$1',
+  uri_path,
+  UPPER(http_status IN('200','304')),
+  CASE
+    WHEN (
+      agent_type = 'user' AND (
+        user_agent RLIKE 'https?://'
+        OR INSTR(user_agent, 'www.') > 0
+        OR INSTR(user_agent, 'github') > 0
+        OR LOWER(user_agent) RLIKE '([a-z0-9._%-]+@[a-z0-9.-]+\.(com|us|net|org|edu|gov|io|ly|co|uk))'
+        OR (
+          user_agent_map['browser_family'] = 'Other'
+          AND user_agent_map['device_family'] = 'Other'
+          AND user_agent_map['os_family'] = 'Other'
+          )
+        )
+    ) OR agent_type = 'spider' THEN 'TRUE'
+    ELSE 'FALSE' END;
+" 2> /dev/null | grep -v parquet.hadoop | grep -v WARN:

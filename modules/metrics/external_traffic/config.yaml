@@ -1,0 +1,7 @@
+reports:
+    referer_data:
+        description: Pageviews broken down by referrer class (e.g. internal vs external) and search engine
+        granularity: days
+        starts: 2015-10-01
+        funnel: true
+        type: script

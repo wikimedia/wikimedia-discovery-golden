@@ -1,0 +1,3 @@
+#!/bin/bash
+
+Rscript modules/metrics/portal/languages.R -d $1 -o switching

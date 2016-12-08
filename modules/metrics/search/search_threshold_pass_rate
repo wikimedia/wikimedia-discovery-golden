@@ -1,0 +1,3 @@
+#!/bin/bash
+
+Rscript modules/metrics/search/search_threshold_pass_rate.R -d $1

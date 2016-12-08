@@ -1,0 +1,3 @@
+#!/bin/bash
+
+Rscript modules/metrics/search/desktop_event_counts.R -d $1

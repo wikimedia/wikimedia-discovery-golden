@@ -1,0 +1,3 @@
+#!/bin/bash
+
+Rscript modules/metrics/portal/dwell_metrics.R -d $1
