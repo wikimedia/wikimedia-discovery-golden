@@ -21,8 +21,8 @@ do
 done
 
 # Forecasts (dependent on latest metrics)
-# for module in "search" "wdqs"
-# do
-#  echo "Running Reportupdater on ${module} forecasts..."
-#  reportupdater/update_reports.py "modules/forecasts/${module}" "/a/aggregate-datasets/discovery-forecasts/${module}"
-# done
+for module in "search" "wdqs"
+do
+ echo "Running Reportupdater on ${module} forecasts..."
+ reportupdater/update_reports.py "modules/forecasts/${module}" "/a/aggregate-datasets/discovery-forecasts/${module}"
+done

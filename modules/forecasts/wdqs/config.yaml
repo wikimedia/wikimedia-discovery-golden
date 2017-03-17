@@ -1,17 +1,21 @@
 reports:
     homepage_traffic_arima:
+        description: ARIMA-modelled forecasts of WDQS homepage traffic by non-automata users
         granularity: days
         starts: 2016-11-01
         type: script
     homepage_traffic_bsts:
+        description: BSTS-modelled forecasts of WDQS homepage traffic by non-automata users
         granularity: days
         starts: 2016-11-01
         type: script
     sparql_usage_arima:
+        description: ARIMA-modelled forecasts of WDQS SPARQL endpoint usage by non-automata
         granularity: days
         starts: 2016-11-01
         type: script
     sparql_usage_bsts:
+        description: BSTS-modelled forecasts of WDQS SPARQL endpoint usage by non-automata
         granularity: days
         starts: 2016-11-01
         type: script

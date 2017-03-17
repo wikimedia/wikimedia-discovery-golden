@@ -246,7 +246,7 @@ SELECT
   DATE('{from_timestamp}') AS date,
   ...,
   COUNT(*) AS events
-FROM <Schema_Revision>
+FROM {Schema_Revision}
 WHERE timestamp >= '{from_timestamp}' AND timestamp < '{to_timestamp}'
 GROUP BY date, ...;
 ```
@@ -403,10 +403,12 @@ When adding a new forecasting module, add a script-type report to the respective
 ```bash
 #!/bin/bash
 
-Rscript modules/forecasts/forecast.R --date=$1 --metric=[your forecasted metric] --model=[ARIMA [--bootstrap_ci]|BSTS]
+Rscript modules/forecasts/forecast.R --date=$2 --metric=[your forecasted metric] --model=[ARIMA [--bootstrap_ci]|BSTS]
 ```
 
 Change the `--metric` and `--model` arguments accordingly. The actual data-reading and metric-forecasting calls are in a switch statement in [modules/forecasts/forecast.R](modules/forecasts/forecast.R). Don't forget to add the forecasted metric to the `--metric` option's help text at the top of **forecast.R** and don't forget to subset the data after reading it in (e.g. `dplyr::filter(data, date < as.Date(opt$date))`)
+
+**Note** the `--date=$2` in there instead of `--date=$1`. This is because Reportupdater passes a *start date* and an *end date* to every script it runs, with the goal of generating a report for *start date*. However, with forecasting modules we're actually interested in generating a report for *end date* after observing the latest metric for *start date*.
 
 ## Additional Information
 
