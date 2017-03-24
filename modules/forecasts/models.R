@@ -1,11 +1,29 @@
-# .libPaths("/a/discovery/r-library")
-
 suppressPackageStartupMessages(suppressWarnings(suppressMessages({
   library(magrittr) # install.packages("tidyverse")
   library(xts) # install.packages("xts")
   library(bsts) # install.packages("bsts")
   library(forecast) # install.packages("forecast")
+  library(prophet) # install.packages("prophet")
 })))
+
+transforms <- list(
+  "none" = list(
+    to = identity,
+    from = identity
+  ),
+  "log" = list(
+    to = log10,
+    from = function(x) { return(10^x) }
+  ),
+  "logit" = list(
+    to = function(p) { return(log(p/(1-p))) },
+    from = function(x) { return(exp(x)/(exp(x)+1)) }
+  ),
+  "in millions" = list(
+    to = function(x) { return(x/1e6) },
+    from = function(x) { return(x*1e6) }
+  )
+)
 
 forecast_arima <- function(
   x, # a 1-column xts object
@@ -15,30 +33,14 @@ forecast_arima <- function(
   transformation = c("none", "log", "logit", "in millions")
 ) {
   if (is.null(arima_params)) {
-    arima_params <- list(order = c(0L, 0L, 0L),
-                         seasonal = list(order = c(0L, 0L, 0L), period = NA))
+    arima_params <- list(
+      order = c(0L, 0L, 0L),
+      seasonal = list(order = c(0L, 0L, 0L), period = NA)
+    )
   }
   if (!(transformation[1] %in% c("none", "log", "logit", "in millions"))) {
     stop("transformation must be one of: 'none', 'log', 'logit', 'in millions'")
   }
-  transforms <- list(
-    "none" = list(
-      to = identity,
-      from = identity
-    ),
-    "log" = list(
-      to = log10,
-      from = function(x) { return(10^x) }
-    ),
-    "logit" = list(
-      to = function(p) { return(log(p/(1-p))) },
-      from = function(x) { return(exp(x)/(exp(x)+1)) }
-    ),
-    "in millions" = list(
-      to = function(x) { return(x/1e6) },
-      from = function(x) { return(x*1e6) }
-    )
-  )
   transform <- transforms[[transformation[1]]]
   # Fit:
   fit <- arima(transform$to(x), order = arima_params$order, seasonal = arima_params$seasonal)
@@ -68,24 +70,6 @@ forecast_bsts <- function(
   if (!(transformation[1] %in% c("none", "log", "logit", "in millions"))) {
     stop("transformation must be one of: 'none', 'log', 'logit', 'in millions'")
   }
-  transforms <- list(
-    "none" = list(
-      to = identity,
-      from = identity
-    ),
-    "log" = list(
-      to = log10,
-      from = function(x) { return(10^x) }
-    ),
-    "logit" = list(
-      to = function(p) { return(log(p/(1-p))) },
-      from = function(x) { return(exp(x)/(exp(x)+1)) }
-    ),
-    "in millions" = list(
-      to = function(x) { return(x/1e6) },
-      from = function(x) { return(x*1e6) }
-    )
-  )
   transform <- transforms[[transformation[1]]]
   # Pre-processing because Some days may be missing, so this ensures that we
   # have something for every day, even if that something is a NA.
@@ -103,10 +87,12 @@ forecast_bsts <- function(
     ss <- AddAr(ss, y, lags = ar_lags)
   }
   # Fit:
-  model <- bsts(y, family = "gaussian",
-                state.specification = ss,
-                niter = burn_in + n_iter, seed = 0,
-                ping = 0)
+  model <- bsts(
+    y, family = "gaussian",
+    state.specification = ss,
+    niter = burn_in + n_iter,
+    seed = 0, ping = 0
+  )
   # Forecast:
   predicted <- predict(model, horizon = 1, burn = burn_in)
   # Post-processing:
@@ -119,6 +105,47 @@ forecast_bsts <- function(
     as.data.frame %>%
     round(3)
   names(output) <- c("point_est", "lower_80", "upper_80", "lower_95", "upper_95")
+  if (!is.data.frame(output)) {
+    stop("Output is not a data frame for some reason?!?")
+  }
+  # Return:
+  return(output)
+}
+
+forecast_prophet <- function(
+  x, # a 1-column xts object
+  n_iter = 500,
+  transformation = c("none", "log", "logit", "in millions")
+) {
+  if (!(transformation[1] %in% c("none", "log", "logit", "in millions"))) {
+    stop("transformation must be one of: 'none', 'log', 'logit', 'in millions'")
+  }
+  transform <- transforms[[transformation[1]]]
+  df <- data.frame(ds = zoo::index(x), y = transform$to(as.numeric(x)))
+  # Fit:
+  model <- prophet(
+    df,
+    weekly.seasonality = TRUE,
+    yearly.seasonality = TRUE,
+    mcmc.samples = n_iter
+  )
+  predicted_95 <- predict(
+      model,
+      df = data.frame(ds = tail(df$ds, 1) + 1),
+      interval_width = 0.95
+    ) %>%
+    .[, c("yhat_lower", "yhat_upper")] %>%
+    transform$from() %>%
+    set_colnames(c("lower_95", "upper_95"))
+  predicted_80 <- predict(
+      model,
+      df = data.frame(ds = tail(df$ds, 1) + 1),
+      interval_width = 0.80
+    ) %>%
+    .[, c("yhat", "yhat_lower", "yhat_upper")] %>%
+    transform$from() %>%
+    set_colnames(c("point_est", "lower_80", "upper_80"))
+  predicted <- cbind(predicted_80, predicted_95)
   if (!is.data.frame(output)) {
     stop("Output is not a data frame for some reason?!?")
   }
