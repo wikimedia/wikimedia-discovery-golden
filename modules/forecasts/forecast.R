@@ -12,7 +12,7 @@ option_list <- list(
                   * wdqs_sparql"),
   make_option("--model", default = NA, action = "store", type = "character",
               help = "Available: ARIMA, BSTS"),
-  make_option("--iters", default = 10000, action = "store", type = "numeric",
+  make_option("--iters", default = 5000, action = "store", type = "numeric",
               help = "Number of MCMC iterations to keep in BSTS models [default %default]"),
   make_option("--burnin", default = 1000, action = "store", type = "numeric",
               help = "Number of iterations to use as burn-in in BSTS models [default %default]")
@@ -39,8 +39,8 @@ if (is.na(opt$date) || is.na(opt$model) || is.na(opt$metric)) {
 source("modules/forecasts/models.R")
 
 check_dataset <- function(data) {
-  if (max(zoo::index(data)) != as.Date(opt$date) - 1) {
-    stop("Cannot forecast for ", opt$date, " because there is no data for ", format(as.Date(opt$date) - 1))
+  if (max(zoo::index(data)) != as.Date(opt$date)) {
+    stop("Cannot forecast for ", as.Date(opt$date) + 1, " because there is no data for ", fopt$date)
   } else {
     return(data)
   }
@@ -52,7 +52,7 @@ if (grepl("^wdqs_", opt$metric)) {
     # De-duplicate just in case there are any duplicates:
     dplyr::distinct(date, path, http_success, is_automata, .keep_all = TRUE) %>%
     dplyr::filter(http_success, !is_automata, path %in% c("/", "/bigdata/namespace/wdq/sparql", "/bigdata/ldf")) %>%
-    dplyr::filter(date < as.Date(opt$date)) %>%
+    dplyr::filter(date <= as.Date(opt$date)) %>%
     dplyr::select(c(date, path, events)) %>%
     tidyr::spread(path, events) %>%
     magrittr::set_colnames(c("date", "homepage", "ldf", "sparql")) %>%
@@ -65,7 +65,7 @@ output <- switch(
 
   "search_api_cirrus" = {
     api_usage <- read_data("discovery/search/search_api_usage.tsv", col_types = "Dci") %>%
-      dplyr::filter(date < as.Date(opt$date)) %>%
+      dplyr::filter(date <= as.Date(opt$date)) %>%
       dplyr::arrange(date, api) %>%
       dplyr::distinct(date, api, .keep_all = TRUE) %>%
       dplyr::filter(!is.na(api)) %>%
@@ -74,10 +74,10 @@ output <- switch(
       check_dataset
     if (opt$model == "ARIMA") {
       try(
-        forecast_arima(api_usage[, "cirrus"], arima_params = list(order = c(0, 1, 2), seasonal = list(order = c(2, 1, 1), period = 7)))
+        ceiling(forecast_arima(api_usage[, "cirrus"], arima_params = list(order = c(0, 1, 2), seasonal = list(order = c(2, 1, 1), period = 7))))
       )
     } else { # BSTS
-      forecast_bsts(api_usage[, "cirrus"], transformation = "log", ar_lags = 1, n_iter = opt$iters, burn_in = opt$burnin)
+      ceiling(forecast_bsts(api_usage[, "cirrus"], transformation = "log", ar_lags = 1, n_iter = opt$iters, burn_in = opt$burnin))
     }
   },
 
@@ -86,7 +86,7 @@ output <- switch(
       dplyr::filter(!is.na(rate)) %>%
       dplyr::arrange(date, rate) %>%
       dplyr::distinct(date, .keep_all = TRUE) %>%
-      dplyr::filter(date < as.Date(opt$date)) %>%
+      dplyr::filter(date <= as.Date(opt$date)) %>%
       { xts::xts(.[, -1], order.by = .$date) } %>%
       check_dataset
     if (opt$model == "ARIMA") {
@@ -101,20 +101,20 @@ output <- switch(
   "wdqs_homepage" = {
     if (opt$model == "ARIMA") {
       try(
-        forecast_arima(wdqs_usage[, "homepage"], transformation = "log", arima_params = list(order = c(1, 1, 1), seasonal = list(order = c(1, 0, 0), period = 7)))
+        ceiling(forecast_arima(wdqs_usage[, "homepage"], transformation = "log", arima_params = list(order = c(1, 1, 1), seasonal = list(order = c(1, 0, 0), period = 7))))
       )
     } else { # BSTS
-      forecast_bsts(wdqs_usage[, "homepage"], transformation = "log", ar_lags = 1, n_iter = opt$iters, burn_in = opt$burnin)
+      ceiling(forecast_bsts(wdqs_usage[, "homepage"], transformation = "log", ar_lags = 1, n_iter = opt$iters, burn_in = opt$burnin))
     }
   },
 
   "wdqs_sparql" = {
     if (opt$model == "ARIMA") {
       try(
-        forecast_arima(wdqs_usage[, "sparql"], transformation = "log", arima_params = list(order = c(1, 1, 2), seasonal = list(order = c(1, 0, 0), period = 7)))
+        ceiling(forecast_arima(wdqs_usage[, "sparql"], transformation = "log", arima_params = list(order = c(1, 1, 2), seasonal = list(order = c(1, 0, 0), period = 7))))
       )
     } else { # BSTS
-      forecast_bsts(wdqs_usage[, "sparql"], transformation = "log", ar_lags = 1, n_iter = opt$iters, burn_in = opt$burnin)
+      ceiling(forecast_bsts(wdqs_usage[, "sparql"], transformation = "log", ar_lags = 1, n_iter = opt$iters, burn_in = opt$burnin))
     }
   }
 
