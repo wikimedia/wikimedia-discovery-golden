@@ -3,14 +3,16 @@
 .libPaths("/a/discovery/r-library"); suppressPackageStartupMessages(library("optparse"))
 
 option_list <- list(
-  make_option(c("-d", "--date"), default = NA, action = "store", type = "character")
+  make_option(c("-d", "--date"), default = NA, action = "store", type = "character"),
+  make_option(c("-o", "--output"), default = "overall", action = "store",
+                help = "Available: [default %default], langproj")
 )
 
 # Get command line options, if help option encountered print help and exit,
 # otherwise if options not found on command line then set defaults:
 opt <- parse_args(OptionParser(option_list = option_list))
 
-if (is.na(opt$date)) {
+if (is.na(opt$date) || !(opt$output %in% c("overall", "langproj"))) {
   quit(save = "no", status = 1)
 }
 
@@ -23,6 +25,7 @@ query <- paste0("SELECT
   event_uniqueId AS event_id,
   event_searchSessionId AS session_id,
   event_pageViewId AS page_id,
+  wiki,
   event_action AS action
 FROM TestSearchSatisfaction2_", dplyr::if_else(as.Date(opt$date) < "2017-02-10", "15922352", "16270835"), "
 WHERE ", date_clause, "
@@ -41,10 +44,20 @@ results <- tryCatch(
 if (nrow(results) == 0) {
   # Here we make the script output tab-separated
   # column names, as required by Reportupdater:
-  output <- data.frame(
-    date = character(),
-    action = character(),
-    events = numeric()
+  output <- switch(
+    opt$output,
+    output = data.frame(
+      date = character(),
+      action = character(),
+      events = numeric()
+    ),
+    langproj = data.frame(
+      date = character(),
+      language = character(),
+      project = character(),
+      action = character(),
+      events = numeric()
+    )
   )
 } else {
   # De-duplicate, clean, and sort:
@@ -62,15 +75,41 @@ if (nrow(results) == 0) {
   # - 'Form submissions' (I don't think we can figure this out?)
   # - 'Result pages opened'
   # - 'search sessions'
-  clickthroughs <- results[, {
-    data.frame(clickthrough = any(action == "click", na.rm = TRUE))
-  }, by = c("session_id", "page_id")]
-  interim <- data.frame(date = opt$date,
-                       clickthroughs = sum(clickthroughs$clickthrough),
-                       "Result pages opened" = nrow(clickthroughs),
-                       "search sessions" = length(unique(clickthroughs$session_id)),
-                       check.names = FALSE, stringsAsFactors = FALSE)
-  output <- tidyr::gather(interim, "action", "events", -date)
+  # Output:
+  suppressWarnings(output <- switch(
+    opt$output,
+    overall = {
+      clickthroughs <- results[, {
+        data.frame(clickthrough = any(action == "click", na.rm = TRUE))
+      }, by = c("session_id", "page_id")]
+      interim <- data.frame(date = opt$date,
+                            clickthroughs = sum(clickthroughs$clickthrough),
+                            "Result pages opened" = nrow(clickthroughs),
+                            "search sessions" = length(unique(clickthroughs$session_id)),
+                            check.names = FALSE, stringsAsFactors = FALSE)
+      tidyr::gather(interim, "action", "events", -date)
+    },
+    langproj = {
+      wmf::set_proxies() # to allow for the latest prefixes to be retrieved.
+      # Update the internal dataset of prefixes and languages:
+      suppressMessages(try(polloi::update_prefixes(), silent = TRUE))
+      suppressMessages(lang_proj <- polloi::parse_wikiid(results$wiki))
+      # Remove accents because Reportupdater requires ASCII:
+      lang_proj$language <- stringi::stri_trans_general(lang_proj$language, "Latin-ASCII")
+      results <- cbind(results, lang_proj) # add parsed languages and projects to results.
+      clickthroughs <- results[, {
+        data.frame(clickthrough = any(action == "click", na.rm = TRUE))
+      }, by = c("date", "language", "project", "session_id", "page_id")]
+      interim <- clickthroughs[is.na(project) == FALSE, {
+        data.frame("clickthroughs" = sum(clickthrough),
+                   "Result pages opened" = length(page_id),
+                   "search sessions" = length(unique(session_id))
+        )
+      }, by = c("date", "language", "project")]
+      colnames(interim) <- gsub("\\.", " ", colnames(interim))
+      tidyr::gather(interim, "action", "events", -date, -language, -project)
+    }
+  ))
 }
 
 write.table(output, file = "", append = FALSE, sep = "\t", row.names = FALSE, quote = FALSE)
