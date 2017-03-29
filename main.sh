@@ -1,12 +1,5 @@
 #!/bin/bash
 
-# Check if modules/forecasts/forecast.R has execution permission for Reportupdater
-# (If it doesn't, then other R and shell scripts in modules/ probably don't either.)
-if [ `ls -l modules/forecasts | grep -e forecast.R | grep -e "-rwxrwxr-x" | wc -l` == "0" ]; then
-  echo "Warning: modules do not have execution permission; granting now..."
-  chmod +x -R modules/
-fi
-
 # Check if Reportupdater git submodule is set up
 if [ ! -f reportupdater/update_reports.py ]; then
   echo "Warning: Reportupdater needs to be initialized and updated..."
