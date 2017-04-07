@@ -11,12 +11,26 @@ option_list <- list(
                   * wdqs_homepage
                   * wdqs_sparql"),
   make_option("--model", default = NA, action = "store", type = "character",
-              help = "Available: ARIMA, BSTS"),
+              help = "Available: ARIMA, BSTS, Prophet"),
   make_option("--iters", default = 5000, action = "store", type = "numeric",
-              help = "Number of MCMC iterations to keep in BSTS models [default %default]"),
+              help = "Number of MCMC iterations to keep in BSTS models [default %default]
+                If using a Prophet model, then setting this to 0 will perform MAP estimation,
+                otherwise a full Bayesian inference is performed using Stan."),
   make_option("--burnin", default = 1000, action = "store", type = "numeric",
               help = "Number of iterations to use as burn-in in BSTS models [default %default]")
 )
+
+empty_forecasts <- function() {
+  return(data.frame(
+    date = opt$date,
+    point_est = numeric(),
+    lower_80 = numeric(),
+    upper_80 = numeric(),
+    lower_95 = numeric(),
+    upper_95 = numeric(),
+    stringsAsFactors = FALSE
+  ))
+}
 
 read_data <- function(path, ...) {
   if (grepl("^stat[0-9]{4}$", Sys.info()["nodename"])) {
@@ -40,7 +54,9 @@ source("modules/forecasts/models.R")
 
 check_dataset <- function(data) {
   if (max(zoo::index(data)) != as.Date(opt$date)) {
-    stop("Cannot forecast for ", as.Date(opt$date) + 1, " because there is no data for ", fopt$date)
+    warning("Cannot forecast for ", as.Date(opt$date) + 1, " because there is no data for ", opt$date)
+    write.table(empty_forecasts(), file = "", append = FALSE, sep = "\t", row.names = FALSE, quote = FALSE)
+    q(save = "no")
   } else {
     return(data)
   }
@@ -76,8 +92,10 @@ output <- switch(
       try(
         ceiling(forecast_arima(api_usage[, "cirrus"], arima_params = list(order = c(0, 1, 2), seasonal = list(order = c(2, 1, 1), period = 7))))
       )
-    } else { # BSTS
+    } else if (opt$model == "BSTS") {
       ceiling(forecast_bsts(api_usage[, "cirrus"], transformation = "log", ar_lags = 1, n_iter = opt$iters, burn_in = opt$burnin))
+    } else if (opt$model == "Prophet") {
+      ceiling(forecast_prophet(api_usage[, "cirrus"], transformation = "log", n_iter = opt$iters))
     }
   },
 
@@ -93,8 +111,10 @@ output <- switch(
       try(
         forecast_arima(zrr_overall[, "rate"], arima_params = list(order = c(2, 1, 2), seasonal = list(order = c(1, 0, 0), period = 7)))
       )
-    } else { # BSTS
+    } else if (opt$model == "BSTS") {
       forecast_bsts(zrr_overall[, "rate"], transformation = "logit", ar_lags = 1, n_iter = opt$iters, burn_in = opt$burnin)
+    } else if (opt$model == "Prophet") {
+      forecast_prophet(zrr_overall[, "rate"], transformation = "logit", n_iter = opt$iters)
     }
   },
 
@@ -103,8 +123,10 @@ output <- switch(
       try(
         ceiling(forecast_arima(wdqs_usage[, "homepage"], transformation = "log", arima_params = list(order = c(1, 1, 1), seasonal = list(order = c(1, 0, 0), period = 7))))
       )
-    } else { # BSTS
+    } else if (opt$model == "BSTS") {
       ceiling(forecast_bsts(wdqs_usage[, "homepage"], transformation = "log", ar_lags = 1, n_iter = opt$iters, burn_in = opt$burnin))
+    } else if (opt$model == "Prophet") {
+      ceiling(forecast_prophet(wdqs_usage[, "homepage"], transformation = "log", n_iter = opt$iters))
     }
   },
 
@@ -113,8 +135,10 @@ output <- switch(
       try(
         ceiling(forecast_arima(wdqs_usage[, "sparql"], transformation = "log", arima_params = list(order = c(1, 1, 2), seasonal = list(order = c(1, 0, 0), period = 7))))
       )
-    } else { # BSTS
+    } else if (opt$model == "BSTS") {
       ceiling(forecast_bsts(wdqs_usage[, "sparql"], transformation = "log", ar_lags = 1, n_iter = opt$iters, burn_in = opt$burnin))
+    } else if (opt$model == "Prophet") {
+      ceiling(forecast_prophet(wdqs_usage[, "sparql"], transformation = "log", n_iter = opt$iters))
     }
   }
 

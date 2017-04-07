@@ -11,7 +11,7 @@ dependencies <- c(
   "knitr",
 
   # For forecasting modules:
-  "bsts", "forecast",
+  "bsts", "forecast", "prophet",
 
   # For querying, etc.:
   "ISOcodes", "uaparser", "ortiz", "wmf", "polloi"

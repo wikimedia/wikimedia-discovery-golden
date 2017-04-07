@@ -9,6 +9,11 @@ reports:
         granularity: days
         starts: 2017-02-01
         type: script
+    api_cirrus_prophet:
+        description: Prophet-modelled forecasts of Cirrus API usage by non-automata users
+        granularity: days
+        starts: 2017-02-01
+        type: script
     zrr_overall_arima:
         description: ARIMA-modelled forecasts of zero results rate, excluding known bots/tools
         granularity: days
@@ -16,6 +21,11 @@ reports:
         type: script
     zrr_overall_bsts:
         description: BSTS-modelled forecasts of zero results rate, excluding known bots/tools
+        granularity: days
+        starts: 2017-02-01
+        type: script
+    zrr_overall_prophet:
+        description: Prophet-modelled forecasts of zero results rate, excluding known bots/tools
         granularity: days
         starts: 2017-02-01
         type: script

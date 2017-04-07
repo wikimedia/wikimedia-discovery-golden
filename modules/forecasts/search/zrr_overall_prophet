@@ -1,0 +1,3 @@
+#!/bin/bash
+
+Rscript modules/forecasts/forecast.R --date=$1 --metric=search_zrr_overall --model=Prophet --iters=0

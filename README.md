@@ -221,17 +221,21 @@ Rscript test.R --include_samples >> test_`date +%F_%T`.log.md 2>&1
     - [x] Cirrus API usage
         - [x] [ARIMA-modelled forecasts](modules/forecasts/search/api_cirrus_arima)
         - [x] [BSTS-modelled forecasts](modules/forecasts/search/api_cirrus_bsts)
+        - [x] [Prophet-modelled forecasts](modules/forecasts/search/api_cirrus_prophet)
     - [x] Overall zero results rate
         - [x] [ARIMA-modelled forecasts](modules/forecasts/search/zrr_overall_arima)
         - [x] [BSTS-modelled forecasts](modules/forecasts/search/zrr_overall_bsts)
+        - [x] [Prophet-modelled forecasts](modules/forecasts/search/zrr_overall_prophet)
   - Wikipedia.org Portal (planned)
   - [x] WDQS ([configuration](modules/forecasts/wdqs/config.yaml))
     - [x] Homepage traffic
         - [x] [ARIMA-modelled forecasts](modules/forecasts/wdqs/homepage_traffic_arima)
         - [x] [BSTS-modelled forecasts](modules/forecasts/wdqs/homepage_traffic_bsts)
+        - [x] [Prophet-modelled forecasts](modules/forecasts/wdqs/homepage_traffic_prophet)
     - [x] SPARQL endpoint usage
         - [x] [ARIMA-modelled forecasts](modules/forecasts/wdqs/sparql_usage_arima)
         - [x] [BSTS-modelled forecasts](modules/forecasts/wdqs/sparql_usage_bsts)
+        - [x] [Prophet-modelled forecasts](modules/forecasts/wdqs/sparql_usage_prophet)
   - Maps (planned)
   - External Traffic (planned)
 
@@ -384,7 +388,7 @@ write.table(results, file = "", append = FALSE, sep = "\t", row.names = FALSE, q
 
 Forecasting modules assume that all the data is current (hence why they are scheduled to run after the metrics modules in **main.sh**) and the forecast is made for the next day. For example, if backfilling a forecast for 2016-12-01, the model is fit using all available data up to and including 2016-11-30.
 
-There are two model wrappers in [modules/forecasts/models.R](modules/forecasts/models.R):
+There are three model wrappers in [modules/forecasts/models.R](modules/forecasts/models.R):
 - `forecast_arima()` which models the time series via [ARIMA](https://en.wikipedia.org/wiki/Autoregressive_integrated_moving_average) and accepts the following inputs:
     - `x`: a 1-column `xts` object
     - `arima_params`: a list w/ order & seasonal components
@@ -397,16 +401,20 @@ There are two model wrappers in [modules/forecasts/models.R](modules/forecasts/m
     - `burn_in`: number of MCMC iterations to throw away as burn-in,
     - `transformation`: a transformation to apply to the data ("none", "log", "logit", or "in millions"); the function back-transforms the predictions to the original scale depending on the transformation chosen
     - `ar_lags`: number of lags ("p") in the AR(p) process, omitted by default so an AR(p) state component is *NOT* added to the state specification
+- `forecast_prophet()` which models the time series via [Facebook's Core Data Science team](https://research.fb.com/category/data-science/)'s open source forecasting procedure [Prophet](https://facebookincubator.github.io/prophet/) and accepts the following inputs:
+    - `x`: a 1-column `xts` object
+    - `n_iter`: number of MCMC samples (default 500). If greater than 0, will perform a full Bayesian inference using [Stan](http://mc-stan.org/) with 4 chains. If 0, will do perform a fast [maximum a posteriori probability (MAP) estimatation](https://en.wikipedia.org/wiki/Maximum_a_posteriori_estimation).
+    - `transformation`: a transformation to apply to the data ("none", "log", "logit", or "in millions"); the function back-transforms the predictions to the original scale depending on the transformation chosen
 
 When adding a new forecasting module, add a script-type report to the respective **config.yaml** and use the following template for the script:
 
 ```bash
 #!/bin/bash
 
-Rscript modules/forecasts/forecast.R --date=$1 --metric=[your forecasted metric] --model=[ARIMA [--bootstrap_ci]|BSTS]
+Rscript modules/forecasts/forecast.R --date=$1 --metric=[your forecasted metric] --model=[ARIMA [--bootstrap_ci]|BSTS|Prophet]
 ```
 
-Change the `--metric` and `--model` arguments accordingly. The actual data-reading and metric-forecasting calls are in a switch statement in [modules/forecasts/forecast.R](modules/forecasts/forecast.R). Don't forget to add the forecasted metric to the `--metric` option's help text at the top of **forecast.R** and don't forget to subset the data after reading it in (e.g. `dplyr::filter(data, date < as.Date(opt$date))`)
+Change the `--metric` and `--model` arguments accordingly. The actual data-reading and metric-forecasting calls are in a switch statement in [modules/forecasts/forecast.R](modules/forecasts/forecast.R). Don't forget to add the forecasted metric to the `--metric` option's help text at the top of **forecast.R** and don't forget to subset the data after reading it in (e.g. `dplyr::filter(data, date <= as.Date(opt$date))`)
 
 ## Additional Information
 
