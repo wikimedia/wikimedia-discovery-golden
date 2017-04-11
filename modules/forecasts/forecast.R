@@ -109,12 +109,12 @@ output <- switch(
       check_dataset
     if (opt$model == "ARIMA") {
       try(
-        forecast_arima(zrr_overall[, "rate"], arima_params = list(order = c(2, 1, 2), seasonal = list(order = c(1, 0, 0), period = 7)))
+        round(forecast_arima(zrr_overall[, "rate"], arima_params = list(order = c(2, 1, 2), seasonal = list(order = c(1, 0, 0), period = 7))), 4)
       )
     } else if (opt$model == "BSTS") {
-      forecast_bsts(zrr_overall[, "rate"], transformation = "logit", ar_lags = 1, n_iter = opt$iters, burn_in = opt$burnin)
+      round(forecast_bsts(zrr_overall[, "rate"], transformation = "logit", ar_lags = 1, n_iter = opt$iters, burn_in = opt$burnin), 4)
     } else if (opt$model == "Prophet") {
-      forecast_prophet(zrr_overall[, "rate"], transformation = "logit", n_iter = opt$iters)
+      round(forecast_prophet(zrr_overall[, "rate"], transformation = "logit", n_iter = opt$iters), 4)
     }
   },
 
@@ -144,4 +144,4 @@ output <- switch(
 
 )
 
-write.table(cbind(date = opt$date, round(output, 4)), file = "", append = FALSE, sep = "\t", row.names = FALSE, quote = FALSE)
+write.table(cbind(date = opt$date, output), file = "", append = FALSE, sep = "\t", row.names = FALSE, quote = FALSE)
