@@ -22,7 +22,7 @@ option_list <- list(
 
 empty_forecasts <- function() {
   return(data.frame(
-    date = opt$date,
+    date = character(),
     point_est = numeric(),
     lower_80 = numeric(),
     upper_80 = numeric(),
