@@ -123,12 +123,16 @@ forecast_prophet <- function(
   transform <- transforms[[transformation[1]]]
   df <- data.frame(ds = zoo::index(x), y = transform$to(as.numeric(x)))
   # Fit:
+  temp_file <- tempfile()
+  sink(temp_file)
   model <- prophet(
     df,
     weekly.seasonality = TRUE,
     yearly.seasonality = TRUE,
     mcmc.samples = n_iter
   )
+  file.remove(temp_file)
+  sink(file = NULL)
   predicted_95 <- predict(
       model,
       df = data.frame(ds = tail(df$ds, 1) + 1),
