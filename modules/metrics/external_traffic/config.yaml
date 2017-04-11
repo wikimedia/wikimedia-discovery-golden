@@ -5,3 +5,9 @@ reports:
         starts: 2015-10-01
         funnel: true
         type: script
+    referer_nonbot_data:
+        description: User-made pageviews broken down by referrer class (e.g. internal vs external) and search engine
+        granularity: days
+        starts: 2017-02-14
+        funnel: true
+        type: script
