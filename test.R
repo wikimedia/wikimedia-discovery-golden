@@ -135,7 +135,7 @@ for (i in 1:nrow(reports)) {
       # When testing out BSTS forecasting, we need to intercept the command and specify iters and burnin options:
       command <- grep("^Rscript", readr::read_lines(reports$path[i]), value = TRUE)
       command <- paste0(command, " --iters=", opt$forecast_iters, " --burnin=", opt$forecast_burnin)
-      command <- sub("$2", opt$end_date, command, fixed = TRUE)
+      command <- sub("$1", opt$end_date, command, fixed = TRUE)
     } else {
       command <- paste("sh", reports$path[i], opt$start_date, opt$end_date)
     }

@@ -136,7 +136,8 @@ forecast_prophet <- function(
     ) %>%
     .[, c("yhat_lower", "yhat_upper")] %>%
     transform$from() %>%
-    set_colnames(c("lower_95", "upper_95"))
+    set_colnames(c("lower_95", "upper_95")) %>%
+    as.data.frame
   predicted_80 <- predict(
       model,
       df = data.frame(ds = tail(df$ds, 1) + 1),
@@ -144,11 +145,12 @@ forecast_prophet <- function(
     ) %>%
     .[, c("yhat", "yhat_lower", "yhat_upper")] %>%
     transform$from() %>%
-    set_colnames(c("point_est", "lower_80", "upper_80"))
+    set_colnames(c("point_est", "lower_80", "upper_80")) %>%
+    as.data.frame
   predicted <- cbind(predicted_80, predicted_95)
-  if (!is.data.frame(output)) {
+  if (!is.data.frame(predicted)) {
     stop("Output is not a data frame for some reason?!?")
   }
   # Return:
-  return(output)
+  return(predicted)
 }
