@@ -7,6 +7,9 @@ if [ ! -f reportupdater/update_reports.py ]; then
 fi
 
 # Metrics
+## Sync README
+rsync -c docs/discovery.md /a/aggregate-datasets/discovery/README.md
+## Run Reportupdater
 for module in "external_traffic" "wdqs" "maps" "search" "portal"
 do
  echo "Running Reportupdater on ${module} metrics..."
@@ -14,6 +17,9 @@ do
 done
 
 # Forecasts (dependent on latest metrics)
+## Sync README
+rsync -c docs/discovery-forecasts.md /a/aggregate-datasets/discovery-forecasts/README.md
+## Run Reportupdater
 for module in "search" "wdqs"
 do
  echo "Running Reportupdater on ${module} forecasts..."

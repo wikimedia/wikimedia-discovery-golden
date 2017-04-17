@@ -60,7 +60,7 @@ reports:
         funnel: true
         type: sql
     last_action_country:
-        description:
+        description: Last action performed on Wikipedia.org Portal per user session
         granularity: days
         starts: 2016-10-14
         max_data_points: 60
