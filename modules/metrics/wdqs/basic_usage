@@ -3,7 +3,7 @@
 hive -S -e "USE wmf;
 SELECT
   '$1' AS date,
-  uri_path AS path,
+  IF(uri_path = '/sparql', '/bigdata/namespace/wdq/sparql', uri_path) AS path,
   UPPER(http_status IN('200','304')) as http_success,
   CASE
     WHEN (
@@ -27,10 +27,10 @@ WHERE
   AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) >= '$1'
   AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) < '$2'
   AND uri_host = 'query.wikidata.org'
-  AND uri_path IN('/', '/bigdata/namespace/wdq/sparql', '/bigdata/ldf')
+  AND uri_path IN('/', '/bigdata/namespace/wdq/sparql', '/bigdata/ldf', '/sparql')
 GROUP BY
   '$1',
-  uri_path,
+  IF(uri_path = '/sparql', '/bigdata/namespace/wdq/sparql', uri_path) AS path,
   UPPER(http_status IN('200','304')),
   CASE
     WHEN (
