@@ -13,7 +13,7 @@ rsync -c docs/discovery.md /a/aggregate-datasets/discovery/README.md
 for module in "external_traffic" "wdqs" "maps" "search" "portal"
 do
  echo "Running Reportupdater on ${module} metrics..."
- reportupdater/update_reports.py "modules/metrics/${module}" "/a/aggregate-datasets/discovery/${module}"
+ nice ionice reportupdater/update_reports.py "modules/metrics/${module}" "/a/aggregate-datasets/discovery/${module}"
 done
 
 # Forecasts (dependent on latest metrics)
@@ -23,5 +23,5 @@ rsync -c docs/discovery-forecasts.md /a/aggregate-datasets/discovery-forecasts/R
 for module in "search" "wdqs"
 do
  echo "Running Reportupdater on ${module} forecasts..."
- reportupdater/update_reports.py "modules/forecasts/${module}" "/a/aggregate-datasets/discovery-forecasts/${module}"
+ nice -n 17 ionice -c 2 -n 6 reportupdater/update_reports.py "modules/forecasts/${module}" "/a/aggregate-datasets/discovery-forecasts/${module}"
 done

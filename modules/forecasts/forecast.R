@@ -12,11 +12,11 @@ option_list <- list(
                   * wdqs_sparql"),
   make_option("--model", default = NA, action = "store", type = "character",
               help = "Available: ARIMA, BSTS, Prophet"),
-  make_option("--iters", default = 5000, action = "store", type = "numeric",
+  make_option("--iters", default = 1000, action = "store", type = "numeric",
               help = "Number of MCMC iterations to keep in BSTS models [default %default]
                 If using a Prophet model, then setting this to 0 will perform MAP estimation,
                 otherwise a full Bayesian inference is performed using Stan."),
-  make_option("--burnin", default = 1000, action = "store", type = "numeric",
+  make_option("--burnin", default = 500, action = "store", type = "numeric",
               help = "Number of iterations to use as burn-in in BSTS models [default %default]")
 )
 
