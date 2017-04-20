@@ -30,7 +30,7 @@ WHERE
   AND uri_path IN('/', '/bigdata/namespace/wdq/sparql', '/bigdata/ldf', '/sparql')
 GROUP BY
   '$1',
-  IF(uri_path = '/sparql', '/bigdata/namespace/wdq/sparql', uri_path) AS path,
+  IF(uri_path = '/sparql', '/bigdata/namespace/wdq/sparql', uri_path),
   UPPER(http_status IN('200','304')),
   CASE
     WHEN (
