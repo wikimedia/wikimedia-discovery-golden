@@ -7,7 +7,7 @@ if [ ! -f reportupdater/update_reports.py ]; then
 fi
 
 # Sync README
-rsync -c docs/README.md /a/puiblished-datasets/discovery/README.md
+rsync -c docs/README.md /a/published-datasets/discovery/README.md
 
 # Metrics
 for module in "external_traffic" "wdqs" "maps" "search" "portal"
