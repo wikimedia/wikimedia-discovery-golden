@@ -1,6 +1,10 @@
 # Change Log (Patch Notes)
 All notable changes to this project will be documented in this file.
 
+## 2017/05/31
+- Changed where datasets are located
+- Updated public README
+
 ## 2016/12/??
 - Migrated codebase to Analytics' [Reportupdater infrastructure](https://wikitech.wikimedia.org/wiki/Analytics/Reportupdater)
   - Rewrote certain scripts to be pure SQL
