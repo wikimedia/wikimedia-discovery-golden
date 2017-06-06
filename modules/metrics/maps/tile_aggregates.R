@@ -27,41 +27,42 @@ date_clause <- as.character(as.Date(opt$date), format = "year = %Y AND month = %
 
 # Get the per-user tile usage:
 query <- paste0("SELECT
-                   date, style, zoom, scale, format, cache, user_id, is_automata, COUNT(1) AS n
-                 FROM (
-                   SELECT
-                     '", opt$date, "' AS date,
-                     REGEXP_EXTRACT(uri_path, '^/([^/]+)/([0-9]{1,2})/(-?[0-9]+)/(-?[0-9]+)(@([0-9]\\.?[0-9]?)x)?\\.([a-z]+)$', 1) AS style,
-                     REGEXP_EXTRACT(uri_path, '^/([^/]+)/([0-9]{1,2})/(-?[0-9]+)/(-?[0-9]+)(@([0-9]\\.?[0-9]?)x)?\\.([a-z]+)$', 2) AS zoom,
-                     COALESCE(REGEXP_EXTRACT(uri_path, '^/([^/]+)/([0-9]{1,2})/(-?[0-9]+)/(-?[0-9]+)(@([0-9]\\.?[0-9]?)x)?\\.([a-z]+)$', 6), '1') AS scale,
-                     REGEXP_EXTRACT(uri_path, '^/([^/]+)/([0-9]{1,2})/(-?[0-9]+)/(-?[0-9]+)(@([0-9]\\.?[0-9]?)x)?\\.([a-z]+)$', 7) AS format,
-                     CONCAT(user_agent, client_ip) AS user_id,
-                     cache_status AS cache,
-                     CASE
-                       WHEN (
-                         agent_type = 'user' AND (
-                           user_agent RLIKE 'https?://'
-                           OR INSTR(user_agent, 'www.') > 0
-                           OR INSTR(user_agent, 'github') > 0
-                           OR LOWER(user_agent) RLIKE '([a-z0-9._%-]+@[a-z0-9.-]+\\.(com|us|net|org|edu|gov|io|ly|co|uk))'
-                           OR (
-                             user_agent_map['browser_family'] = 'Other'
-                             AND user_agent_map['device_family'] = 'Other'
-                             AND user_agent_map['os_family'] = 'Other'
-                           )
-                         )
-                       ) OR agent_type = 'spider' THEN 'TRUE'
-                       ELSE 'FALSE' END AS is_automata
-                   FROM wmf.webrequest
-                   WHERE
-                     webrequest_source = 'maps'
-                     AND ", date_clause, "
-                     AND http_status IN('200','304')
-                     AND uri_path RLIKE '^/([^/]+)/([0-9]{1,2})/(-?[0-9]+)/(-?[0-9]+)(@([0-9]\\.?[0-9]?)x)?\\.([a-z]+)$'
-                     AND uri_query <> '?loadtesting'
-                 ) prepared
-                 WHERE zoom != '' AND style != ''
-                 GROUP BY date, style, zoom, scale, format, cache, is_automata, user_id;")
+  date, style, zoom, scale, format, cache, user_id, is_automata, COUNT(1) AS n
+FROM (
+  SELECT
+    '", opt$date, "' AS date,
+    REGEXP_EXTRACT(uri_path, '^/([^/]+)/([0-9]{1,2})/(-?[0-9]+)/(-?[0-9]+)(@([0-9]\\.?[0-9]?)x)?\\.([a-z]+)$', 1) AS style,
+    REGEXP_EXTRACT(uri_path, '^/([^/]+)/([0-9]{1,2})/(-?[0-9]+)/(-?[0-9]+)(@([0-9]\\.?[0-9]?)x)?\\.([a-z]+)$', 2) AS zoom,
+    COALESCE(REGEXP_EXTRACT(uri_path, '^/([^/]+)/([0-9]{1,2})/(-?[0-9]+)/(-?[0-9]+)(@([0-9]\\.?[0-9]?)x)?\\.([a-z]+)$', 6), '1') AS scale,
+    REGEXP_EXTRACT(uri_path, '^/([^/]+)/([0-9]{1,2})/(-?[0-9]+)/(-?[0-9]+)(@([0-9]\\.?[0-9]?)x)?\\.([a-z]+)$', 7) AS format,
+    CONCAT(user_agent, client_ip) AS user_id,
+    cache_status AS cache,
+    CASE
+      WHEN (
+        agent_type = 'user' AND (
+          user_agent RLIKE 'https?://'
+          OR INSTR(user_agent, 'www.') > 0
+          OR INSTR(user_agent, 'github') > 0
+          OR LOWER(user_agent) RLIKE '([a-z0-9._%-]+@[a-z0-9.-]+\\.(com|us|net|org|edu|gov|io|ly|co|uk))'
+          OR (
+            user_agent_map['browser_family'] = 'Other'
+            AND user_agent_map['device_family'] = 'Other'
+            AND user_agent_map['os_family'] = 'Other'
+          )
+        )
+      ) OR agent_type = 'spider' THEN 'TRUE'
+      ELSE 'FALSE' END AS is_automata
+  FROM wmf.webrequest
+  WHERE
+    webrequest_source = 'upload'
+    AND ", date_clause, "
+    AND uri_host = 'maps.wikimedia.org'
+    AND http_status IN('200', '304')
+    AND uri_path RLIKE '^/([^/]+)/([0-9]{1,2})/(-?[0-9]+)/(-?[0-9]+)(@([0-9]\\.?[0-9]?)x)?\\.([a-z]+)$'
+    AND uri_query <> '?loadtesting'
+) prepared
+WHERE zoom != '' AND style != ''
+GROUP BY date, style, zoom, scale, format, cache, is_automata, user_id;")
 
 # Fetch data from database using Hive:
 results <- tryCatch(
