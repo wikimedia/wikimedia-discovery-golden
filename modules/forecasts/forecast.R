@@ -35,7 +35,7 @@ empty_forecasts <- function() {
 read_data <- function(path, ...) {
   if (grepl("^stat[0-9]{4}$", Sys.info()["nodename"])) {
     # Use local datasets if run on stat1002
-    return(readr::read_tsv(file.path("/a/aggregate-datasets", path), ...))
+    return(readr::read_tsv(file.path("/a/published-datasets", path), ...))
   } else {
     # Download from datasets.wikimedia.org otherwise
     return(polloi::read_dataset(path, ...))
@@ -63,7 +63,7 @@ check_dataset <- function(data) {
 }
 
 if (grepl("^wdqs_", opt$metric)) {
-  wdqs_usage <- read_data("discovery/wdqs/basic_usage.tsv", col_types = "Dclli") %>%
+  wdqs_usage <- read_data("discovery/metrics/wdqs/basic_usage.tsv", col_types = "Dclli") %>%
     dplyr::arrange(date, path, http_success, is_automata, desc(events)) %>%
     # De-duplicate just in case there are any duplicates:
     dplyr::distinct(date, path, http_success, is_automata, .keep_all = TRUE) %>%
@@ -80,7 +80,7 @@ output <- switch(
   opt$metric,
 
   "search_api_cirrus" = {
-    api_usage <- read_data("discovery/search/search_api_usage.tsv", col_types = "Dci") %>%
+    api_usage <- read_data("discovery/metrics/search/search_api_usage.tsv", col_types = "Dci") %>%
       dplyr::filter(date <= as.Date(opt$date)) %>%
       dplyr::arrange(date, api) %>%
       dplyr::distinct(date, api, .keep_all = TRUE) %>%
@@ -100,7 +100,7 @@ output <- switch(
   },
 
   "search_zrr_overall" = {
-    zrr_overall <- read_data("discovery/search/cirrus_query_aggregates_no_automata.tsv", col_types = "Dd") %>%
+    zrr_overall <- read_data("discovery/metrics/search/cirrus_query_aggregates_no_automata.tsv", col_types = "Dd") %>%
       dplyr::filter(!is.na(rate)) %>%
       dplyr::arrange(date, rate) %>%
       dplyr::distinct(date, .keep_all = TRUE) %>%
