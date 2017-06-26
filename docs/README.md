@@ -8,7 +8,7 @@ retrieval codebase that executes daily and uses
 infrastructure. These datasets provide the metrics that are used by
 [Discovery's Dashboards](https://discovery.wmflabs.org/)
 
-Last updated on 31 May 2017
+Last updated on 26 June 2017
 
 Daily Metrics
 -------------
@@ -137,6 +137,10 @@ search/
 -   **cirrus\_langproj\_breakdown\_with\_automata.tsv**: Zero results
     and total searches broken down by language-project pairs (e.g.
     German Wikiquote ZRR vs. French Wikibooks ZRR)
+-   **sister\_search\_traffic.tsv**: Traffic to various wikis from
+    Wikipedia search results pages; broken up by language, destination
+    type (SERP vs not), and access method (desktop vs mobile web);
+    exlcudes known automata
 
 wdqs/
 -----

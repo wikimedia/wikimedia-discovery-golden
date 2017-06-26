@@ -156,3 +156,9 @@ reports:
         funnel: true
         max_data_points: 30
         type: script
+    sister_search_traffic:
+        description: Traffic to various wikis from Wikipedia search results pages; broken up by language, destination type (SERP vs not), and access method (desktop vs mobile web); exlcudes known automata
+        granularity: days
+        starts: 2017-06-01
+        funnel: true
+        type: script

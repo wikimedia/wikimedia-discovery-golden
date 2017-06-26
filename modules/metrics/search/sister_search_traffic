@@ -1,0 +1,55 @@
+#!/bin/bash
+
+hive -S -e "USE wmf;
+ADD JAR hdfs:///wmf/refinery/current/artifacts/refinery-hive.jar;
+CREATE TEMPORARY FUNCTION normalize_host AS 'org.wikimedia.analytics.refinery.hive.GetHostPropertiesUDF';
+WITH sister_search_pvs AS (
+  SELECT
+    TO_DATE(ts) AS `date`, access_method,
+    CASE normalized_host.project
+         WHEN 'commons' THEN 'wikimedia commons'
+         WHEN 'simple' THEN CONCAT('simple ', normalized_host.project_class)
+         WHEN 'species' THEN 'wikispecies'
+         ELSE normalized_host.project_class
+    END AS project,
+    IF(normalized_host.project IN('commons', 'meta', 'simple', 'incubator', 'species'), '',
+       IF(normalized_host.project = 'en', 'English', 'Other languages')) AS language,
+    -- flag for pageviews that are search results pages (e.g. if user clicked to see more results from a sister project):
+    (
+      page_id IS NULL
+      AND (
+        uri_path = '/wiki/Special:Search'
+        OR (
+          uri_path = '/w/index.php'
+          AND (
+            uri_query RLIKE '^\?search\='
+            OR INSTR(uri_query, '?title=Special:Search&search=') > 0
+          )
+        )
+      )
+    ) AS is_serp
+  FROM webrequest
+  WHERE
+    webrequest_source = 'text'
+    AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) >= '$1'
+    AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) < '$2'
+    AND is_pageview
+    AND referer_class = 'internal'
+    AND (
+      INSTR(referer, '/w/index.php?search=') > 0
+      OR INSTR(referer, '/wiki/Special:Search?search=') > 0
+    )
+    -- warning: comparing uri_host = PARSE_URL(referer, 'HOST') would mark 'en.m.wikipedia.org' as a sister of 'en.wikipedia.org'
+    AND normalize_host(PARSE_URL(referer, 'HOST')).project_class = 'wikipedia'
+    AND normalize_host(PARSE_URL(referer, 'HOST')).project_class != normalized_host.project_class
+    AND NOT normalized_host.project_class IN('mediawiki', 'wikimediafoundation', 'wikidata')
+    AND NOT normalized_host.project IN('meta', 'incubator')
+    -- keep commons.wikimedia.org and species.wikimedia.org:
+    AND NOT (normalized_host.project_class = 'wikimedia' AND NOT (normalized_host.project IN('commons', 'species')))
+)
+SELECT `date`, access_method, project, language, IF(is_serp, 'TRUE', 'FALSE') AS is_serp, COUNT(1) AS pageviews
+FROM sister_search_pvs
+GROUP BY `date`, access_method, project, language, IF(is_serp, 'TRUE', 'FALSE')
+ORDER BY `date`, access_method, project, language, is_serp
+LIMIT 10000;
+" 2> /dev/null | grep -v parquet.hadoop | grep -v WARN:
