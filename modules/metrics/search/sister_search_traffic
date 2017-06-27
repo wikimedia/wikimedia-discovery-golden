@@ -5,7 +5,7 @@ ADD JAR hdfs:///wmf/refinery/current/artifacts/refinery-hive.jar;
 CREATE TEMPORARY FUNCTION normalize_host AS 'org.wikimedia.analytics.refinery.hive.GetHostPropertiesUDF';
 WITH sister_search_pvs AS (
   SELECT
-    TO_DATE(ts) AS `date`, access_method,
+    '$1' AS date, access_method,
     CASE normalized_host.project
          WHEN 'commons' THEN 'wikimedia commons'
          WHEN 'simple' THEN CONCAT('simple ', normalized_host.project_class)
@@ -47,9 +47,9 @@ WITH sister_search_pvs AS (
     -- keep commons.wikimedia.org and species.wikimedia.org:
     AND NOT (normalized_host.project_class = 'wikimedia' AND NOT (normalized_host.project IN('commons', 'species')))
 )
-SELECT `date`, access_method, project, language, IF(is_serp, 'TRUE', 'FALSE') AS is_serp, COUNT(1) AS pageviews
+SELECT date, access_method, project, language, IF(is_serp, 'TRUE', 'FALSE') AS is_serp, COUNT(1) AS pageviews
 FROM sister_search_pvs
-GROUP BY `date`, access_method, project, language, IF(is_serp, 'TRUE', 'FALSE')
-ORDER BY `date`, access_method, project, language, is_serp
+GROUP BY date, access_method, project, language, IF(is_serp, 'TRUE', 'FALSE')
+ORDER BY date, access_method, project, language, is_serp
 LIMIT 10000;
 " 2> /dev/null | grep -v parquet.hadoop | grep -v WARN:
