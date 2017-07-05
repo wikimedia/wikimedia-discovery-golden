@@ -1,6 +1,9 @@
 # Change Log (Patch Notes)
 All notable changes to this project will be documented in this file.
 
+## 2017/07/05
+- Switched TSS2 from Revision 16270835 to 16909631 (due to [change 360851](https://gerrit.wikimedia.org/r/#/c/360851/))
+
 ## 2017/05/31
 - Changed where datasets are located
 - Updated public README

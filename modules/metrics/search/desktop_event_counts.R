@@ -27,7 +27,7 @@ query <- paste0("SELECT
   event_pageViewId AS page_id,
   wiki,
   event_action AS action
-FROM TestSearchSatisfaction2_", dplyr::if_else(as.Date(opt$date) < "2017-02-10", "15922352", "16270835"), "
+FROM TestSearchSatisfaction2_", dplyr::if_else(as.Date(opt$date) < "2017-02-10", "15922352", dplyr::if_else(as.Date(opt$date) < "2017-06-29", "16270835", "16909631")), "
 WHERE ", date_clause, "
   AND event_action IN('searchResultPage', 'click')
   AND (event_subTest IS NULL OR event_subTest IN ('null', 'baseline'))

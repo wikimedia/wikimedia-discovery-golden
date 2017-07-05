@@ -44,7 +44,7 @@ SELECT
   event_uniqueId AS event_id,
   CASE WHEN event_msToDisplayResults <= 0 THEN NULL
        ELSE event_msToDisplayResults END AS load_time
-FROM TestSearchSatisfaction2_", dplyr::if_else(as.Date(opt$date) < "2017-02-10", "15922352", "16270835"), "
+FROM TestSearchSatisfaction2_", dplyr::if_else(as.Date(opt$date) < "2017-02-10", "15922352", dplyr::if_else(as.Date(opt$date) < "2017-06-29", "16270835", "16909631")), "
 WHERE ", date_clause, "
   AND event_action = 'searchResultPage'
   AND (event_subTest IS NULL OR event_subTest IN ('null', 'baseline'))

@@ -33,7 +33,7 @@ query <-paste0("SELECT
   SUM(IF(event_action = 'click', POW(0.7, event_position), 0)) / SUM(IF(event_action = 'searchResultPage', 1, 0)) AS pow_7,
   SUM(IF(event_action = 'click', POW(0.8, event_position), 0)) / SUM(IF(event_action = 'searchResultPage', 1, 0)) AS pow_8,
   SUM(IF(event_action = 'click', POW(0.9, event_position), 0)) / SUM(IF(event_action = 'searchResultPage', 1, 0)) AS pow_9
-FROM TestSearchSatisfaction2_16270835
+FROM TestSearchSatisfaction2_", dplyr::if_else(as.Date(opt$date) < "2017-02-10", "15922352", dplyr::if_else(as.Date(opt$date) < "2017-06-29", "16270835", "16909631")), "
 WHERE ", date_clause, "
   AND event_action IN ('searchResultPage', 'click')
   AND IF(event_source = 'autocomplete', event_inputLocation = 'header', TRUE)
