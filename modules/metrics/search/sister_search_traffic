@@ -12,8 +12,12 @@ WITH sister_search_pvs AS (
          WHEN 'species' THEN 'wikispecies'
          ELSE normalized_host.project_class
     END AS project,
-    IF(normalized_host.project IN('commons', 'meta', 'simple', 'incubator', 'species'), '',
-       IF(normalized_host.project = 'en', 'English', 'Other languages')) AS language,
+    CASE WHEN normalized_host.project IN('commons', 'meta', 'simple', 'incubator', 'species') THEN ''
+         WHEN normalized_host.project = 'en' THEN 'English'
+         -- frwiki and cawiki use homebrew sister search that shows up in addition to ours
+         WHEN normalized_host.project IN('ca', 'fr') THEN 'French and Catalan'
+         ELSE 'Other languages'
+    END AS language,
     -- flag for pageviews that are search results pages (e.g. if user clicked to see more results from a sister project):
     (
       page_id IS NULL
@@ -22,8 +26,8 @@ WITH sister_search_pvs AS (
         OR (
           uri_path = '/w/index.php'
           AND (
-            uri_query RLIKE '^\?search\='
-            OR INSTR(uri_query, '?title=Special:Search&search=') > 0
+            PARSE_URL(CONCAT('http://', uri_host, uri_path, uri_query), 'QUERY', 'search') IS NOT NULL
+            OR PARSE_URL(CONCAT('http://', uri_host, uri_path, uri_query), 'QUERY', 'searchToken') IS NOT NULL
           )
         )
       )
@@ -34,10 +38,11 @@ WITH sister_search_pvs AS (
     AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) >= '$1'
     AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) < '$2'
     AND is_pageview
+    -- only those that have been referred by a search results page on a wikipedia:
     AND referer_class = 'internal'
     AND (
-      INSTR(referer, '/w/index.php?search=') > 0
-      OR INSTR(referer, '/wiki/Special:Search?search=') > 0
+      PARSE_URL(referer, 'QUERY', 'search') IS NOT NULL
+      OR PARSE_URL(referer, 'QUERY', 'searchToken') IS NOT NULL
     )
     -- warning: comparing uri_host = PARSE_URL(referer, 'HOST') would mark 'en.m.wikipedia.org' as a sister of 'en.wikipedia.org'
     AND normalize_host(PARSE_URL(referer, 'HOST')).project_class = 'wikipedia'
