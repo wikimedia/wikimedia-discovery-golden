@@ -66,23 +66,11 @@ if (nrow(results) == 0) {
 } else {
   results$ts <- as.POSIXct(results$ts, format = "%Y%m%d%H%M%S")
   # Geography data that is common to both outputs:
-  data("ISO_3166_1", package = "ISOcodes")
-  # Remove accents because Reportupdater requires ASCII:
-  ISO_3166_1$Name <- stringi::stri_trans_general(ISO_3166_1$Name, "Latin-ASCII")
-  us_other_abb <- c("AS", "GU", "MP", "PR", "VI")
-  us_other_mask <- match(us_other_abb, ISO_3166_1$Alpha_2)
-  regions <- data.frame(abb = c(paste0("US:", c(as.character(state.abb), "DC")), us_other_abb),
-                        region = paste0("U.S. (", c(as.character(state.region), "South", rep("Other",5)), ")"),
-                        state = c(state.name, "District of Columbia", ISO_3166_1$Name[us_other_mask]),
-                        stringsAsFactors = FALSE)
-  regions$region[regions$region == "U.S. (North Central)"] <- "U.S. (Midwest)"
-  regions$region[c(state.division == "Pacific", rep(FALSE, 5))] <- "U.S. (Pacific)" # see https://phabricator.wikimedia.org/T136257#2399411
+  regions <- polloi::get_us_state()
   library(magrittr) # Required for piping
   if (opt$include_all) {
     # Generate all countries breakdown
-    all_countries <- data.frame(abb = c(regions$abb, ISO_3166_1$Alpha_2[-us_other_mask]),
-                                name = c(regions$region, ISO_3166_1$Name[-us_other_mask]),
-                                stringsAsFactors = FALSE)
+    all_countries <- polloi::get_country_state()
     data_w_countryname <- results %>%
       dplyr::mutate(country = ifelse(country %in% all_countries$abb, country, "Other")) %>%
       dplyr::left_join(all_countries, by = c("country" = "abb")) %>%
