@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 
-.libPaths("/a/discovery/r-library")
+source("config.R")
+.libPaths(r_library)
 
 # Check dependencies:
 dependencies <- c(
@@ -9,10 +10,8 @@ dependencies <- c(
   "tidyverse", "data.table", "plyr",
   "optparse", "yaml", "data.tree",
   "knitr",
-
   # For forecasting modules:
   "bsts", "forecast", "prophet",
-
   # For querying, etc.:
   "ISOcodes", "uaparser", "ortiz", "wmf", "polloi"
 )
@@ -28,7 +27,7 @@ suppressPackageStartupMessages({
 })
 
 option_list <- list(
-  make_option("--start_date", default = as.character(Sys.Date()-1, "%Y-%m-%d"), action = "store", type = "character"),
+  make_option("--start_date", default = as.character(Sys.Date() - 1, "%Y-%m-%d"), action = "store", type = "character"),
   make_option("--end_date", default = as.character(Sys.Date(), "%Y-%m-%d"), action = "store", type = "character",
               help = "This is required for proper Reportupdater emulation; should be 'start_date' + 1"),
   make_option("--omit_times", default = FALSE, action = "store_true",
@@ -42,21 +41,12 @@ option_list <- list(
   make_option("--forecast_iters", default = 100, action = "store", type = "numeric",
               help = "Overrides number of MCMC iterations used in BSTS models [default %default]"),
   make_option("--forecast_burnin", default = 50, action = "store", type = "numeric",
-              help = "Overrides number of MCMC iterations discarded in BSTS models [default %default]"),
-  make_option("--update_packages", default = FALSE, action = "store_true",
-              help = paste("Update dependencies in", .libPaths()[1]))
+              help = "Overrides number of MCMC iterations discarded in BSTS models [default %default]")
 )
 
 # Get command line options, if help option encountered print help and exit,
 # otherwise if options not found on command line then set defaults:
 opt <- parse_args(OptionParser(option_list = option_list))
-
-if (opt$update_packages) {
-  withr::with_libpaths("/a/discovery/r-library", devtools::update_packages(dependencies))
-  library("uaparser", lib.loc = "/a/discovery/r-library")
-  update_regexes()
-  q(save = "no")
-}
 
 if (opt$disable_metrics && opt$disable_forecasts) {
   stop("Cannot run test utility with metrics AND forecasting modules disabled.")

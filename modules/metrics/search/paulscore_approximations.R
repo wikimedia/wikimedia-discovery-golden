@@ -1,6 +1,8 @@
 #!/usr/bin/env Rscript
 
-.libPaths("/a/discovery/r-library"); suppressPackageStartupMessages(library("optparse"))
+source("config.R")
+.libPaths(r_library)
+suppressPackageStartupMessages(library("optparse"))
 
 option_list <- list(
   make_option(c("-d", "--date"), default = NA, action = "store", type = "character"),

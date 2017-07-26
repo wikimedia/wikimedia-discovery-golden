@@ -7,15 +7,12 @@ This repository contains aggregation/acquisition scripts for extracting data fro
 - [Mikhail Popov](https://meta.wikimedia.org/wiki/User:MPopov_(WMF)) (Data Analyst)
 - [Chelsy Xie](https://meta.wikimedia.org/wiki/User:CXie_(WMF)) (Data Analyst)
 
-For questions and comments, contact [Deb](mailto:deb@wikimedia.org?subject=Discovery Analysis data retriever codebase), [Mikhail](mailto:mikhail@wikimedia.org?subject=Golden repo), or [Chelsy](mailto:cxie@wikimedia.org?subject=Golden repo).
+For questions and comments, contact [Deb](mailto:deb@wikimedia.org), [Mikhail](mailto:mikhail@wikimedia.org), or [Chelsy](mailto:cxie@wikimedia.org).
 
 ## Table of Contents
 
-- [Setup](#setup)
-    - [Dependencies](#dependencies)
-- [Usage](#usage)
-    - [Production](#production)
-    - [Testing](#testing)
+- [Setup](#setup-and-usage)
+- [Dependencies](#dependencies)
 - [Modules](#modules)
 - [Adding New Metrics Modules](#adding-new-metrics-modules)
     - [MySQL](#mysql)
@@ -26,23 +23,11 @@ For questions and comments, contact [Deb](mailto:deb@wikimedia.org?subject=Disco
 - [Adding New Forecasting Modules](#adding-new-forecasting-modules)
 - [Additional Information](#additional-information)
 
-## Setup
+## Setup and Usage
 
-On [stat1002](https://wikitech.wikimedia.org/wiki/Stat1002):
+As of [T170494](https://phabricator.wikimedia.org/T170494), the setup and daily runs are Puppetized on [stat1005](https://wikitech.wikimedia.org/wiki/Stat1005) via the [statistics::discovery](https://phabricator.wikimedia.org/diffusion/OPUP/browse/production/modules/statistics/manifests/discovery.pp) module (also mirrored on [GitHub](https://github.com/wikimedia/operations-puppet/blob/production/modules/statistics/manifests/discovery.pp)).
 
-```bash
-cd /a/discovery/
-git clone --recursive https://gerrit.wikimedia.org/r/wikimedia/discovery/golden
-cd golden
-
-# If already cloned without --recursive:
-git submodule update --init --recursive
-
-# Add execution permission to scripts:
-chmod -R +x modules/
-```
-
-### Dependencies
+## Dependencies
 
 ```bash
 pip install -r reportupdater/requirements.txt
@@ -56,7 +41,8 @@ Sys.setenv("http_proxy" = "http://webproxy.eqiad.wmnet:8080")
 Sys.setenv("https_proxy" = "http://webproxy.eqiad.wmnet:8080")
 
 # Set path for packages:
-.libPaths("/a/discovery/r-library")
+lib_path <- "/srv/discovery/r-library"
+.libPaths(lib_path)
 
 # Essentials:
 install.packages(
@@ -74,11 +60,11 @@ install.packages(
     "bsts", "forecast"
     # ^ see note below
   ),
-  repos = "https://cran.rstudio.com/",
-  lib = "/a/discovery/r-library"
+  repos = c(CRAN = "https://cran.rstudio.com/"),
+  lib = lib_path
 )
 
-# 'uaparser' requires C++11, and libyaml-cpp 0.3, boost-system, boost-regex C++ libraries
+# 'uaparser' requires C++11, and libyaml-cpp, boost-system, boost-regex C++ libraries
 devtools::install_github("ua-parser/uap-r", configure.args = "-I/usr/include/yaml-cpp -I/usr/include/boost")
 
 # 'ortiz' is needed for Search team's user engagement calculation | https://phabricator.wikimedia.org/diffusion/WDOZ/
@@ -93,37 +79,14 @@ devtools::install_git("https://gerrit.wikimedia.org/r/wikimedia/discovery/polloi
 
 Don't forget to add packages to [test.R](test.R) because that script checks that all packages are installed before performing a test run of the reports.
 
-**Note**: we have had problems installing R package [bsts](https://cran.r-project.org/package=bsts) and its dependencies [Boom](https://cran.r-project.org/package=Boom) and [BoomSpikeSlab](https://cran.r-project.org/package=BoomSpikeSlab) on stat1002 (but not stat1003). Fortunately, [Andrew Otto](https://meta.wikimedia.org/wiki/User:Ottomata) has figured out what to put in [~/.R/Makevars](https://cran.r-project.org/doc/manuals/r-release/R-exts.html#Using-Makevars) to make those packages compile. From [T147682#2837271](https://phabricator.wikimedia.org/T147682#2837271):
+To update packages, use [update-library.R](https://github.com/wikimedia/puppet/blob/production/modules/r/files/update-library.R):
 
-```
-CXX=g++-4.8
-CXX1X=g++-4.8
-CXX1XFLAGS=-std=c++11 -g -O2 -fstack-protector --param=ssp-buffer-size=4 -Wformat -Werror=format-security -D_FORTIFY_SOURCE=2 -g
-CXX1XPICFLAGS=-fPIC
-SHLIB_CXX1XLD=g++-4.8
-SHLIB_CXX1XLDFLAGS=-std=c++11 -shared
-LDFLAGS=-L/usr/lib/R/lib -Wl,-Bsymbolic-functions -Wl,-z,relro
+```bash
+Rscript /etc/R/update-library.R -l /srv/discovery/r-library
+Rscript /etc/R/update-library.R -l /srv/discovery/r-library -p polloi
 ```
 
-To **update packages**, run `Rscript test.R --update_packages` which will update all the dependencies listed in **test.R**
-
-## Usage
-
-**Note**: You don't need to use the `--config-path` argument if your config file is inside the query folder and is named **config.yaml**, that is the default.
-
-### Production
-
-To use in production, add **main.sh** to `crontab`:
-
-```
-$ crontab -e
-
-12 20 * * * cd /a/discovery/golden/ && sh main.sh
-```
-
-**main.sh** executes **reportupdater/update_reports.py** on each module and writes data to the respective files in **/a/aggregate-datasets/discovery/**
-
-### Testing
+## Testing
 
 If you wish to run all the modules without writing data to files or checking for missingness, use:
 

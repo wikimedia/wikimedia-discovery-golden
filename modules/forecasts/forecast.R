@@ -1,6 +1,8 @@
 #!/usr/bin/env Rscript
 
-.libPaths("/a/discovery/r-library"); suppressPackageStartupMessages(library("optparse"))
+source("config.R")
+.libPaths(r_library)
+suppressPackageStartupMessages(library("optparse"))
 
 option_list <- list(
   make_option(c("-d", "--date"), default = NA, action = "store", type = "character"),
@@ -34,8 +36,8 @@ empty_forecasts <- function() {
 
 read_data <- function(path, ...) {
   if (grepl("^stat[0-9]{4}$", Sys.info()["nodename"])) {
-    # Use local datasets if run on stat1002
-    return(readr::read_tsv(file.path("/a/published-datasets", path), ...))
+    # Use local datasets if run on stat1005
+    return(readr::read_tsv(file.path(published_datasets, path), ...))
   } else {
     # Download from datasets.wikimedia.org otherwise
     return(polloi::read_dataset(path, ...))

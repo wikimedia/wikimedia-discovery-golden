@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 
-.libPaths("/a/discovery/r-library")
+source("config.R")
+.libPaths(r_library)
 suppressPackageStartupMessages({
   library("methods")
   library("optparse")
