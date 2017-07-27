@@ -1,0 +1,3 @@
+#!/bin/bash
+
+Rscript modules/metrics/maps/prevalence.R -d $1 -o mapframe

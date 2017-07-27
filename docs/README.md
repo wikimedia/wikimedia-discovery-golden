@@ -8,7 +8,7 @@ retrieval codebase that executes daily and uses
 infrastructure. These datasets provide the metrics that are used by
 [Discovery's Dashboards](https://discovery.wmflabs.org/)
 
-Last updated on 26 June 2017
+Last updated on 01 August 2017
 
 Daily Metrics
 -------------
@@ -34,6 +34,10 @@ maps/
     level, etc.
 -   **tile\_aggregates\_no\_automata.tsv**: Tile counts by style, zoom
     level, etc., excluding those made by bots/tools
+-   **mapframe\_prevalence.tsv**: Proportion of articles on a wiki that
+    have a mapframe
+-   **maplink\_prevalence.tsv**: Proportion of articles on a wiki that
+    have a maplink
 
 portal/
 -------

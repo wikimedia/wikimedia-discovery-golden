@@ -49,7 +49,7 @@ install.packages(
   c("devtools", "testthat", "Rcpp",
     "tidyverse", "data.table", "plyr",
     "optparse", "yaml", "data.tree",
-    "ISOcodes", "knitr",
+    "ISOcodes", "knitr", "glue",
     # For wmf:
     "urltools", "ggthemes", "pwr",
     # For polloi's datavis functions:
@@ -171,11 +171,15 @@ Rscript test.R --include_samples >> test_`date +%F_%T`.log.md 2>&1
     - [x] GeoFeatures ([T112311](https://phabricator.wikimedia.org/T112311))
       - [x] [Actions per tool](modules/metrics/maps/actions_per_tool.sql)
       - [x] [Users per feature](modules/metrics/maps/users_per_feature.sql)
-    - [x] Kartographer usage
+    - [x] Kartotherian usage
       - [x] [Users by country](modules/metrics/maps/users_by_country) ([T119448](https://phabricator.wikimedia.org/T119448))
       - [x] Tile requests ([T113832](https://phabricator.wikimedia.org/T113832))
         - [x] [No automata](modules/metrics/maps/tile_aggregates_no_automata)
         - [x] [With automata](modules/metrics/maps/tile_aggregates_with_automata)
+    - [ ] Maps prevalence on wikis ([T170022](https://phabricator.wikimedia.org/T170022))
+      - [ ] [Maplinks](modules/metrics/maps/maplink_prevalence)
+      - [ ] [Mapframes](modules/metrics/maps/mapframe_prevalence)
+    - Kartographer usage (planned)
     - KPIs (planned)
   - [x] External Traffic ([configuration](modules/metrics/external_traffic/config.yaml))
     - [x] [Referer data](modules/metrics/external_traffic/referer_data) ([T116295](https://phabricator.wikimedia.org/T116295), [Change 247601](https://gerrit.wikimedia.org/r/#/c/247601/))

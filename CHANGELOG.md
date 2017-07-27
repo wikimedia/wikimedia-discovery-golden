@@ -1,6 +1,9 @@
 # Change Log (Patch Notes)
 All notable changes to this project will be documented in this file.
 
+## 2017/08/01
+- Added maplink and mapframe prevalence tracking across wikis ([T170022](https://phabricator.wikimedia.org/T170022))
+
 ## 2017/07/27
 - Prepared for Puppetized runs ([T170494](https://phabricator.wikimedia.org/T170494))
 

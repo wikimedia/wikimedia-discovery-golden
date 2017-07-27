@@ -9,7 +9,7 @@ dependencies <- c(
   "devtools", "testthat", "Rcpp",
   "tidyverse", "data.table", "plyr",
   "optparse", "yaml", "data.tree",
-  "knitr",
+  "knitr", "glue",
   # For forecasting modules:
   "bsts", "forecast", "prophet",
   # For querying, etc.:
