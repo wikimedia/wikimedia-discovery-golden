@@ -57,7 +57,7 @@ install.packages(
     # For polloi's data manipulation functions:
     "xts", "mgcv", "zoo",
     # For forecasting modules:
-    "bsts", "forecast"
+    "bsts", "forecast", "prophet"
     # ^ see note below
   ),
   repos = c(CRAN = "https://cran.rstudio.com/"),
