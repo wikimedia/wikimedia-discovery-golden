@@ -77,9 +77,8 @@ results <- dplyr::bind_rows(lapply(wikis, function(wiki) {
 }), .id = "wiki")
 
 output <- cbind(
-  date = as.Date(opt$date, "%Y%m%d"),
+  date = lubridate::ymd(opt$date),
   results[, union("wiki", colnames(results))]
 )
 
 write.table(output, file = "", append = FALSE, sep = "\t", row.names = FALSE, quote = FALSE)
-
