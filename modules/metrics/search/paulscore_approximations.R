@@ -2,7 +2,10 @@
 
 source("config.R")
 .libPaths(r_library)
-suppressPackageStartupMessages(library("optparse"))
+suppressPackageStartupMessages({
+  library("optparse")
+  library("glue")
+})
 
 option_list <- list(
   make_option(c("-d", "--date"), default = NA, action = "store", type = "character"),
@@ -19,10 +22,15 @@ if (is.na(opt$date) || !(opt$output %in% c("overall", "langproj"))) {
 }
 
 # Build query:
-date_clause <- as.character(as.Date(opt$date), format = "LEFT(timestamp, 8) = '%Y%m%d'")
+yyyymmdd <- format(as.Date(opt$date), "%Y%m%d")
+revision <- dplyr::case_when(
+  as.Date(opt$date) < "2017-02-10" ~ "15922352",
+  as.Date(opt$date) < "2017-06-29" ~ "16270835",
+  TRUE ~ "16909631"
+)
 
-query <-paste0("SELECT
-  DATE('", opt$date, "') AS date,
+query <- glue("SELECT
+  DATE('{opt$date}') AS date,
   event_searchSessionId,
   event_source,
   wiki,
@@ -35,11 +43,15 @@ query <-paste0("SELECT
   SUM(IF(event_action = 'click', POW(0.7, event_position), 0)) / SUM(IF(event_action = 'searchResultPage', 1, 0)) AS pow_7,
   SUM(IF(event_action = 'click', POW(0.8, event_position), 0)) / SUM(IF(event_action = 'searchResultPage', 1, 0)) AS pow_8,
   SUM(IF(event_action = 'click', POW(0.9, event_position), 0)) / SUM(IF(event_action = 'searchResultPage', 1, 0)) AS pow_9
-FROM TestSearchSatisfaction2_", dplyr::if_else(as.Date(opt$date) < "2017-02-10", "15922352", dplyr::if_else(as.Date(opt$date) < "2017-06-29", "16270835", "16909631")), "
-WHERE ", date_clause, "
-  AND event_action IN ('searchResultPage', 'click')
-  AND IF(event_source = 'autocomplete', event_inputLocation = 'header', TRUE)
-  AND IF(event_source = 'autocomplete' AND event_action = 'click', event_position >= 0, TRUE)
+FROM (
+  SELECT DISTINCT
+    event_searchSessionId, event_source, wiki, event_action, event_position, event_pageViewId, event_query
+  FROM TestSearchSatisfaction2_{revision}
+  WHERE LEFT(timestamp, 8) = {yyyymmdd}
+    AND event_action IN ('searchResultPage', 'click')
+    AND IF(event_source = 'autocomplete', event_inputLocation = 'header', TRUE)
+    AND IF(event_source = 'autocomplete' AND event_action = 'click', event_position >= 0, TRUE)
+) AS deduplicate
 GROUP BY date, event_searchSessionId, event_source, wiki;")
 
 # Fetch data from MySQL database:
