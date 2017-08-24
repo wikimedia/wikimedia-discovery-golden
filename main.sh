@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# files created / touched by report updater need to be rw for user and group
+umask 002
+
 # Sync README
 rsync -c docs/README.md /srv/published-datasets/discovery/README.md
 
