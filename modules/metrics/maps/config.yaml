@@ -40,12 +40,12 @@ reports:
     mapframe_prevalence:
         description: Proportion of articles on a wiki that have a mapframe
         granularity: days
-        starts: 2017-08-03 # this will need to be set to when patch goes live, we can't backfill this data
+        starts: 2017-09-01 # this will need to be set to when patch goes live, we can't backfill this data
         funnel: true
         type: script
     maplink_prevalence:
         description: Proportion of articles on a wiki that have a maplink
         granularity: days
-        starts: 2017-08-03 # this will need to be set to when patch goes live, we can't backfill this data
+        starts: 2017-09-01 # this will need to be set to when patch goes live, we can't backfill this data
         funnel: true
         type: script
