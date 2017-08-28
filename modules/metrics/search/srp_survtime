@@ -1,0 +1,3 @@
+#!/bin/bash
+
+Rscript modules/metrics/search/srp_survtime.R -d $1
