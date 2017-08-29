@@ -28,7 +28,8 @@ date_clause <- as.character(as.Date(opt$date), format = "year = %Y AND month = %
 # - tile requests per style per zoom, e.g. "osm-z10", "osm-z11", ...
 
 # Get the per-user tile usage:
-query <- paste0("SELECT
+query <- paste0("SET mapred.job.queue.name=nice;
+SELECT
   date, style, zoom, scale, format, cache, user_id, is_automata, COUNT(1) AS n
 FROM (
   SELECT

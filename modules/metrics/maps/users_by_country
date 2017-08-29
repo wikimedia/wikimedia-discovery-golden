@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export HADOOP_HEAPSIZE=1024 && hive -e "USE wmf;
+export HADOOP_HEAPSIZE=1024 && hive -S --hiveconf mapred.job.queue.name=nice -e "USE wmf;
 WITH maps_users AS (
   SELECT DISTINCT
     '$1' AS date,

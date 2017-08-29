@@ -1,6 +1,6 @@
 #!/bin/bash
 
-hive -S -e "ADD JAR hdfs:///wmf/refinery/current/artifacts/refinery-hive.jar;
+hive -S --hiveconf mapred.job.queue.name=nice -e "ADD JAR hdfs:///wmf/refinery/current/artifacts/refinery-hive.jar;
 CREATE TEMPORARY FUNCTION search_classify AS 'org.wikimedia.analytics.refinery.hive.GetSearchRequestTypeUDF';
 USE wmf;
 SELECT

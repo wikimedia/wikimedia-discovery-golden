@@ -23,7 +23,8 @@ if (is.na(opt$date) || !(opt$output %in% c("overall", "breakdown", "suggestion",
 # Build query:
 date_clause <- as.character(as.Date(opt$date), format = "year = %Y AND month = %m AND day = %d")
 
-query <- paste0("ADD JAR hdfs:///wmf/refinery/current/artifacts/refinery-hive.jar;
+query <- paste0("SET mapred.job.queue.name=nice;
+ADD JAR hdfs:///wmf/refinery/current/artifacts/refinery-hive.jar;
 CREATE TEMPORARY FUNCTION array_sum AS 'org.wikimedia.analytics.refinery.hive.ArraySumUDF';
 CREATE TEMPORARY FUNCTION is_spider as 'org.wikimedia.analytics.refinery.hive.IsSpiderUDF';
 CREATE TEMPORARY FUNCTION ua_parser as 'org.wikimedia.analytics.refinery.hive.UAParserUDF';

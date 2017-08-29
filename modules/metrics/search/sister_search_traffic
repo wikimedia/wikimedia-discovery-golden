@@ -1,6 +1,6 @@
 #!/bin/bash
 
-hive -S -e "USE wmf;
+hive -S --hiveconf mapred.job.queue.name=nice -e "USE wmf;
 ADD JAR hdfs:///wmf/refinery/current/artifacts/refinery-hive.jar;
 CREATE TEMPORARY FUNCTION normalize_host AS 'org.wikimedia.analytics.refinery.hive.GetHostPropertiesUDF';
 WITH sister_search_pvs AS (

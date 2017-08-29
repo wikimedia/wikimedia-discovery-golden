@@ -1,6 +1,6 @@
 #!/bin/bash
 
-hive -S -e "USE wmf;
+hive -S --hiveconf mapred.job.queue.name=nice -e "USE wmf;
 SELECT
   '$1' AS date,
   IF(uri_path = '/sparql', '/bigdata/namespace/wdq/sparql', uri_path) AS path,

@@ -17,7 +17,8 @@ if (is.na(opt$date)) {
 # Build query:
 date_clause <- as.character(as.Date(opt$date), format = "year = %Y AND month = %m AND day = %d")
 
-query <- paste0("USE wmf;
+query <- paste0("SET mapred.job.queue.name=nice;
+USE wmf;
 SELECT
   client_ip,
   COUNT(1) AS pageviews
