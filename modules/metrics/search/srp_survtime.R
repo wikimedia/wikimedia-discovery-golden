@@ -33,8 +33,7 @@ query <- glue("SELECT
   event_searchSessionId AS session_id,
   event_pageViewId AS page_id,
   event_action AS event,
-  event_checkin AS checkin,
-  event_scroll AS has_scrolled
+  event_checkin AS checkin
 FROM TestSearchSatisfaction2_{revision_number}
 WHERE
   LEFT(timestamp, 8) = '{yyyymmdd}'
@@ -54,12 +53,9 @@ results <- tryCatch(
   }
 )
 
-if (nrow(results) == 0) {
-  # Here we make the script output tab-separated
-  # column names, as required by Reportupdater:
-  srp_survivorship <- data.frame(
+empty_df <- function() {
+  data.frame(
     date = character(),
-    wiki = character(),
     LD10 = character(),
     LD25 = character(),
     LD50 = character(),
@@ -68,20 +64,21 @@ if (nrow(results) == 0) {
     LD95 = character(),
     LD99 = character()
   )
+}
+
+if (nrow(results) == 0) {
+  # Here we make the script output tab-separated
+  # column names, as required by Reportupdater:
+  srp_survivorship <- empty_df()
 } else {
   results %<>%
-    dplyr::mutate(
-      ts = lubridate::ymd_hms(ts),
-      has_scrolled = has_scrolled == 1
-    ) %>%
+    dplyr::mutate(ts = lubridate::ymd_hms(ts)) %>%
     dplyr::arrange(session_id, event_id, ts) %>%
     dplyr::distinct(session_id, event_id, .keep_all = TRUE) %>%
     dplyr::arrange(wiki, session_id, page_id, desc(event), ts) %>%
-    dplyr::select(wiki, ts, session_id, page_id, event, checkin, has_scrolled) %>%
+    dplyr::select(wiki, ts, session_id, page_id, event, checkin) %>%
     dplyr::group_by(session_id, page_id) %>%
-    dplyr::filter(
-      event == "visitPage" | (event == "checkin" & checkin == max(checkin))
-    ) %>%
+    dplyr::filter(event == "visitPage" | (event == "checkin" & checkin == max(checkin))) %>%
     dplyr::ungroup() %>%
     data.table::data.table(key = c("wiki", "session_id", "page_id"))
 
@@ -105,15 +102,20 @@ if (nrow(results) == 0) {
       )
     }
   }, by = c("wiki", "session_id", "page_id")]
-  surv <- survival::Surv(
-    time = page_visits$`last check-in`,
-    time2 = page_visits$`next check-in`,
-    event = page_visits$status,
-    type = "interval"
-  )
-  fit <- survival::survfit(surv ~ 1)
-  srp_survivorship <- data.frame(date = opt$date, rbind(quantile(fit, probs = c(0.10, 0.25, 0.50, 0.75, 0.90, 0.95, 0.99))$quantile))
-  colnames(srp_survivorship) <- c('date', 'LD10', 'LD25', 'LD50', 'LD75', 'LD90', 'LD95', 'LD99')
+
+  if (nrow(page_visits) == 0) {
+    srp_survivorship <- empty_df()
+  } else {
+    surv <- survival::Surv(
+      time = page_visits$`last check-in`,
+      time2 = page_visits$`next check-in`,
+      event = page_visits$status,
+      type = "interval"
+    )
+    fit <- survival::survfit(surv ~ 1)
+    srp_survivorship <- data.frame(date = opt$date, rbind(quantile(fit, probs = c(0.10, 0.25, 0.50, 0.75, 0.90, 0.95, 0.99))$quantile))
+    colnames(srp_survivorship) <- c('date', 'LD10', 'LD25', 'LD50', 'LD75', 'LD90', 'LD95', 'LD99')
+  }
 
 }
 
