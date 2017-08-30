@@ -8,7 +8,7 @@ retrieval codebase that executes daily and uses
 infrastructure. These datasets provide the metrics that are used by
 [Discovery's Dashboards](https://discovery.wmflabs.org/)
 
-Last updated on 28 August 2017
+Last updated on 30 August 2017
 
 Daily Metrics
 -------------
@@ -147,7 +147,8 @@ search/
     exlcudes known automata
 -   **srp\_survtime.tsv**: Estimates (via survival analysis) of how long
     Wikipedia searchers stay on full-text search results page after
-    getting there from autocomplete search.
+    getting there from autocomplete search, split by English vs French
+    and Catalan vs other languages.
 
 wdqs/
 -----

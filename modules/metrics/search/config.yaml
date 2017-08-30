@@ -163,8 +163,8 @@ reports:
         funnel: true
         type: script
     srp_survtime:
-        description: Estimates (via survival analysis) of how long Wikipedia searchers stay on full-text search results page after getting there from autocomplete search.
+        description: Estimates (via survival analysis) of how long Wikipedia searchers stay on full-text search results page after getting there from autocomplete search, split by English vs French and Catalan vs other languages.
         granularity: days
         starts: 2017-04-01
-        funnel: false
+        funnel: true
         type: script

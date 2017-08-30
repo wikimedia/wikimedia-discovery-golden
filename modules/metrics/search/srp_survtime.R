@@ -56,6 +56,7 @@ results <- tryCatch(
 empty_df <- function() {
   data.frame(
     date = character(),
+    language = character(),
     LD10 = character(),
     LD25 = character(),
     LD50 = character(),
@@ -78,9 +79,14 @@ if (nrow(results) == 0) {
     dplyr::arrange(wiki, session_id, page_id, desc(event), ts) %>%
     dplyr::select(wiki, ts, session_id, page_id, event, checkin) %>%
     dplyr::group_by(session_id, page_id) %>%
-    dplyr::filter(event == "visitPage" | (event == "checkin" & checkin == max(checkin))) %>%
+    dplyr::filter(event == "visitPage" | (event == "checkin" & checkin == max(checkin, na.rm = TRUE))) %>%
     dplyr::ungroup() %>%
-    data.table::data.table(key = c("wiki", "session_id", "page_id"))
+    dplyr::mutate(language = dplyr::case_when(
+      wiki == "enwiki" ~ "English",
+      wiki %in% c("cawiki", "frwiki") ~ "French and Catalan",
+      TRUE ~ "Other languages"
+    )) %>%
+    data.table::data.table(key = c("wiki", "language", "session_id", "page_id"))
 
   ## Calculates the median lethal dose (LD50) and other.
   ## LD50 = the time point at which we have lost 50% of our users.
@@ -89,7 +95,7 @@ if (nrow(results) == 0) {
   # Treat each individual search session as its own thing, rather than belonging
   #   to a set of other search sessions by the same user.
   page_visits <- results[, {
-    if (all(!is.na(.SD$checkin))) {
+    if (any(.SD$event == "checkin")) {
       last_checkin <- max(.SD$checkin, na.rm = TRUE)
       idx <- which(checkins > last_checkin)
       if (length(idx) == 0) idx <- 16 # length(checkins) = 16
@@ -101,20 +107,23 @@ if (nrow(results) == 0) {
         status = as.integer(status)
       )
     }
-  }, by = c("wiki", "session_id", "page_id")]
+  }, by = c("wiki", "language", "session_id", "page_id")]
 
   if (nrow(page_visits) == 0) {
     srp_survivorship <- empty_df()
   } else {
-    surv <- survival::Surv(
-      time = page_visits$`last check-in`,
-      time2 = page_visits$`next check-in`,
-      event = page_visits$status,
-      type = "interval"
-    )
-    fit <- survival::survfit(surv ~ 1)
-    srp_survivorship <- data.frame(date = opt$date, rbind(quantile(fit, probs = c(0.10, 0.25, 0.50, 0.75, 0.90, 0.95, 0.99))$quantile))
-    colnames(srp_survivorship) <- c('date', 'LD10', 'LD25', 'LD50', 'LD75', 'LD90', 'LD95', 'LD99')
+    srp_survivorship <- page_visits[, {
+      surv <- survival::Surv(
+        time = page_visits$`last check-in`,
+        time2 = page_visits$`next check-in`,
+        event = page_visits$status,
+        type = "interval"
+      )
+      fit <- survival::survfit(surv ~ 1)
+      df <- data.frame(date = opt$date, rbind(quantile(fit, probs = c(0.10, 0.25, 0.50, 0.75, 0.90, 0.95, 0.99))$quantile))
+      colnames(df) <- c('date', 'LD10', 'LD25', 'LD50', 'LD75', 'LD90', 'LD95', 'LD99')
+      df
+    }, by = "language"][, c('date', 'language', 'LD10', 'LD25', 'LD50', 'LD75', 'LD90', 'LD95', 'LD99')]
   }
 
 }

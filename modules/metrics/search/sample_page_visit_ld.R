@@ -40,10 +40,8 @@ results <- tryCatch(
   }
 )
 
-if (nrow(results) == 0) {
-  # Here we make the script output tab-separated
-  # column names, as required by Reportupdater:
-  page_visit_survivorship <- data.frame(
+empty_df <- function() {
+  data.frame(
     date = character(),
     LD10 = character(),
     LD25 = character(),
@@ -53,6 +51,12 @@ if (nrow(results) == 0) {
     LD95 = character(),
     LD99 = character()
   )
+}
+
+if (nrow(results) == 0) {
+  # Here we make the script output tab-separated
+  # column names, as required by Reportupdater:
+  page_visit_survivorship <- empty_df()
 } else {
   # De-duplicate, clean, and sort:
   results$timestamp <- as.POSIXct(results$timestamp, format = "%Y%m%d%H%M%S")
@@ -69,7 +73,7 @@ if (nrow(results) == 0) {
   # Treat each individual search session as its own thing, rather than belonging
   #   to a set of other search sessions by the same user.
   page_visits <- results[, {
-    if (all(!is.na(.SD$checkin))) {
+    if (any(.SD$event == "checkin")) {
       last_checkin <- max(.SD$checkin, na.rm = TRUE)
       idx <- which(checkins > last_checkin)
       if (length(idx) == 0) idx <- 16 # length(checkins) = 16
@@ -82,13 +86,19 @@ if (nrow(results) == 0) {
       )
     }
   }, by = c("session_id", "page_id")]
-  surv <- survival::Surv(time = page_visits$`last check-in`,
-                         time2 = page_visits$`next check-in`,
-                         event = page_visits$status,
-                         type = "interval")
-  fit <- survival::survfit(surv ~ 1)
-  page_visit_survivorship <- data.frame(date = opt$date, rbind(quantile(fit, probs = c(0.10, 0.25, 0.50, 0.75, 0.90, 0.95, 0.99))$quantile))
-  colnames(page_visit_survivorship) <- c('date', 'LD10', 'LD25', 'LD50', 'LD75', 'LD90', 'LD95', 'LD99')
+  if (nrow(page_visits) == 0) {
+    page_visit_survivorship <- empty_df()
+  } else {
+    surv <- survival::Surv(
+      time = page_visits$`last check-in`,
+      time2 = page_visits$`next check-in`,
+      event = page_visits$status,
+      type = "interval"
+    )
+    fit <- survival::survfit(surv ~ 1)
+    page_visit_survivorship <- data.frame(date = opt$date, rbind(quantile(fit, probs = c(0.10, 0.25, 0.50, 0.75, 0.90, 0.95, 0.99))$quantile))
+    colnames(page_visit_survivorship) <- c('date', 'LD10', 'LD25', 'LD50', 'LD75', 'LD90', 'LD95', 'LD99')
+  }
 }
 
 write.table(page_visit_survivorship, file = "", append = FALSE, sep = "\t", row.names = FALSE, quote = FALSE)
