@@ -20,6 +20,12 @@ reports:
         funnel: true
         max_data_points: 30
         type: script
+    app_event_counts_langproj_breakdown_history:
+        description: Clicks and other events by users searching on Android and iOS apps broken down by language. Historical data store.
+        granularity: days
+        starts: 2017-04-01
+        funnel: true
+        type: script
     app_load_times:
         description: User-perceived load times when searching on Android and iOS apps
         granularity: days
@@ -51,6 +57,12 @@ reports:
         max_data_points: 30
         funnel: true
         type: script
+    mobile_event_counts_langproj_breakdown_history:
+        description: Clicks and other events by users searching on mobile web broken down by language-project pairs. Historical data store.
+        granularity: days
+        starts: 2017-04-01
+        funnel: true
+        type: script
     mobile_load_times:
         description: User-perceived load times when searching on mobile web
         granularity: days
@@ -69,6 +81,12 @@ reports:
         max_data_points: 30
         funnel: true
         type: script
+    desktop_event_counts_langproj_breakdown_history:
+        description: Clicks and other events by users searching on desktop broken down by language-project pairs. Historical data store.
+        granularity: days
+        starts: 2017-04-01
+        funnel: true
+        type: script
     desktop_load_times:
         description: User-perceived load times when searching on desktop
         granularity: days
@@ -85,6 +103,12 @@ reports:
         granularity: days
         starts: 2017-03-01
         max_data_points: 30
+        funnel: true
+        type: script
+    paulscore_approximations_fulltext_langproj_breakdown_history:
+        description: Relevancy of our fulltext desktop search as measured by [PaulScore](https://www.mediawiki.org/wiki/Wikimedia_Discovery/Search/Glossary#PaulScore) broken down by language-project pairs. Historical data store.
+        granularity: days
+        starts: 2017-04-01
         funnel: true
         type: script
     sample_page_visit_ld:
@@ -108,6 +132,12 @@ reports:
         granularity: days
         starts: 2017-03-01
         max_data_points: 30
+        funnel: true
+        type: script
+    search_threshold_pass_rate_langproj_breakdown_history:
+        description: Proportion of users having search sessions longer than a predetermined threshold (10s) broken down by language-project pairs. Historical data store.
+        granularity: days
+        starts: 2017-04-01
         funnel: true
         type: script
     cirrus_query_aggregates_no_automata:
@@ -149,12 +179,24 @@ reports:
         funnel: true
         max_data_points: 30
         type: script
+    cirrus_langproj_breakdown_no_automata_history:
+        description: Zero results and total searches broken down by language-project pairs (e.g. German Wikiquote ZRR vs. French Wikibooks ZRR), excluding known bots/tools. Historical data store.
+        granularity: days
+        starts: 2017-06-01
+        funnel: true
+        type: script
     cirrus_langproj_breakdown_with_automata:
         description: Zero results and total searches broken down by language-project pairs (e.g. German Wikiquote ZRR vs. French Wikibooks ZRR)
         granularity: days
         starts: 2016-11-01
         funnel: true
         max_data_points: 30
+        type: script
+    cirrus_langproj_breakdown_with_automata_history:
+        description: Zero results and total searches broken down by language-project pairs (e.g. German Wikiquote ZRR vs. French Wikibooks ZRR). Historical data store.
+        granularity: days
+        starts: 2017-06-01
+        funnel: true
         type: script
     sister_search_traffic:
         description: Traffic to various wikis from Wikipedia search results pages; broken up by language, destination type (SERP vs not), and access method (desktop vs mobile web); exlcudes known automata

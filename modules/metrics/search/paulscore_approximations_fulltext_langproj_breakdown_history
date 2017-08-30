@@ -1,0 +1,3 @@
+#!/bin/bash
+
+Rscript modules/metrics/search/paulscore_approximations.R -d $1 -o langproj

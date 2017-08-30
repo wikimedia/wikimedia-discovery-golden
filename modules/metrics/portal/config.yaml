@@ -53,6 +53,12 @@ reports:
         max_data_points: 60
         funnel: true
         type: script
+    all_country_data_history:
+        description: Sampled traffic to Wikipedia.org Portal, broken down by country. Historical data store.
+        granularity: days
+        starts: 2017-04-01
+        funnel: true
+        type: script
     app_link_clicks:
         description: Clicks to Wikipedia mobile apps and list of apps
         granularity: days
@@ -66,6 +72,12 @@ reports:
         max_data_points: 60
         funnel: true
         type: script
+    last_action_country_history:
+        description: Last action performed on Wikipedia.org Portal per user session. Historical data store.
+        granularity: days
+        starts: 2017-04-01
+        funnel: true
+        type: script
     most_common_country:
         description: Most common action performed on Wikipedia.org Portal per user session, broken down by country
         granularity: days
@@ -73,11 +85,23 @@ reports:
         max_data_points: 60
         funnel: true
         type: script
+    most_common_country_history:
+        description: Most common action performed on Wikipedia.org Portal per user session, broken down by country. Historical data store.
+        granularity: days
+        starts: 2017-04-01
+        funnel: true
+        type: script
     first_visits_country:
         description: Action performed on Wikipedia.org Portal on each user's initial visit, broken down by country
         granularity: days
         starts: 2016-10-14
         max_data_points: 60
+        funnel: true
+        type: script
+    first_visits_country_history:
+        description: Action performed on Wikipedia.org Portal on each user's initial visit, broken down by country. Historical data store.
+        granularity: days
+        starts: 2017-04-01
         funnel: true
         type: script
     clickthrough_rate:
