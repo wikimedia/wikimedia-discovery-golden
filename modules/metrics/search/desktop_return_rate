@@ -1,0 +1,3 @@
+#!/bin/bash
+
+Rscript modules/metrics/search/desktop_return_rate.R -d $1

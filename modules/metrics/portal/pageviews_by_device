@@ -1,0 +1,39 @@
+#!/bin/bash
+
+hive -S --hiveconf mapred.job.queue.name=nice -e "USE wmf;
+SELECT
+  '$1' AS date,
+  IF((
+    user_agent_map['os_family'] IN('Android', 'iOS', 'Firefox OS', 'Chrome OS', 'BlackBerry OS', 'Kindle')
+    OR INSTR(user_agent_map['os_family'], 'Phone') > 0
+    OR user_agent_map['os_family'] RLIKE '^Symbian'
+    OR INSTR(user_agent_map['browser_family'], 'Mobile') > 0
+    OR user_agent_map['browser_family'] = 'Opera Mini'
+    OR user_agent_map['device_family'] RLIKE '^((HTC)|(Samsung)|(Moto))'
+    OR user_agent_map['device_family'] RLIKE '([pP]hone)|([tT]ablet)|(Lumia)'
+  ), 'mobile', 'desktop') AS device,
+  COUNT(1) AS pageviews
+FROM wmf.webrequest
+WHERE
+  webrequest_source = 'text'
+  AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) >= '$1'
+  AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) < '$2'
+  AND uri_host RLIKE('^(www\\.)?wikipedia.org/*$')
+  AND INSTR(uri_path, 'search-redirect.php') = 0
+  AND content_type RLIKE('^text/html')
+  AND NOT (referer RLIKE('^http://localhost'))
+  AND agent_type = 'user'
+  AND referer_class != 'unknown'
+  AND http_status IN('200', '304')
+GROUP BY
+  '$1',
+  IF((
+    user_agent_map['os_family'] IN('Android', 'iOS', 'Firefox OS', 'Chrome OS', 'BlackBerry OS', 'Kindle')
+    OR INSTR(user_agent_map['os_family'], 'Phone') > 0
+    OR user_agent_map['os_family'] RLIKE '^Symbian'
+    OR INSTR(user_agent_map['browser_family'], 'Mobile') > 0
+    OR user_agent_map['browser_family'] = 'Opera Mini'
+    OR user_agent_map['device_family'] RLIKE '^((HTC)|(Samsung)|(Moto))'
+    OR user_agent_map['device_family'] RLIKE '([pP]hone)|([tT]ablet)|(Lumia)'
+  ), 'mobile', 'desktop');
+" 2> /dev/null | grep -v parquet.hadoop | grep -v WARN:

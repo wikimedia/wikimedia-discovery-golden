@@ -210,3 +210,20 @@ reports:
         starts: 2017-04-01
         funnel: true
         type: script
+    pageviews_from_fulltext_search:
+        description: Number of searches, pageviews and users to articles from full-text search, broken down by access method (desktop vs mobile web) and agent type (user vs spider).
+        granularity: days
+        starts: 2017-08-01
+        funnel: true
+        type: script
+    search_result_pages:
+        description: Number of searches, search result pages and users, broken down by access method (desktop vs mobile web) and agent type (user vs spider).
+        granularity: days
+        starts: 2017-08-01
+        funnel: true
+        type: script
+    desktop_return_rate:
+        description: Number of searches with at least a click and the number of searches that return to the same search page after clickthrough; Number of sessions with at least a click and the number of sessions that return to search for different things after clickthrough.
+        granularity: days
+        starts: 2017-04-01
+        type: script

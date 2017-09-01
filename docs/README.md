@@ -86,6 +86,12 @@ portal/
     section
 -   **most\_common\_per\_visit.tsv**: Most common action performed on
     Wikipedia.org Portal per user session
+-   **pageviews\_by\_device.tsv**: Pageviews broken down by device
+    (desktop vs mobile)
+-   **clickthrough\_by\_device.tsv**: Clickthroughs from Wikipedia.org
+    Portal, broken down by device (desktop vs mobile)
+-   **mobile\_use\_us\_elsewhere.tsv**: Number of Wikipedia.org Portal
+    visitors on mobile devices in U.S. vs everywhere else
 
 search/
 -------
@@ -184,6 +190,18 @@ search/
     Wikipedia searchers stay on full-text search results page after
     getting there from autocomplete search, split by English vs French
     and Catalan vs other languages.
+-   **pageviews\_from\_fulltext\_search.tsv**: Number of searches,
+    pageviews and users to articles from full-text search, broken down
+    by access method (desktop vs mobile web) and agent type (user vs
+    spider)
+-   **search\_result\_pages.tsv**: Number of searches, search result
+    pages and users, broken down by access method (desktop vs mobile
+    web) and agent type (user vs spider)
+-   **desktop\_return\_rate.tsv**: Number of searches with at least a
+    click and the number of searches that return to the same search page
+    after clickthrough; Number of sessions with at least a click and the
+    number of sessions that return to search for different things after
+    clickthrough.
 
 wdqs/
 -----

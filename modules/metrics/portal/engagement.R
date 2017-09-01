@@ -10,7 +10,9 @@ option_list <- list(
                   * clickthrough_breakdown (can be broken down by country)
                   * clickthrough_firstvisit (can be broken down by country)
                   * clickthrough_sisterprojects
-                  * most_common_per_visit (can be broken down by country)"),
+                  * most_common_per_visit (can be broken down by country)
+                  * clickthrough_by_device
+                  * mobile_use_us_elsewhere"),
   make_option("--by_country", default = FALSE, action = "store_true",
               help = "Whether to break output down across all countries")
 )
@@ -34,7 +36,8 @@ SELECT
   UPPER(event_country) AS country,
   event_destination AS destination,
   event_event_type AS type,
-  event_section_used AS section_used
+  event_section_used AS section_used,
+  userAgent AS user_agent
 FROM WikipediaPortal_15890769
 WHERE ", date_clause, "
   AND (
@@ -113,6 +116,18 @@ if (nrow(results) == 0) {
         date = character(),
         section_used = character(),
         visits = numeric()
+      ),
+      clickthrough_by_device = data.frame(
+        date = character(),
+        device = character(),
+        n_sessions = numeric(),
+        clickthrough = numeric()
+      ),
+      mobile_use_us_elsewhere = data.frame(
+        date = character(),
+        region = character(),
+        n_mobile = numeric(),
+        n_sessions = numeric()
       )
     )
   }
@@ -245,6 +260,37 @@ if (nrow(results) == 0) {
           dplyr::summarize(visits = n()) %>%
           dplyr::ungroup()
       }
+    },
+    clickthrough_by_device = {
+      results %>%
+        cbind(purrr::map_df(.$user_agent, ~ wmf::null2na(jsonlite::fromJSON(.x, simplifyVector = FALSE)))) %>%
+        dplyr::mutate(
+          device = dplyr::if_else(browser_family %in% c("Opera Mini") | grepl("^Symbian", os_family) |
+            os_family %in% c("iOS", "Android", "Firefox OS", "BlackBerry OS", "Chrome OS", "Kindle", "Windows Phone") |
+            grepl("(phone)|(mobile)|(tablet)|(lumia)", device_family, ignore.case = TRUE), "mobile", "desktop")
+        ) %>%
+        dplyr::group_by(date, device, session) %>%
+        dplyr::filter("landing" %in% type) %>%
+        dplyr::summarize(clickthrough = any(type == "clickthrough")) %>%
+        dplyr::summarize(
+          n_sessions = n(),
+          clickthrough = sum(clickthrough)
+          ) %>%
+        dplyr::ungroup()
+    },
+    mobile_use_us_elsewhere = {
+      results %>%
+        cbind(purrr::map_df(.$user_agent, ~ wmf::null2na(jsonlite::fromJSON(.x, simplifyVector = FALSE)))) %>%
+        dplyr::mutate(
+          is_mobile = browser_family %in% c("Opera Mini") | grepl("^Symbian", os_family) |
+            os_family %in% c("iOS", "Android", "Firefox OS", "BlackBerry OS", "Chrome OS", "Kindle", "Windows Phone") |
+            grepl("(phone)|(mobile)|(tablet)|(lumia)", device_family, ignore.case = TRUE),
+          region = dplyr::if_else(grepl("^US:", country), "United States", "Everywhere else")
+        ) %>%
+        dplyr::group_by(date, region, session) %>%
+        dplyr::filter("landing" %in% type) %>%
+        dplyr::summarize(is_mobile = all(is_mobile)) %>%
+        dplyr::summarize(n_mobile = sum(is_mobile), n_sessions = n())
     }
   )
 }

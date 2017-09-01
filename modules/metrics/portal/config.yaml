@@ -133,3 +133,21 @@ reports:
         starts: 2016-05-05
         funnel: true
         type: script
+    pageviews_by_device:
+        description: Pageviews broken down by device (desktop vs mobile)
+        granularity: days
+        starts: 2017-08-01
+        funnel: true
+        type: script
+    clickthrough_by_device:
+        description: Clickthroughs from Wikipedia.org Portal, broken down by device (desktop vs mobile)
+        granularity: days
+        starts: 2017-04-01
+        funnel: true
+        type: script
+    mobile_use_us_elsewhere:
+        description: Number of Wikipedia.org Portal visitors on mobile devices in U.S. vs everywhere else
+        granularity: days
+        starts: 2017-04-01
+        funnel: true
+        type: script

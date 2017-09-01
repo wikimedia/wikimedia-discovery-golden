@@ -1,0 +1,39 @@
+#!/bin/bash
+
+hive -S --hiveconf mapred.job.queue.name=nice -e "USE wmf;
+  SELECT
+    date,
+    access_method,
+    agent_type,
+    COUNT(DISTINCT CONCAT(client_ip, user_agent, query)) AS n_search,
+    COUNT(*) AS n_serp,
+    COUNT(DISTINCT CONCAT(client_ip, user_agent)) AS n_user
+  FROM (
+    SELECT
+      '$1' AS date,
+      access_method,
+      client_ip,
+      user_agent,
+      agent_type,
+      PARSE_URL(CONCAT('http://', uri_host, uri_path, uri_query), 'QUERY', 'search') AS query
+    FROM webrequest
+    WHERE
+      webrequest_source = 'text'
+      AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) >= '$1'
+      AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) < '$2'
+      AND is_pageview
+      -- pageviews that are search results pages
+      AND page_id IS NULL
+      AND (
+        uri_path = '/wiki/Special:Search'
+        OR (
+          uri_path = '/w/index.php'
+          AND (
+            LENGTH(PARSE_URL(CONCAT('http://', uri_host, uri_path, uri_query), 'QUERY', 'search')) > 0
+            OR LENGTH(PARSE_URL(CONCAT('http://', uri_host, uri_path, uri_query), 'QUERY', 'searchToken')) > 0
+          )
+        )
+      )
+  ) AS serp
+  GROUP BY date, access_method, agent_type;
+" 2> /dev/null | grep -v parquet.hadoop | grep -v WARN:
