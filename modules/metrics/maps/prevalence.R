@@ -35,14 +35,19 @@ prevalence_query <- function(type, wiki) {
   SUM(COALESCE({type}s, 0)) AS total_{type}s
 FROM (
   SELECT
-    page.page_id,
+    p.page_id,
     pp_value AS {type}s
   FROM (
     SELECT pp_page, pp_value
     FROM page_props
     WHERE pp_propname = '{prop_name}' AND pp_value > 0
   ) AS filtered_props
-  RIGHT JOIN page ON page.page_id = filtered_props.pp_page AND page.page_namespace = {ns}
+  RIGHT JOIN (
+    SELECT page_id
+    FROM page
+    WHERE page_namespace = {ns} AND page_is_redirect = 0
+  ) p
+  ON p.page_id = filtered_props.pp_page
 ) joined_tables;")
   return(query)
 }

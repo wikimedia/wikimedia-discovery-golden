@@ -16,6 +16,7 @@ mapframe:
     - mediawikiwiki
     - metawiki
     - commonswiki
+    - uawikimedia # as of August 2017
   wikivoyages: # enabled for all *except* the following:
     - hewikivoyage # https://phabricator.wikimedia.org/T170976#3471701
 maplink:
