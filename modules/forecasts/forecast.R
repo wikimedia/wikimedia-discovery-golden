@@ -8,7 +8,6 @@ option_list <- list(
   make_option(c("-d", "--date"), default = NA, action = "store", type = "character"),
   make_option("--metric", default = NA, action = "store", type = "character",
               help = "Available:
-                  * search_api_cirrus
                   * search_zrr_overall
                   * wdqs_homepage
                   * wdqs_sparql"),
@@ -80,26 +79,6 @@ if (grepl("^wdqs_", opt$metric)) {
 
 output <- switch(
   opt$metric,
-
-  "search_api_cirrus" = {
-    api_usage <- read_data("discovery/metrics/search/search_api_usage.tsv", col_types = "Dci") %>%
-      dplyr::filter(date <= as.Date(opt$date)) %>%
-      dplyr::arrange(date, api) %>%
-      dplyr::distinct(date, api, .keep_all = TRUE) %>%
-      dplyr::filter(!is.na(api)) %>%
-      tidyr::spread(api, calls) %>%
-      { xts::xts(.[, -1], order.by = .$date) } %>%
-      check_dataset
-    if (opt$model == "ARIMA") {
-      try(
-        ceiling(forecast_arima(api_usage[, "cirrus"], arima_params = list(order = c(0, 1, 2), seasonal = list(order = c(2, 1, 1), period = 7))))
-      )
-    } else if (opt$model == "BSTS") {
-      ceiling(forecast_bsts(api_usage[, "cirrus"], transformation = "log", ar_lags = 1, n_iter = opt$iters, burn_in = opt$burnin))
-    } else if (opt$model == "Prophet") {
-      ceiling(forecast_prophet(api_usage[, "cirrus"], transformation = "log", n_iter = opt$iters))
-    }
-  },
 
   "search_zrr_overall" = {
     zrr_overall <- read_data("discovery/metrics/search/cirrus_query_aggregates_no_automata.tsv", col_types = "Dd") %>%

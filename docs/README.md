@@ -8,7 +8,7 @@ retrieval codebase that executes daily and uses
 infrastructure. These datasets provide the metrics that are used by
 [Discovery's Dashboards](https://discovery.wmflabs.org/)
 
-Last updated on 30 August 2017
+Last updated on 14 September 2017
 
 Daily Metrics
 -------------
@@ -57,14 +57,24 @@ portal/
     top 10 countries
 -   **all\_country\_data.tsv**: Sampled traffic to Wikipedia.org Portal,
     broken down by country
+-   **all\_country\_data\_history.tsv**: Sampled traffic to
+    Wikipedia.org Portal, broken down by country. Historical data store.
 -   **app\_link\_clicks.tsv**: Clicks to Wikipedia mobile apps and list
     of apps
 -   **last\_action\_country.tsv**: Last action performed on
     Wikipedia.org Portal per user session
+-   **last\_action\_country\_history.tsv**: Last action performed on
+    Wikipedia.org Portal per user session. Historical data store.
 -   **most\_common\_country.tsv**: Most common action performed on
     Wikipedia.org Portal per user session, broken down by country
+-   **most\_common\_country\_history.tsv**: Most common action performed
+    on Wikipedia.org Portal per user session, broken down by country.
+    Historical data store.
 -   **first\_visits\_country.tsv**: Action performed on Wikipedia.org
     Portal on each user's initial visit, broken down by country
+-   **first\_visits\_country\_history.tsv**: Action performed on
+    Wikipedia.org Portal on each user's initial visit, broken down by
+    country. Historical data store.
 -   **clickthrough\_rate.tsv**: Last action (no action vs clickthrough)
     by Wikipedia.org Portal visitors
 -   **clickthrough\_sisterprojects.tsv**: Clicks to Wikimedia projects
@@ -85,6 +95,9 @@ search/
 -   **app\_event\_counts\_langproj\_breakdown.tsv**: Clicks and other
     events by users searching on Android and iOS apps broken down by
     language
+-   **app\_event\_counts\_langproj\_breakdown\_history.tsv**: Clicks and
+    other events by users searching on Android and iOS apps broken down
+    by language. Historical data store.
 -   **app\_load\_times.tsv**: User-perceived load times when searching
     on Android and iOS apps
 -   **invoke\_source\_counts.tsv**: How the user initiated their search
@@ -96,6 +109,9 @@ search/
 -   **mobile\_event\_counts\_langproj\_breakdown.tsv**: Clicks and other
     events by users searching on mobile web broken down by
     language-project pairs
+-   **mobile\_event\_counts\_langproj\_breakdown\_history.tsv**: Clicks
+    and other events by users searching on mobile web broken down by
+    language-project pairs. Historical data store.
 -   **mobile\_load\_times.tsv**: User-perceived load times when
     searching on mobile web
 -   **desktop\_event\_counts.tsv**: Clicks and other events by users
@@ -103,6 +119,9 @@ search/
 -   **desktop\_event\_counts\_langproj\_breakdown.tsv**: Clicks and
     other events by users searching on desktop broken down by
     language-project pairs
+-   **desktop\_event\_counts\_langproj\_breakdown\_history.tsv**: Clicks
+    and other events by users searching on desktop broken down by
+    language-project pairs. Historical data store.
 -   **desktop\_load\_times.tsv**: User-perceived load times when
     searching on desktop
 -   **paulscore\_approximations.tsv**: Relevancy of our desktop search
@@ -112,6 +131,10 @@ search/
     Relevancy of our fulltext desktop search as measured by
     [PaulScore](https://www.mediawiki.org/wiki/Wikimedia_Discovery/Search/Glossary#PaulScore)
     broken down by language-project pairs
+-   **paulscore\_approximations\_fulltext\_langproj\_breakdown\_history.tsv**:
+    Relevancy of our fulltext desktop search as measured by
+    [PaulScore](https://www.mediawiki.org/wiki/Wikimedia_Discovery/Search/Glossary#PaulScore)
+    broken down by language-project pairs. Historical data store.
 -   **sample\_page\_visit\_ld.tsv**: How long users last on pages they
     arrived at from the search results page, computed like [median
     lethal dose in
@@ -122,6 +145,10 @@ search/
 -   **search\_threshold\_pass\_rate\_langproj\_breakdown.tsv**:
     Proportion of users having search sessions longer than a
     predetermined threshold (10s) broken down by language-project pairs
+-   **search\_threshold\_pass\_rate\_langproj\_breakdown\_history.tsv**:
+    Proportion of users having search sessions longer than a
+    predetermined threshold (10s) broken down by language-project pairs.
+    Historical data store.
 -   **cirrus\_query\_aggregates\_no\_automata.tsv**: Zero results rate
     (ZRR), excluding known bots/tools
 -   **cirrus\_query\_aggregates\_with\_automata.tsv**: Overall zero
@@ -138,9 +165,17 @@ search/
 -   **cirrus\_langproj\_breakdown\_no\_automata.tsv**: Zero results and
     total searches broken down by language-project pairs (e.g. German
     Wikiquote ZRR vs. French Wikibooks ZRR), excluding known bots/tools
+-   **cirrus\_langproj\_breakdown\_no\_automata\_history.tsv**: Zero
+    results and total searches broken down by language-project pairs
+    (e.g. German Wikiquote ZRR vs. French Wikibooks ZRR), excluding
+    known bots/tools. Historical data store.
 -   **cirrus\_langproj\_breakdown\_with\_automata.tsv**: Zero results
     and total searches broken down by language-project pairs (e.g.
     German Wikiquote ZRR vs. French Wikibooks ZRR)
+-   **cirrus\_langproj\_breakdown\_with\_automata\_history.tsv**: Zero
+    results and total searches broken down by language-project pairs
+    (e.g. German Wikiquote ZRR vs. French Wikibooks ZRR). Historical
+    data store.
 -   **sister\_search\_traffic.tsv**: Traffic to various wikis from
     Wikipedia search results pages; broken up by language, destination
     type (SERP vs not), and access method (desktop vs mobile web);
@@ -162,12 +197,6 @@ Daily Forecasts
 search/
 -------
 
--   **api\_cirrus\_arima.tsv**: ARIMA-modelled forecasts of Cirrus API
-    usage by non-automata users
--   **api\_cirrus\_bsts.tsv**: BSTS-modelled forecasts of Cirrus API
-    usage by non-automata users
--   **api\_cirrus\_prophet.tsv**: Prophet-modelled forecasts of Cirrus
-    API usage by non-automata users
 -   **zrr\_overall\_arima.tsv**: ARIMA-modelled forecasts of zero
     results rate, excluding known bots/tools
 -   **zrr\_overall\_bsts.tsv**: BSTS-modelled forecasts of zero results
