@@ -8,7 +8,7 @@ retrieval codebase that executes daily and uses
 infrastructure. These datasets provide the metrics that are used by
 [Discovery's Dashboards](https://discovery.wmflabs.org/)
 
-Last updated on 14 September 2017
+Last updated on 22 September 2017
 
 Daily Metrics
 -------------
@@ -186,6 +186,8 @@ search/
     Wikipedia search results pages; broken up by language, destination
     type (SERP vs not), and access method (desktop vs mobile web);
     exlcudes known automata
+-   **sister\_search\_prevalence.tsv**: Prevalence of sister search
+    results on Wikipedia search result pages; broken up by language
 -   **srp\_survtime.tsv**: Estimates (via survival analysis) of how long
     Wikipedia searchers stay on full-text search results page after
     getting there from autocomplete search, split by English vs French
@@ -193,10 +195,10 @@ search/
 -   **pageviews\_from\_fulltext\_search.tsv**: Number of searches,
     pageviews and users to articles from full-text search, broken down
     by access method (desktop vs mobile web) and agent type (user vs
-    spider)
+    spider).
 -   **search\_result\_pages.tsv**: Number of searches, search result
     pages and users, broken down by access method (desktop vs mobile
-    web) and agent type (user vs spider)
+    web) and agent type (user vs spider).
 -   **desktop\_return\_rate.tsv**: Number of searches with at least a
     click and the number of searches that return to the same search page
     after clickthrough; Number of sessions with at least a click and the

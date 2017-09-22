@@ -1,6 +1,18 @@
 # Change Log (Patch Notes)
 All notable changes to this project will be documented in this file.
 
+## 2017/09/22
+- Added sister project search results prevalence
+
+## 2017/09/21
+- Added new datasets in search and portal ([T172453](https://phabricator.wikimedia.org/T172453)):
+  - wikipedia portal pageview by device (desktop vs mobile)
+  - wikipedia portal clickthrough rate by device (desktop vs mobile)
+  - proportion of wikipedia portal visitors on mobile devices in US vs elsewhere
+  - pageviews from full-text search (desktop vs mobile)
+  - search return rate on desktop
+  - SERPs by access method
+
 ## 2017/08/29
 - Switched Hive queries to use the "nice" queue ([T156841](https://phabricator.wikimedia.org/T156841)). See [this section](https://wikitech.wikimedia.org/wiki/Analytics/Systems/Cluster/Hive/Queries#Run_long_queries_in_a_screen_session_and_in_the_nice_queue) for additional details.
 
