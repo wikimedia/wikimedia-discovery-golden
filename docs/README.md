@@ -8,7 +8,7 @@ retrieval codebase that executes daily and uses
 infrastructure. These datasets provide the metrics that are used by
 [Discovery's Dashboards](https://discovery.wmflabs.org/)
 
-Last updated on 22 September 2017
+Last updated on 27 September 2017
 
 Daily Metrics
 -------------
@@ -204,6 +204,8 @@ search/
     after clickthrough; Number of sessions with at least a click and the
     number of sessions that return to search for different things after
     clickthrough.
+-   **mobile\_session\_counts.tsv**: Number of user sessions on mobile
+    web, broken down by high, medium and low volume.
 
 wdqs/
 -----

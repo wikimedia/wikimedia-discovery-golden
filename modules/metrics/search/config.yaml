@@ -233,3 +233,8 @@ reports:
         granularity: days
         starts: 2017-04-01
         type: script
+    mobile_session_counts:
+        description: Number of user sessions on mobile web, broken down by high, medium and low volume.
+        granularity: days
+        starts: 2017-04-01
+        type: script

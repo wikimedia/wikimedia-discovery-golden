@@ -1,0 +1,3 @@
+#!/bin/bash
+
+Rscript modules/metrics/search/mobile_session_counts.R -d $1
