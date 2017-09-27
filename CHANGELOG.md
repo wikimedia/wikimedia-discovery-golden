@@ -1,6 +1,9 @@
 # Change Log (Patch Notes)
 All notable changes to this project will be documented in this file.
 
+## 2017/10/05
+- Changed which hostname the SQL queries are run on ([T176639](https://phabricator.wikimedia.org/T176639))
+
 ## 2017/09/22
 - Added sister project search results prevalence
 
