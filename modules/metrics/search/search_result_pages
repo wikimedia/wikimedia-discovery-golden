@@ -25,14 +25,8 @@ hive -S --hiveconf mapred.job.queue.name=nice -e "USE wmf;
       -- pageviews that are search results pages
       AND page_id IS NULL
       AND (
-        uri_path = '/wiki/Special:Search'
-        OR (
-          uri_path = '/w/index.php'
-          AND (
-            LENGTH(PARSE_URL(CONCAT('http://', uri_host, uri_path, uri_query), 'QUERY', 'search')) > 0
-            OR LENGTH(PARSE_URL(CONCAT('http://', uri_host, uri_path, uri_query), 'QUERY', 'searchToken')) > 0
-          )
-        )
+        LENGTH(PARSE_URL(CONCAT('http://', uri_host, uri_path, uri_query), 'QUERY', 'search')) > 0
+        OR LENGTH(PARSE_URL(CONCAT('http://', uri_host, uri_path, uri_query), 'QUERY', 'searchToken')) > 0
       )
   ) AS serp
   GROUP BY date, access_method, agent_type;
