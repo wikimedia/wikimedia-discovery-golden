@@ -1,6 +1,6 @@
 databases:
     el:
-        host: analytics-store.eqiad.wmnet
+        host: db1047.eqiad.wmnet
         port: 3306
         creds_file: /etc/mysql/conf.d/discovery-stats-client.cnf
         db: log
