@@ -22,14 +22,8 @@ WITH sister_search_pvs AS (
     (
       page_id IS NULL
       AND (
-        uri_path = '/wiki/Special:Search'
-        OR (
-          uri_path = '/w/index.php'
-          AND (
-            PARSE_URL(CONCAT('http://', uri_host, uri_path, uri_query), 'QUERY', 'search') IS NOT NULL
-            OR PARSE_URL(CONCAT('http://', uri_host, uri_path, uri_query), 'QUERY', 'searchToken') IS NOT NULL
-          )
-        )
+        LENGTH(PARSE_URL(CONCAT('http://', uri_host, uri_path, uri_query), 'QUERY', 'search')) > 0
+        OR LENGTH(PARSE_URL(CONCAT('http://', uri_host, uri_path, uri_query), 'QUERY', 'searchToken')) > 0
       )
     ) AS is_serp
   FROM webrequest
