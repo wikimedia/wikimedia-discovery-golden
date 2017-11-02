@@ -183,7 +183,7 @@ Rscript test.R --include_samples >> test_`date +%F_%T`.log.md 2>&1
     - KPIs (planned)
   - [x] External Traffic ([configuration](modules/metrics/external_traffic/config.yaml))
     - [x] [Referer data](modules/metrics/external_traffic/referer_data) ([T116295](https://phabricator.wikimedia.org/T116295), [Change 247601](https://gerrit.wikimedia.org/r/#/c/247601/))
-- [x] **Forecasts** ([modules/forecasts/forecast.R](modules/forecasts/forecast.R), see [T112170](https://phabricator.wikimedia.org/T112170) for more details)
+- [x] **Forecasts** ([modules/forecasts/forecast.R](modules/forecasts/forecast.R), see [T112170](https://phabricator.wikimedia.org/T112170) for more details) (DISABLED)
   - [x] Search ([configuration](modules/forecasts/search/config.yaml))
     - [x] Cirrus API usage
         - [x] [ARIMA-modelled forecasts](modules/forecasts/search/api_cirrus_arima)

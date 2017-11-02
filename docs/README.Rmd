@@ -39,20 +39,3 @@ metrics <- dplyr::bind_rows(lapply(config_yamls, function(path) {
 ```{r results='asis'}
 print_reports(metrics)
 ```
-
-## Daily Forecasts
-
-```{r yamls_forecasts}
-config_yamls <- list.files(path = "../modules/forecasts", pattern = "^config\\.yaml$", recursive = TRUE, full.names = TRUE)
-names(config_yamls) <- sub("../modules/forecasts/", "", dirname(config_yamls), fixed = TRUE)
-forecasts <- dplyr::bind_rows(lapply(config_yamls, function(path) {
-  config_yaml <- suppressMessages(suppressWarnings(data.tree::as.Node(yaml::yaml.load_file(path))))
-  reports <- data.tree::ToDataFrameTable(config_yaml[["reports"]], "report" = "name", "description")
-  reports$path = paste0(file.path(dirname(path), reports$report), ifelse(reports$type == "sql", ".sql", ""))
-  return(reports)
-}), .id = "module")
-```
-
-```{r results='asis'}
-print_reports(forecasts)
-```

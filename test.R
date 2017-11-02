@@ -36,7 +36,7 @@ option_list <- list(
               help = "Whether to print head & tail of existing datasets"),
   make_option("--disable_metrics", default = FALSE, action = "store_true",
               help = "Skip metrics modules to make the test run shorter"),
-  make_option("--disable_forecasts", default = FALSE, action = "store_true",
+  make_option("--disable_forecasts", default = TRUE, action = "store_true",
               help = "Skip forecasting modules to make the test run shorter"),
   make_option("--forecast_iters", default = 100, action = "store", type = "numeric",
               help = "Overrides number of MCMC iterations used in BSTS models [default %default]"),

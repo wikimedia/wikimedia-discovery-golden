@@ -1,6 +1,9 @@
 # Change Log (Patch Notes)
 All notable changes to this project will be documented in this file.
 
+## 2017/11/02
+- Disabled forecasting (per [T112170#3724472](https://phabricator.wikimedia.org/T112170#3724472))
+
 ## 2017/10/05
 - Changed which hostname the SQL queries are run on ([T176639](https://phabricator.wikimedia.org/T176639))
 

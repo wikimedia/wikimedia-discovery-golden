@@ -12,10 +12,3 @@ do
  echo "Running Reportupdater on ${module} metrics..."
  nice ionice reportupdater/update_reports.py -l info "modules/metrics/${module}" "/srv/published-datasets/discovery/metrics/${module}"
 done
-
-# Forecasts (dependent on latest metrics)
-for module in "search" "wdqs"
-do
- echo "Running Reportupdater on ${module} forecasts..."
- nice -n 17 ionice -c 2 -n 6 reportupdater/update_reports.py -l info "modules/forecasts/${module}" "/srv/published-datasets/discovery/forecasts/${module}"
-done
