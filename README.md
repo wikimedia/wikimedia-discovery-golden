@@ -119,12 +119,15 @@ Rscript test.R --include_samples >> test_`date +%F_%T`.log.md 2>&1
     - [x] Search on Mobile Web
         - [x] [Event counts](modules/metrics/search/mobile_event_counts.sql)
         - [x] [Load times](modules/metrics/search/mobile_load_times) (invokes [load_times.R](modules/metrics/search/load_times.R))
+        - [x] [Session counts](modules/metrics/search/mobile_session_counts) (invokes [mobile_session_counts.R](modules/metrics/search/mobile_session_counts.R))
     - [x] Search on Desktop
         - [x] [Event counts](modules/metrics/search/desktop_event_counts.sql)
         - [x] [Load times](modules/metrics/search/desktop_load_times) (invokes [load_times.R](modules/metrics/search/load_times.R))
         - [x] [Survival/LDN: Retention of users on visited pages](modules/metrics/search/sample_page_visit_ld) ([T113297](https://phabricator.wikimedia.org/T113297))
         - [x] [Dwell-time: % of users visiting results for more than 10s](modules/metrics/search/search_threshold_pass_rate) ([T113297](https://phabricator.wikimedia.org/T113297), [T113513](https://phabricator.wikimedia.org/T113513), [Change 240593](https://gerrit.wikimedia.org/r/#/c/240593/))
+        - [x] [Time spent on search result pages (SRPs)](modules/metrics/search/srp_survtime) (invokes [srp_survtime.R](modules/metrics/search/srp_survtime.R))
         - [x] [PaulScore](modules/metrics/search/paulscore_approximations) ([T144424](https://phabricator.wikimedia.org/T144424))
+        - [x] [Bounce rate](modules/metrics/search/desktop_return_rate) (invokes [desktop_return_rate.R](modules/metrics/search/desktop_return_rate.R))
         - Dwell-time, PaulScore, event counts, etc. broken down by language-project (planned, [T150410](https://phabricator.wikimedia.org/T150410))
     - [x] Zero results rate (all invoke [cirrus_aggregates.R](modules/metrics/search/cirrus_aggregates.R))
         - [x] Overall
@@ -140,9 +143,15 @@ Rscript test.R --include_samples >> test_`date +%F_%T`.log.md 2>&1
             - [x] [No automata](modules/metrics/search/cirrus_langproj_breakdown_no_automata)
             - [x] [With automata](modules/metrics/search/cirrus_langproj_breakdown_with_automata)
         - Well-behaved searchers (planned, [T150901](https://phabricator.wikimedia.org/T150901))
-        - Probable non-bots, as detected by ML (planned, [T149440](https://phabricator.wikimedia.org/T149440)
+        - Probable non-bots, as detected by ML (abandoned, [T149440](https://phabricator.wikimedia.org/T149440)
+    - [x] Sister search
+      - [x] [Prevalence on SRPs](modules/metrics/search/sister_search_prevalence.sql)
+      - [x] [Traffic to sister projects from Wikipedia SRPs](modules/metrics/search/sister_search_traffic)
+    - [x] [Article pageviews from full-text search](modules/metrics/search/pageviews_from_fulltext_search)
+    - [x] [Full-text SRP views by device and agent type](modules/metrics/search/search_result_pages)
   - [x] [Wikipedia.org Portal](https://www.mediawiki.org/wiki/Wikipedia.org_Portal) ([configuration](modules/metrics/portal/config.yaml), [T118994](https://phabricator.wikimedia.org/T118994))
     - [x] [Pageviews](modules/metrics/portal/pageviews) ([T125737](https://phabricator.wikimedia.org/T125737), [T143064](https://phabricator.wikimedia.org/T143064), [T143605](https://phabricator.wikimedia.org/T143605))
+    - [x] [Pageviews by device (mobile vs desktop)](modules/metrics/portal/pageviews_by_device)
     - [x] [Referers](modules/metrics/portal/referer_data)
     - [x] [User Agent breakdown](modules/metrics/portal/user_agent_data)
     - [x] Languages
@@ -162,6 +171,8 @@ Rscript test.R --include_samples >> test_`date +%F_%T`.log.md 2>&1
             - [x] [Last performed action](modules/metrics/portal/last_action_country)
             - [x] [Most commonly clicked section per visit](modules/metrics/portal/most_common_country)
             - [x] [Clickthrough on first visit](modules/metrics/portal/first_visits_country)
+            - [x] [Clickthrough by device (mobile vs desktop)](modules/metrics/portal/clickthrough_by_device)
+            - [x] [Use of mobile devices everywhere vs U.S.](modules/metrics/portal/mobile_use_us_elsewhere)
         - [x] [Dwell-time](modules/metrics/portal/dwell_metrics) ([T120432](https://phabricator.wikimedia.org/T120432))
         - [x] [Mobile app links](modules/metrics/portal/app_link_clicks.sql) ([T154634](https://phabricator.wikimedia.org/T154634))
   - [x] [Wikidata Query Service](https://www.mediawiki.org/wiki/Wikidata_query_service) ([configuration](modules/metrics/wdqs/config.yaml))
@@ -176,9 +187,9 @@ Rscript test.R --include_samples >> test_`date +%F_%T`.log.md 2>&1
       - [x] Tile requests ([T113832](https://phabricator.wikimedia.org/T113832))
         - [x] [No automata](modules/metrics/maps/tile_aggregates_no_automata)
         - [x] [With automata](modules/metrics/maps/tile_aggregates_with_automata)
-    - [ ] Maps prevalence on wikis ([T170022](https://phabricator.wikimedia.org/T170022))
-      - [ ] [Maplinks](modules/metrics/maps/maplink_prevalence)
-      - [ ] [Mapframes](modules/metrics/maps/mapframe_prevalence)
+    - [x] Maps prevalence on wikis ([T170022](https://phabricator.wikimedia.org/T170022))
+      - [x] [Maplinks](modules/metrics/maps/maplink_prevalence)
+      - [x] [Mapframes](modules/metrics/maps/mapframe_prevalence)
     - Kartographer usage (planned)
     - KPIs (planned)
   - [x] External Traffic ([configuration](modules/metrics/external_traffic/config.yaml))
@@ -203,8 +214,6 @@ Rscript test.R --include_samples >> test_`date +%F_%T`.log.md 2>&1
         - [x] [ARIMA-modelled forecasts](modules/forecasts/wdqs/sparql_usage_arima)
         - [x] [BSTS-modelled forecasts](modules/forecasts/wdqs/sparql_usage_bsts)
         - [x] [Prophet-modelled forecasts](modules/forecasts/wdqs/sparql_usage_prophet)
-  - Maps (planned)
-  - External Traffic (planned)
 
 ## Adding New Metrics Modules
 

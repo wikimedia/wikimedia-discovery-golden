@@ -1,6 +1,10 @@
 # Change Log (Patch Notes)
 All notable changes to this project will be documented in this file.
 
+## 2017/11/13
+- Switched host name from db1047.eqiad.wmnet to db1108.eqiad.wmnet per [T156844](https://phabricator.wikimedia.org/T156844)
+- Updated documentation
+
 ## 2017/11/02
 - Disabled forecasting (per [T112170#3724472](https://phabricator.wikimedia.org/T112170#3724472))
 
