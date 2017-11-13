@@ -12,6 +12,7 @@ mapframe:
     - uawiki # as of August 2017 (T171805)
     - euwiki # as of August 2017 (T171805)
     - ptwiki # as of August 2017 (T171805)
+    - eswiki # as of October 2017 (T177695)
   miscellaneous: # enabled for the following:
     - mediawikiwiki
     - metawiki
