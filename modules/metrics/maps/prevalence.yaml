@@ -1,18 +1,22 @@
 mapframe:
   wikipedias: # enabled for the following:
-    - ruwiki
+    - arwiki
+    - bgwiki
     - cawiki
-    - hewiki
-    - mkwiki
-    - frwiki
+    - cswiki
+    - enwiki
+    - eswiki
+    - euwiki
     - fiwiki
+    - frwiki
+    - hewiki
+    - knwiki
+    - kuwiki
+    - lvwiki
+    - mkwiki
     - nowiki
-    - svwiki
-    - cswiki # as of July 2017 (T171805)
-    - uawiki # as of August 2017 (T171805)
-    - euwiki # as of August 2017 (T171805)
-    - ptwiki # as of August 2017 (T171805)
-    - eswiki # as of October 2017 (T177695)
+    - ptwiki
+    - ruwiki
   miscellaneous: # enabled for the following:
     - mediawikiwiki
     - metawiki
