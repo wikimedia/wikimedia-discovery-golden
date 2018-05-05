@@ -22,14 +22,13 @@ mapframe:
     - metawiki
     - commonswiki
     - uawikimedia # as of August 2017
-  wikivoyages: # enabled for all *except* the following:
-    - hewikivoyage # https://phabricator.wikimedia.org/T170976#3471701
+  # wikivoyages use the same list as maplink below
 maplink:
   miscellaneous: # enabled for the following:
     - mediawikiwiki
     - metawiki
     - commonswiki
-  wikivyoages: # enabled for the following:
+  wikivoyages: # enabled for the following:
     - dewikivoyage
     - elwikivoyage
     - enwikivoyage
@@ -38,6 +37,7 @@ maplink:
     - fiwikivoyage
     - frwikivoyage
     - hewikivoyage
+    - hiwikivoyage
     - itwikivoyage
     - nlwikivoyage
     - plwikivoyage

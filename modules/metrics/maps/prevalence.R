@@ -56,7 +56,7 @@ if (opt$output == "mapframe") {
   wikis <- c(
     enabled$mapframe$wikipedias,
     enabled$mapframe$miscellaneous,
-    setdiff(enabled$maplink$wikivyoages, enabled$mapframe$wikivoyages)
+    enabled$maplink$wikivoyages
   )
 } else {
   wikis <- unname(unlist(enabled$maplink))
