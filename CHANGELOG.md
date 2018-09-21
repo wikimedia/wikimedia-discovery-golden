@@ -1,6 +1,12 @@
 # Change Log (Patch Notes)
 All notable changes to this project will be documented in this file.
 
+## 2018/09/26
+- Corrected the following metrics per [T197128](https://phabricator.wikimedia.org/T197128):
+  - Survival analysis to correct for no-checkin page visits
+  - PaulScore calculation for autocomplete searches
+- Fixed WDQS request counts ([T204415](https://phabricator.wikimedia.org/T204415))
+
 ## 2017/11/13
 - Switched host name from db1047.eqiad.wmnet to db1108.eqiad.wmnet per [T156844](https://phabricator.wikimedia.org/T156844)
 - Updated documentation

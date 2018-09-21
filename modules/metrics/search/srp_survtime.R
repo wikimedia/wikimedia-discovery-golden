@@ -106,6 +106,12 @@ if (nrow(results) == 0) {
         `next check-in` = as.integer(next_checkin),
         status = as.integer(status)
       )
+    } else { # If there is no checkin event, that means users leave the page within 10s
+      data.table::data.table(
+        `last check-in` = 0L,
+        `next check-in` = 10L,
+        status = 3L
+      )
     }
   }, by = c("wiki", "language", "session_id", "page_id")]
 
@@ -114,9 +120,9 @@ if (nrow(results) == 0) {
   } else {
     srp_survivorship <- page_visits[, {
       surv <- survival::Surv(
-        time = page_visits$`last check-in`,
-        time2 = page_visits$`next check-in`,
-        event = page_visits$status,
+        time = `last check-in`,
+        time2 = `next check-in`,
+        event = status,
         type = "interval"
       )
       fit <- survival::survfit(surv ~ 1)

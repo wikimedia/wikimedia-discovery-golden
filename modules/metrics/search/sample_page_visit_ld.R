@@ -20,11 +20,11 @@ if (is.na(opt$date)) {
 date_clause <- as.character(as.Date(opt$date), format = "LEFT(timestamp, 8) = '%Y%m%d'")
 
 query <- paste0("SELECT
-  timestamp,
+  timestamp AS ts,
   event_uniqueId AS event_id,
   event_searchSessionId AS session_id,
   event_pageViewId AS page_id,
-  event_action AS action,
+  event_action AS event,
   event_checkin AS checkin
 FROM TestSearchSatisfaction2_", dplyr::if_else(as.Date(opt$date) < "2017-02-10", "15922352", dplyr::if_else(as.Date(opt$date) < "2017-06-29", "16270835", "16909631")), "
 WHERE ", date_clause, "
@@ -59,13 +59,16 @@ if (nrow(results) == 0) {
   page_visit_survivorship <- empty_df()
 } else {
   # De-duplicate, clean, and sort:
-  results$timestamp <- as.POSIXct(results$timestamp, format = "%Y%m%d%H%M%S")
-  results <- results[order(results$event_id, results$timestamp), ]
-  results <- results[!duplicated(results$event_id, fromLast = TRUE), ]
-  results <- data.table::as.data.table(results[order(results$session_id, results$page_id, results$timestamp), ])
-  valid_sessions <- results[, list(valid = all(c("searchResultPage", "visitPage", "checkin") %in% action)),
-                            by = "session_id"]$session_id
-  results <- results[results$session_id %in% valid_sessions & results$action != "searchResultPage", ]
+  results %<>%
+    dplyr::mutate(ts = lubridate::ymd_hms(ts)) %>%
+    dplyr::arrange(session_id, event_id, ts) %>%
+    dplyr::distinct(session_id, event_id, .keep_all = TRUE) %>%
+    dplyr::arrange(session_id, page_id, ts) %>%
+    dplyr::select(ts, session_id, page_id, event, checkin) %>%
+    data.table::data.table(key = c("session_id", "page_id"))
+  valid_sessions <- results[, list(valid = all(c("searchResultPage", "visitPage", "checkin") %in% event)),
+                            by = "session_id"]
+  results <- results[results$session_id %in% valid_sessions$session_id[valid_sessions$valid] & results$event != "searchResultPage", ]
   ## Calculates the median lethal dose (LD50) and other.
   ## LD50 = the time point at which we have lost 50% of our users.
   checkins <- c(0, 10, 20, 30, 40, 50, 60, 90, 120, 150, 180, 210, 240, 300, 360, 420)
@@ -80,12 +83,19 @@ if (nrow(results) == 0) {
       next_checkin <- checkins[min(idx)]
       status <- ifelse(last_checkin == 420, 0, 3)
       data.table::data.table(
-        `last check-in` = last_checkin,
-        `next check-in` = next_checkin,
-        status = status
+        `last check-in` = as.integer(last_checkin),
+        `next check-in` = as.integer(next_checkin),
+        status = as.integer(status)
+      )
+    } else { # If there is no checkin event, that means users leave the page within 10s
+      data.table::data.table(
+        `last check-in` = 0L,
+        `next check-in` = 10L,
+        status = 3L
       )
     }
   }, by = c("session_id", "page_id")]
+
   if (nrow(page_visits) == 0) {
     page_visit_survivorship <- empty_df()
   } else {
