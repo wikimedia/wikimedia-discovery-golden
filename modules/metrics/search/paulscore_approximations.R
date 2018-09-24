@@ -49,7 +49,7 @@ FROM (
   FROM TestSearchSatisfaction2_{revision}
   WHERE LEFT(timestamp, 8) = {yyyymmdd}
     AND event_action IN ('searchResultPage', 'click')
-    AND IF(event_source = 'autocomplete', event_inputLocation = 'header', TRUE)
+    AND IF(event_source = 'autocomplete' AND event_action = 'searchResultPage', event_inputLocation = 'header', TRUE)
     AND IF(event_source = 'autocomplete' AND event_action = 'click', event_position >= 0, TRUE)
 ) AS deduplicate
 GROUP BY date, event_searchSessionId, event_source, wiki;")
