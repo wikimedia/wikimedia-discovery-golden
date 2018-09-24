@@ -23,7 +23,7 @@ SELECT
   COUNT(*) AS events
 FROM webrequest
 WHERE
-  webrequest_source = 'misc'
+  webrequest_source = 'text'
   AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) >= '$1'
   AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) < '$2'
   AND uri_host = 'query.wikidata.org'
