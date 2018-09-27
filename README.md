@@ -1,13 +1,12 @@
 *Golden* Retriever Scripts
 ==========================
 
-This repository contains aggregation/acquisition scripts for extracting data from the MySQL/Hive databases for computing metrics for [various teams](https://www.mediawiki.org/wiki/Wikimedia_Discovery#The_team) within [Discovery](https://www.mediawiki.org/wiki/Wikimedia_Discovery). It uses Analytics' [Reportupdater infrastructure](https://wikitech.wikimedia.org/wiki/Analytics/Reportupdater). This codebase is maintained by [Discovery's Analysis team](https://www.mediawiki.org/wiki/Discovery_Analysis):
+This repository contains aggregation/acquisition scripts for extracting data from the MySQL/Hive databases for computing metrics for [various teams](https://www.mediawiki.org/wiki/Wikimedia_Discovery#The_team) within [Discovery](https://www.mediawiki.org/wiki/Wikimedia_Discovery). It uses Analytics' [Reportupdater infrastructure](https://wikitech.wikimedia.org/wiki/Analytics/Reportupdater). This codebase is maintained by [Product Analytics team](https://www.mediawiki.org/wiki/Product_Analytics):
 
-- [Deb Tankersley](https://meta.wikimedia.org/wiki/User:DTankersley_(WMF)) (Product Manager)
 - [Mikhail Popov](https://meta.wikimedia.org/wiki/User:MPopov_(WMF)) (Data Analyst)
 - [Chelsy Xie](https://meta.wikimedia.org/wiki/User:CXie_(WMF)) (Data Analyst)
 
-For questions and comments, contact [Deb](mailto:deb@wikimedia.org), [Mikhail](mailto:mikhail@wikimedia.org), or [Chelsy](mailto:cxie@wikimedia.org).
+For questions and comments, contact [Mikhail](mailto:mikhail@wikimedia.org), or [Chelsy](mailto:cxie@wikimedia.org).
 
 ## Table of Contents
 
