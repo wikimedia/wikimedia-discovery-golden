@@ -6,6 +6,7 @@ databases:
         db: log
 defaults:
     db: el
+    group: analytics-search-users
 reports:
     actions_per_tool:
         description: Actions broken down by feature (e.g. GeoHack)

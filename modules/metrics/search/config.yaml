@@ -6,6 +6,7 @@ databases:
         db: log
 defaults:
     db: el
+    group: analytics-search-users
 reports:
     app_event_counts:
         description: Clicks and other events by users searching on Android and iOS apps

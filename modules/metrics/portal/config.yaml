@@ -6,6 +6,7 @@ databases:
         db: log
 defaults:
     db: el
+    group: analytics-search-users
 reports:
     pageviews:
         description: Wikipedia.org Portal pageviews, broken down by high-volume clients vs. low-volume clients

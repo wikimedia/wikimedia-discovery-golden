@@ -1,3 +1,5 @@
+defaults:
+    group: analytics-search-users
 reports:
     basic_usage:
         description: Homepage visits, SPARQL & LDF endpoint requests

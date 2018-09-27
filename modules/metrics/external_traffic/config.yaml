@@ -1,3 +1,5 @@
+defaults:
+    group: analytics-search-users
 reports:
     referer_data:
         description: Pageviews broken down by referrer class (e.g. internal vs external) and search engine
