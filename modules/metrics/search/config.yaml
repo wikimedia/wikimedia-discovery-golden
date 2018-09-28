@@ -38,13 +38,13 @@ reports:
         granularity: days
         starts: 2016-07-28
         funnel: true
-        type: sql
+        type: script
     click_position_counts:
         description: The position of the clicked search result on the Android app
         granularity: days
         starts: 2016-07-28
         funnel: true
-        type: sql
+        type: script
     mobile_event_counts:
         description: Clicks and other events by users searching on mobile web
         granularity: days

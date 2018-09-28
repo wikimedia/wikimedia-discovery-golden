@@ -1,6 +1,9 @@
 # Change Log (Patch Notes)
 All notable changes to this project will be documented in this file.
 
+## 2018/09/28
+- Change SQL queries using MobileWikiAppSearch table to Hive queries
+
 ## 2018/09/26
 - Corrected the following metrics per [T197128](https://phabricator.wikimedia.org/T197128):
   - Survival analysis to correct for no-checkin page visits

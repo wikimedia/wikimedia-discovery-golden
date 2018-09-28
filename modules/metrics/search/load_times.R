@@ -26,11 +26,11 @@ if (!(opt$platform %in% c("desktop", "mobileweb", "app"))) {
 }
 
 # Build query:
-date_clause <- as.character(as.Date(opt$date), format = "LEFT(timestamp, 8) = '%Y%m%d'")
+date_clause <- as.character(as.Date(opt$date), format = "year = %Y AND month = %m AND day = %d")
 
 # All three platforms will yield data structured the same way, having the following columns:
 # date      : the date of the event
-# timestamp : YYYYMMDDHHMMSS of the event
+# dt : timestamp (ISO-8601) of the event
 # platform  : 'Android' or 'iOS' for app-based events, NULL otherwise
 # event_id  : unique event ID for de-duplication of desktop-based events, NULL o.w.
 # load_time : load time (ms)
@@ -39,58 +39,55 @@ query <- switch(
 
   # Desktop-based events:
   desktop = paste0("
+SET mapred.job.queue.name=nice;
+USE event;
 SELECT
-  '", opt$date, "' AS date, timestamp,
+  '", opt$date, "' AS date, dt,
   'desktop' AS platform,
-  event_uniqueId AS event_id,
-  CASE WHEN event_msToDisplayResults <= 0 THEN NULL
-       ELSE event_msToDisplayResults END AS load_time
-FROM TestSearchSatisfaction2_", dplyr::if_else(as.Date(opt$date) < "2017-02-10", "15922352", dplyr::if_else(as.Date(opt$date) < "2017-06-29", "16270835", "16909631")), "
+  event.uniqueId AS event_id,
+  CASE WHEN event.msToDisplayResults <= 0 THEN NULL
+       ELSE event.msToDisplayResults END AS load_time
+FROM testsearchsatisfaction2
 WHERE ", date_clause, "
-  AND event_action = 'searchResultPage'
-  AND (event_subTest IS NULL OR event_subTest IN ('null', 'baseline'))
-  AND event_source = 'fulltext';"),
+  AND event.action = 'searchResultPage'
+  AND (event.subTest IS NULL OR event.subTest IN ('null', 'baseline'))
+  AND event.source = 'fulltext';"),
 
   # Mobile Web-based events:
   mobileweb = paste0("
+SET mapred.job.queue.name=nice;
+USE event;
 SELECT
-  '", opt$date, "' AS date, timestamp,
+  '", opt$date, "' AS date, dt,
   'mobileweb' AS platform,
   'N/A' AS event_id,
-  CASE WHEN event_timeToDisplayResults <= 0 THEN NULL
-       ELSE event_timeToDisplayResults END AS load_time
-FROM MobileWebSearch_12054448
+  CASE WHEN event.timeToDisplayResults <= 0 THEN NULL
+       ELSE event.timeToDisplayResults END AS load_time
+FROM mobilewebsearch
 WHERE ", date_clause, "
-  AND event_action = 'impression-results';"),
+  AND event.action = 'impression-results';"),
 
   # App-based events:
   app = paste0("
+SET mapred.job.queue.name=nice;
+USE event;
 SELECT
-  '", opt$date, "' AS date, timestamp,
-  CASE WHEN INSTR(userAgent, 'Android') > 0 THEN 'Android'
-       ELSE 'iOS' END AS platform,
-  '10641988' as event_id,
-  CASE WHEN event_timeToDisplayResults <= 0 THEN NULL
-       ELSE event_timeToDisplayResults END AS load_time
-FROM MobileWikiAppSearch_10641988
+  '", opt$date, "' AS date, dt,
+  useragent.os_family AS platform,
+  'N/A' as event_id,
+  CASE WHEN COALESCE(event.timeToDisplayResults, event.time_to_display_results) <= 0 THEN NULL
+       ELSE COALESCE(event.timeToDisplayResults, event.time_to_display_results) END AS load_time
+FROM mobilewikiappsearch
 WHERE ", date_clause, "
-  AND event_action = 'results'
-UNION ALL
-SELECT
-  '", opt$date, "' AS date, timestamp,
-  CASE WHEN INSTR(userAgent, 'Android') > 0 THEN 'Android'
-       ELSE 'iOS' END AS platform,
-  '15729321' as event_id,
-  event_timeToDisplayResults AS load_time
-FROM MobileWikiAppSearch_15729321
-WHERE ", date_clause, "
-  AND event_action = 'results';")
+  AND event.action = 'results'
+  -- Need to union with MobileWikiAppiOSSearch after T205551 is fixed
+  ;")
 
 )
 
-# Fetch data from MySQL database:
+# Fetch data from database using Hive:
 results <- tryCatch(
-  suppressMessages(wmf::mysql_read(query, "log")),
+  suppressMessages(wmf::query_hive(query, use_beeline = TRUE)),
   error = function(e) {
     return(data.frame())
   }
@@ -116,10 +113,11 @@ if (nrow(results) == 0) {
     )
   }
 } else {
-  results$timestamp <- lubridate::ymd_hms(results$timestamp)
+  results$dt <- lubridate::ymd_hms(results$dt)
+  results$load_time <- as.numeric(gsub("NULL", NA, results$load_time, fixed = TRUE))
   # Remove duplicated events on TSS2:
   if (opt$platform == "desktop") {
-    results <- results[order(results$event_id, results$timestamp), ]
+    results <- results[order(results$event_id, results$dt), ]
     results <- results[!duplicated(results$event_id), ]
   }
   results$event_id <- NULL

@@ -1,0 +1,22 @@
+#!/bin/bash
+
+hive -S --hiveconf mapred.job.queue.name=nice -e "USE event;
+SELECT date, click_position, COUNT(*) AS events
+FROM (
+  SELECT 
+    DATE('$1') AS date, 
+    CASE WHEN (event.position + 1) < 10 THEN (event.position + 1)
+         WHEN (event.position + 1) >= 10 AND (event.position + 1) < 20 THEN '10-19'
+         WHEN (event.position + 1) >= 20 AND (event.position + 1) <= 100 THEN '20-100'
+         WHEN (event.position + 1) > 100 THEN '100+'
+         END AS click_position
+  FROM mobilewikiappsearch
+  WHERE
+    CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) >= '$1'
+    AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) < '$2'
+    AND event.action = 'click'
+    AND event.position IS NOT NULL
+) AS MobileWikiAppSearch
+GROUP BY date, click_position;
+-- Need to union with MobileWikiAppiOSSearch after T205551 is fixed
+" 2> /dev/null | grep -v parquet.hadoop | grep -v WARN:

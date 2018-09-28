@@ -1,0 +1,25 @@
+#!/bin/bash
+
+hive -S --hiveconf mapred.job.queue.name=nice -e "USE event;
+SELECT date, invoke_source, COUNT(*) AS events
+FROM (
+SELECT
+  DATE('$1') AS date, 
+  CASE COALESCE(event.source, event.invoke_source) WHEN 0 THEN 'Main article toolbar'
+                                                   WHEN 1 THEN 'Widget'
+                                                   WHEN 2 THEN 'Share intent'
+                                                   WHEN 3 THEN 'Process-text intent'
+                                                   WHEN 4 THEN 'Floating search bar in the feed'
+                                                   WHEN 5 THEN 'Voice search query'
+                                                   WHEN 6 THEN 'App shortcut'
+                                                   END AS invoke_source
+FROM mobilewikiappsearch
+WHERE
+  CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) >= '$1'
+  AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) < '$2'
+  AND event.action = 'start'
+  AND COALESCE(event.source, event.invoke_source) IS NOT NULL
+) AS MobileWikiAppSearch
+GROUP BY date, invoke_source;
+-- Need to union with MobileWikiAppiOSSearch after T205551 is fixed
+" 2> /dev/null | grep -v parquet.hadoop | grep -v WARN:

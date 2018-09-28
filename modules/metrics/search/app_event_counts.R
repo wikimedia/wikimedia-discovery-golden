@@ -19,44 +19,33 @@ if (is.na(opt$date) || !(opt$output %in% c("overall", "langproj"))) {
 }
 
 # Build query:
-date_clause <- as.character(as.Date(opt$date), format = "LEFT(timestamp, 8) = '%Y%m%d'")
+date_clause <- as.character(as.Date(opt$date), format = "year = %Y AND month = %m AND day = %d")
 
-query <-paste0("SELECT
+query <-paste0("
+SET mapred.job.queue.name=nice;
+USE event;
+SELECT
   date, wiki, action, platform, COUNT(*) AS events
 FROM (
   SELECT
     DATE('", opt$date, "') AS date,
     wiki,
-    CASE event_action WHEN 'click' THEN 'clickthroughs'
+    CASE event.action WHEN 'click' THEN 'clickthroughs'
                       WHEN 'start' THEN 'search sessions'
                       WHEN 'results' THEN 'Result pages opened'
                       END AS action,
-    CASE WHEN INSTR(userAgent, 'Android') > 0 THEN 'Android'
-         ELSE 'iOS' END AS platform
-  FROM MobileWikiAppSearch_10641988
+    useragent.os_family AS platform
+  FROM mobilewikiappsearch
   WHERE ", date_clause, "
-    AND event_action IN ('click', 'start', 'results')
+    AND event.action IN ('click', 'start', 'results')
     AND wiki NOT RLIKE '^WikipediaApp'
-  UNION ALL
-  SELECT
-    DATE('", opt$date, "') AS date,
-    wiki,
-    CASE event_action WHEN 'click' THEN 'clickthroughs'
-                      WHEN 'start' THEN 'search sessions'
-                      WHEN 'results' THEN 'Result pages opened'
-                      END AS action,
-    CASE WHEN INSTR(userAgent, 'Android') > 0 THEN 'Android'
-         ELSE 'iOS' END AS platform
-  FROM MobileWikiAppSearch_15729321
-  WHERE ", date_clause, "
-    AND event_action IN ('click', 'start', 'results')
-    AND wiki NOT RLIKE '^WikipediaApp'
+  -- Need to union with MobileWikiAppiOSSearch after T205551 is fixed
 ) AS MobileWikiAppSearch
 GROUP BY date, wiki, action, platform;")
 
-# Fetch data from MySQL database:
+# Fetch data from database using Hive:
 results <- tryCatch(
-  suppressMessages(wmf::mysql_read(query, "log")),
+  suppressMessages(wmf::query_hive(query)),
   error = function(e) {
     return(data.frame())
   }
