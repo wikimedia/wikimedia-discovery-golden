@@ -2,7 +2,10 @@
 
 source("config.R")
 .libPaths(r_library)
-suppressPackageStartupMessages(library("optparse"))
+suppressPackageStartupMessages({
+  library("optparse")
+  library("magrittr")
+})
 
 option_list <- list(
   make_option(c("-d", "--date"), default = NA, action = "store", type = "character")
