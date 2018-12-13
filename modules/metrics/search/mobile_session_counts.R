@@ -61,7 +61,7 @@ if (nrow(results) == 0) {
               date = opt$date,
               user_sessions = nrow(results),
               search_sessions = sum(results$n_search_session, na.rm = TRUE),
-              tidyr::spread(results[, list(user_session = length(user_session_token)), by = "session_type"],
+              tidyr::spread(as.data.frame(results[, list(user_session = length(user_session_token)), by = "session_type"]),
                             session_type, user_session),
               threshold_high = `90th percentile`,
               threshold_low = `10th percentile`
