@@ -1,6 +1,9 @@
 # Change Log (Patch Notes)
 All notable changes to this project will be documented in this file.
 
+## 2019/02/15
+- Change metrics/portal/app_link_clicks query from SQL to Hive
+
 ## 2018/09/28
 - Change SQL queries using MobileWikiAppSearch table to Hive queries
 
