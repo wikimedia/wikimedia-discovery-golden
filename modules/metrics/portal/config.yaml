@@ -1,12 +1,3 @@
-databases:
-    el:
-        host: db1108.eqiad.wmnet
-        port: 3306
-        creds_file: /etc/mysql/conf.d/discovery-stats-client.cnf
-        db: log
-defaults:
-    db: el
-    group: analytics-search-users
 reports:
     pageviews:
         description: Wikipedia.org Portal pageviews, broken down by high-volume clients vs. low-volume clients
@@ -65,7 +56,7 @@ reports:
         granularity: days
         starts: 2016-11-01
         funnel: true
-        type: sql
+        type: script
     last_action_country:
         description: Last action performed on Wikipedia.org Portal per user session
         granularity: days
