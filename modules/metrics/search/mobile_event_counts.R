@@ -2,7 +2,11 @@
 
 source("config.R")
 .libPaths(r_library)
-suppressPackageStartupMessages(library("optparse"))
+suppressPackageStartupMessages({
+  library("optparse")
+  library("glue")
+  library("zeallot")
+})
 
 option_list <- list(
   make_option(c("-d", "--date"), default = NA, action = "store", type = "character"),
@@ -19,25 +23,31 @@ if (is.na(opt$date) || !(opt$output %in% c("overall", "langproj"))) {
 }
 
 # Build query:
-date_clause <- as.character(as.Date(opt$date), format = "LEFT(timestamp, 8) = '%Y%m%d'")
+c(year, month, day) %<-% wmf::extract_ymd(as.Date(opt$date))
 
-query <-paste0("SELECT
-  DATE('", opt$date, "') AS date,
+query <- glue("USE event;
+SELECT
+  '${opt$date}' AS date,
   wiki,
-  CASE event_action WHEN 'click-result' THEN 'clickthroughs'
+  CASE event.action WHEN 'click-result' THEN 'clickthroughs'
                     WHEN 'session-start' THEN 'search sessions'
                     WHEN 'impression-results' THEN 'Result pages opened'
                     END AS action,
-  COUNT(*) AS events
-FROM MobileWebSearch_12054448
-WHERE ", date_clause, "
-  AND event_action IN('click-result', 'session-start', 'impression-results')
-GROUP BY date, wiki, action;")
+  COUNT(1) AS events
+FROM MobileWebSearch
+WHERE year = ${year} AND month = ${month} AND day = ${day}
+  AND event.action IN('click-result', 'session-start', 'impression-results')
+GROUP BY
+  '${opt$date}',
+  wiki,
+  CASE event.action WHEN 'click-result' THEN 'clickthroughs'
+                    WHEN 'session-start' THEN 'search sessions'
+                    WHEN 'impression-results' THEN 'Result pages opened'
+                    END
+;", .open = "${")
 
-
-# Fetch data from MySQL database:
 results <- tryCatch(
-  suppressMessages(wmf::mysql_read(query, "log")),
+  suppressMessages(wmf::query_hive(query)),
   error = function(e) {
     return(data.frame())
   }
@@ -67,7 +77,7 @@ if (nrow(results) == 0) {
     opt$output,
     overall = {
       results[, {
-        data.frame(events=sum(events, na.rm=TRUE))
+        data.frame(events = sum(events, na.rm = TRUE))
       }, by = c("date", "action")]
     },
     langproj = {
@@ -77,7 +87,7 @@ if (nrow(results) == 0) {
       suppressMessages(lang_proj <- polloi::parse_wikiid(results$wiki))
       # Remove accents because Reportupdater requires ASCII:
       lang_proj$language <- stringi::stri_trans_general(lang_proj$language, "Latin-ASCII")
-      results <- cbind(results[, wiki:=NULL], lang_proj) # add parsed languages and projects to results.
+      results <- cbind(results[, wiki := NULL], lang_proj) # add parsed languages and projects to results.
       data.table::setcolorder(results, c("date", "language", "project", "action", "events"))
       results
     }

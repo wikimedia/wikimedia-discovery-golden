@@ -5,6 +5,7 @@ source("config.R")
 suppressPackageStartupMessages({
   library("optparse")
   library("glue")
+  library("zeallot")
 })
 
 option_list <- list(
@@ -21,42 +22,41 @@ if (is.na(opt$date) || !(opt$output %in% c("overall", "langproj"))) {
   quit(save = "no", status = 1)
 }
 
-# Build query:
-yyyymmdd <- format(as.Date(opt$date), "%Y%m%d")
-revision <- dplyr::case_when(
-  as.Date(opt$date) < "2017-02-10" ~ "15922352",
-  as.Date(opt$date) < "2017-06-29" ~ "16270835",
-  TRUE ~ "16909631"
-)
+c(year, month, day) %<-% wmf::extract_ymd(as.Date(opt$date))
 
-query <- glue("SELECT
-  DATE('{opt$date}') AS date,
-  event_searchSessionId,
-  event_source,
-  wiki,
-  SUM(IF(event_action = 'click', POW(0.1, event_position), 0)) / SUM(IF(event_action = 'searchResultPage', 1, 0)) AS pow_1,
-  SUM(IF(event_action = 'click', POW(0.2, event_position), 0)) / SUM(IF(event_action = 'searchResultPage', 1, 0)) AS pow_2,
-  SUM(IF(event_action = 'click', POW(0.3, event_position), 0)) / SUM(IF(event_action = 'searchResultPage', 1, 0)) AS pow_3,
-  SUM(IF(event_action = 'click', POW(0.4, event_position), 0)) / SUM(IF(event_action = 'searchResultPage', 1, 0)) AS pow_4,
-  SUM(IF(event_action = 'click', POW(0.5, event_position), 0)) / SUM(IF(event_action = 'searchResultPage', 1, 0)) AS pow_5,
-  SUM(IF(event_action = 'click', POW(0.6, event_position), 0)) / SUM(IF(event_action = 'searchResultPage', 1, 0)) AS pow_6,
-  SUM(IF(event_action = 'click', POW(0.7, event_position), 0)) / SUM(IF(event_action = 'searchResultPage', 1, 0)) AS pow_7,
-  SUM(IF(event_action = 'click', POW(0.8, event_position), 0)) / SUM(IF(event_action = 'searchResultPage', 1, 0)) AS pow_8,
-  SUM(IF(event_action = 'click', POW(0.9, event_position), 0)) / SUM(IF(event_action = 'searchResultPage', 1, 0)) AS pow_9
+query <- glue("USE event;
+SELECT
+  '${opt$date}' AS date, session_id, source, wiki,
+  SUM(IF(action = 'click', POW(0.1, position), 0)) / SUM(IF(action = 'searchResultPage', 1, 0)) AS pow_1,
+  SUM(IF(action = 'click', POW(0.2, position), 0)) / SUM(IF(action = 'searchResultPage', 1, 0)) AS pow_2,
+  SUM(IF(action = 'click', POW(0.3, position), 0)) / SUM(IF(action = 'searchResultPage', 1, 0)) AS pow_3,
+  SUM(IF(action = 'click', POW(0.4, position), 0)) / SUM(IF(action = 'searchResultPage', 1, 0)) AS pow_4,
+  SUM(IF(action = 'click', POW(0.5, position), 0)) / SUM(IF(action = 'searchResultPage', 1, 0)) AS pow_5,
+  SUM(IF(action = 'click', POW(0.6, position), 0)) / SUM(IF(action = 'searchResultPage', 1, 0)) AS pow_6,
+  SUM(IF(action = 'click', POW(0.7, position), 0)) / SUM(IF(action = 'searchResultPage', 1, 0)) AS pow_7,
+  SUM(IF(action = 'click', POW(0.8, position), 0)) / SUM(IF(action = 'searchResultPage', 1, 0)) AS pow_8,
+  SUM(IF(action = 'click', POW(0.9, position), 0)) / SUM(IF(action = 'searchResultPage', 1, 0)) AS pow_9
 FROM (
   SELECT DISTINCT
-    event_searchSessionId, event_source, wiki, event_action, event_position, event_pageViewId, event_query
-  FROM TestSearchSatisfaction2_{revision}
-  WHERE LEFT(timestamp, 8) = {yyyymmdd}
-    AND event_action IN ('searchResultPage', 'click')
-    AND IF(event_source = 'autocomplete' AND event_action = 'searchResultPage', event_inputLocation = 'header', TRUE)
-    AND IF(event_source = 'autocomplete' AND event_action = 'click', event_position >= 0, TRUE)
+    event.searchSessionId AS session_id,
+    event.source AS source,
+    wiki,
+    event.action AS action,
+    event.position AS position,
+    event.pageViewId AS view_id,
+    event.query AS query
+  FROM TestSearchSatisfaction2
+  WHERE year = ${year} AND month = ${month} AND day = ${day}
+    AND event.action IN('searchResultPage', 'click')
+    AND IF(event.source = 'autocomplete' AND event.action = 'searchResultPage', event.inputLocation = 'header', TRUE)
+    AND IF(event.source = 'autocomplete' AND event.action = 'click', event.position >= 0, TRUE)
 ) AS deduplicate
-GROUP BY date, event_searchSessionId, event_source, wiki;")
+GROUP BY '${opt$date}', session_id, source, wiki
+HAVING SUM(IF(action = 'searchResultPage', 1, 0)) > 0
+;", .open = "${")
 
-# Fetch data from MySQL database:
 results <- tryCatch(
-  suppressMessages(wmf::mysql_read(query, "log")),
+  suppressMessages(wmf::query_hive(query)),
   error = function(e) {
     return(data.frame())
   }
@@ -112,12 +112,12 @@ if (nrow(results) == 0) {
           pow_7 = round(mean(pow_7, na.rm = TRUE), 3),
           pow_8 = round(mean(pow_8, na.rm = TRUE), 3),
           pow_9 = round(mean(pow_9, na.rm = TRUE), 3))
-      }, by = c("date", "event_source")]
+      }, by = c("date", "source")]
     },
     langproj = {
-      results <- results[event_source == 'fulltext', {
+      results <- results[source == 'fulltext', {
         data.frame(
-          search_sessions = length(event_searchSessionId),
+          search_sessions = length(session_id),
           pow_1 = round(mean(pow_1, na.rm = TRUE), 3),
           pow_2 = round(mean(pow_2, na.rm = TRUE), 3),
           pow_3 = round(mean(pow_3, na.rm = TRUE), 3),

@@ -4,7 +4,9 @@ source("config.R")
 .libPaths(r_library)
 suppressPackageStartupMessages({
   library("optparse")
+  library("glue")
   library("magrittr")
+  library("zeallot")
 })
 
 option_list <- list(
@@ -19,25 +21,25 @@ if (is.na(opt$date)) {
   quit(save = "no", status = 1)
 }
 
-# Build query:
-date_clause <- as.character(as.Date(opt$date), format = "LEFT(timestamp, 8) = '%Y%m%d'")
+c(year, month, day) %<-% wmf::extract_ymd(as.Date(opt$date))
 
-query <- paste0("SELECT
-  timestamp AS ts,
-  event_uniqueId AS event_id,
-  event_searchSessionId AS session_id,
-  event_pageViewId AS page_id,
-  event_action AS event,
-  event_checkin AS checkin
-FROM TestSearchSatisfaction2_", dplyr::if_else(as.Date(opt$date) < "2017-02-10", "15922352", dplyr::if_else(as.Date(opt$date) < "2017-06-29", "16270835", "16909631")), "
-WHERE ", date_clause, "
-  AND event_action IN('searchResultPage','visitPage', 'checkin')
-  AND (event_subTest IS NULL OR event_subTest IN ('null', 'baseline'))
-  AND event_source = 'fulltext';")
+query <- glue("USE event;
+SELECT
+  dt AS ts,
+  event.uniqueId AS event_id,
+  event.searchSessionId AS session_id,
+  event.pageViewId AS page_id,
+  event.action AS event,
+  IF(event.checkin IS NULL, 'NA', event.checkin) AS checkin
+FROM TestSearchSatisfaction2
+WHERE year = ${year} AND month = ${month} AND day = ${day}
+  AND event.action IN('searchResultPage','visitPage', 'checkin')
+  AND (event.subTest IS NULL OR event.subTest IN('null', 'baseline'))
+  AND event.source = 'fulltext'
+;", .open = "${")
 
-# Fetch data from MySQL database:
 results <- tryCatch(
-  suppressMessages(wmf::mysql_read(query, "log")),
+  suppressMessages(wmf::query_hive(query)),
   error = function(e) {
     return(data.frame())
   }
@@ -90,7 +92,8 @@ if (nrow(results) == 0) {
         `next check-in` = as.integer(next_checkin),
         status = as.integer(status)
       )
-    } else { # If there is no checkin event, that means users leave the page within 10s
+    } else {
+      # If there is no checkin event, that means users leave the page within 10s
       data.table::data.table(
         `last check-in` = 0L,
         `next check-in` = 10L,

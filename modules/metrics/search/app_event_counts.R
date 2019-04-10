@@ -2,7 +2,11 @@
 
 source("config.R")
 .libPaths(r_library)
-suppressPackageStartupMessages(library("optparse"))
+suppressPackageStartupMessages({
+  library("optparse")
+  library("glue")
+  library("zeallot")
+})
 
 option_list <- list(
   make_option(c("-d", "--date"), default = NA, action = "store", type = "character"),
@@ -18,32 +22,40 @@ if (is.na(opt$date) || !(opt$output %in% c("overall", "langproj"))) {
   quit(save = "no", status = 1)
 }
 
-# Build query:
-date_clause <- as.character(as.Date(opt$date), format = "year = %Y AND month = %m AND day = %d")
+c(year, month, day) %<-% wmf::extract_ymd(as.Date(opt$date))
 
-query <-paste0("
-SET mapred.job.queue.name=nice;
-USE event;
+query <- glue("USE event;
 SELECT
-  date, wiki, action, platform, COUNT(*) AS events
+  '${opt$date}' AS date, wiki, action, platform, COUNT(1) AS events
 FROM (
   SELECT
-    DATE('", opt$date, "') AS date,
     wiki,
     CASE event.action WHEN 'click' THEN 'clickthroughs'
                       WHEN 'start' THEN 'search sessions'
                       WHEN 'results' THEN 'Result pages opened'
                       END AS action,
     useragent.os_family AS platform
-  FROM mobilewikiappsearch
-  WHERE ", date_clause, "
-    AND event.action IN ('click', 'start', 'results')
-    AND wiki NOT RLIKE '^WikipediaApp'
-  -- Need to union with MobileWikiAppiOSSearch after T205551 is fixed
-) AS MobileWikiAppSearch
-GROUP BY date, wiki, action, platform;")
+  FROM MobileWikiAppSearch
+  WHERE year = ${year} AND month = ${month} AND day = ${day}
+    AND event.action IN('click', 'start', 'results')
 
-# Fetch data from database using Hive:
+  UNION ALL
+
+  SELECT
+    wiki,
+    CASE event.action WHEN 'click' THEN 'clickthroughs'
+                      WHEN 'start' THEN 'search sessions'
+                      WHEN 'results' THEN 'Result pages opened'
+                      END AS action,
+    useragent.os_family AS platform
+  FROM MobileWikiAppiOSSearch
+  WHERE year = ${year} AND month = ${month} AND day = ${day}
+    AND event.action IN('click', 'start', 'results')
+) AS MobileWikiAppSearch
+WHERE platform IN('iOS', 'Android')
+GROUP BY '${opt$date}', wiki, action, platform
+;", .open = "${")
+
 results <- tryCatch(
   suppressMessages(wmf::query_hive(query)),
   error = function(e) {

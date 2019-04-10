@@ -2,7 +2,12 @@
 
 source("config.R")
 .libPaths(r_library)
-suppressPackageStartupMessages(library("optparse"))
+suppressPackageStartupMessages({
+  library("optparse")
+  library("glue")
+  library("zeallot")
+  library("data.table")
+})
 
 option_list <- list(
   make_option(c("-d", "--date"), default = NA, action = "store", type = "character"),
@@ -20,11 +25,9 @@ if (is.na(opt$date) || !(opt$output %in% c("overall", "breakdown", "suggestion",
   quit(save = "no", status = 1)
 }
 
-# Build query:
-date_clause <- as.character(as.Date(opt$date), format = "year = %Y AND month = %m AND day = %d")
+c(year, month, day) %<-% wmf::extract_ymd(as.Date(opt$date))
 
-query <- paste0("SET mapred.job.queue.name=nice;
-ADD JAR hdfs:///wmf/refinery/current/artifacts/refinery-hive.jar;
+query <- glue("ADD JAR hdfs:///wmf/refinery/current/artifacts/refinery-hive.jar;
 CREATE TEMPORARY FUNCTION array_sum AS 'org.wikimedia.analytics.refinery.hive.ArraySumUDF';
 CREATE TEMPORARY FUNCTION is_spider as 'org.wikimedia.analytics.refinery.hive.IsSpiderUDF';
 CREATE TEMPORARY FUNCTION ua_parser as 'org.wikimedia.analytics.refinery.hive.UAParserUDF';
@@ -40,7 +43,7 @@ SELECT
   SUM(IF(zero_result, 1, 0)) AS zero_results
 FROM (
   SELECT
-    '", opt$date, "' AS date,
+    '${opt$date}' AS date,
     wikiid AS wiki_id,
     IF(length(concat_ws('', requests.suggestion)) > 0, 'TRUE', 'FALSE') AS has_suggestion,
     IF(array_contains(requests.suggestionrequested, TRUE), 'TRUE', 'FALSE') AS requested_suggestion,
@@ -65,8 +68,7 @@ FROM (
          ELSE 'FALSE'
          END AS is_automata
   FROM CirrusSearchRequestSet
-  WHERE
-    ", date_clause, "
+  WHERE year = ${year} AND month = ${month} AND day = ${day}
     AND NOT array_contains(requests.hitstotal, -1)
     AND requests[size(requests)-1].querytype IN('comp_suggest', 'full_text', 'GeoData_spatial_search', 'prefix', 'more_like', 'regex')
 ) AS data_source
@@ -77,11 +79,9 @@ GROUP BY
   has_suggestion,
   requested_suggestion,
   query_type,
-  is_automata;")
+  is_automata
+;", .open = "${")
 
-suppressPackageStartupMessages(library(data.table))
-
-# Fetch data from database using Hive:
 results <- tryCatch(
   as.data.table(wmf::query_hive(query)),
   error = function(e) {

@@ -6,6 +6,7 @@ suppressPackageStartupMessages({
   library("optparse")
   library("glue")
   library("magrittr")
+  library("zeallot")
 })
 
 option_list <- list(
@@ -20,34 +21,29 @@ if (is.na(opt$date)) {
   quit(save = "no", status = 1)
 }
 
-yyyymmdd <- format(as.Date(opt$date), "%Y%m%d")
-revision_number <- dplyr::case_when(
-  as.Date(opt$date) < "2017-02-10" ~ "15922352",
-  as.Date(opt$date) < "2017-06-29" ~ "16270835",
-  TRUE ~ "16909631"
-)
+c(year, month, day) %<-% wmf::extract_ymd(as.Date(opt$date))
 
-query <- glue("SELECT
-  timestamp AS ts, wiki,
-  event_uniqueId AS event_id,
-  event_searchSessionId AS session_id,
-  event_pageViewId AS page_id,
-  event_action AS event,
-  event_checkin AS checkin
-FROM TestSearchSatisfaction2_{revision_number}
-WHERE
-  LEFT(timestamp, 8) = '{yyyymmdd}'
+query <- glue("USE event;
+SELECT
+  dt AS ts, wiki,
+  event.uniqueId AS event_id,
+  event.searchSessionId AS session_id,
+  event.pageViewId AS page_id,
+  event.action AS event,
+  IF(event.checkin IS NULL, 'NA', event.checkin) AS checkin
+FROM TestSearchSatisfaction2
+WHERE year = ${year} AND month = ${month} AND day = ${day}
   AND wiki RLIKE 'wiki$'
   AND NOT wiki RLIKE '^(arbcom)|(be_x_old)'
   AND NOT wiki IN('commonswiki', 'mediawikiwiki', 'metawiki', 'checkuserwiki', 'donatewiki', 'collabwiki', 'foundationwiki', 'incubatorwiki', 'legalteamwiki', 'officewiki', 'outreachwiki', 'sourceswiki', 'specieswiki', 'stewardwiki', 'wikidatawiki', 'wikimania2017wiki', 'movementroleswiki', 'internalwiki', 'otrs_wikiwiki', 'projectcomwiki', 'ombudsmenwiki', 'votewiki', 'chapcomwiki', 'nostalgiawiki', 'otrs_wikiwiki')
-  AND event_source = 'autocomplete'
-  AND event_subTest IS NULL
-  AND event_articleId IS NULL
-  AND event_action IN('visitPage', 'checkin');")
+  AND event.source = 'autocomplete'
+  AND event.subTest IS NULL
+  AND event.articleId IS NULL
+  AND event.action IN('visitPage', 'checkin')
+;", .open = "${")
 
-# Fetch data from MySQL database:
 results <- tryCatch(
-  suppressMessages(wmf::mysql_read(query, "log")),
+  suppressMessages(wmf::query_hive(query)),
   error = function(e) {
     return(data.frame())
   }
@@ -79,6 +75,8 @@ if (nrow(results) == 0) {
     dplyr::arrange(wiki, session_id, page_id, desc(event), ts) %>%
     dplyr::select(wiki, ts, session_id, page_id, event, checkin) %>%
     dplyr::group_by(session_id, page_id) %>%
+    dplyr::mutate(valid = "visitPage" %in% event) %>%
+    dplyr::filter(valid) %>%
     dplyr::filter(event == "visitPage" | (event == "checkin" & checkin == max(checkin, na.rm = TRUE))) %>%
     dplyr::ungroup() %>%
     dplyr::mutate(language = dplyr::case_when(
@@ -106,7 +104,8 @@ if (nrow(results) == 0) {
         `next check-in` = as.integer(next_checkin),
         status = as.integer(status)
       )
-    } else { # If there is no checkin event, that means users leave the page within 10s
+    } else {
+      # If there is no checkin event, that means users leave the page within 10s
       data.table::data.table(
         `last check-in` = 0L,
         `next check-in` = 10L,

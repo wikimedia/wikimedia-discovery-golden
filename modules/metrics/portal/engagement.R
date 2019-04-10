@@ -1,6 +1,13 @@
 #!/usr/bin/env Rscript
 
-.libPaths("/srv/discovery/r-library"); suppressPackageStartupMessages(library("optparse"))
+source("config.R")
+.libPaths(r_library)
+suppressPackageStartupMessages({
+  library("optparse")
+  library("glue")
+  library("zeallot")
+  library("magrittr")
+})
 
 option_list <- list(
   make_option(c("-d", "--date"), default = NA, action = "store", type = "character"),
@@ -25,32 +32,30 @@ if (is.na(opt$date) || is.na(opt$output)) {
   quit(save = "no", status = 1)
 }
 
-# Build query:
-date_clause <- as.character(as.Date(opt$date), format = "LEFT(timestamp, 8) = '%Y%m%d'")
+c(year, month, day) %<-% wmf::extract_ymd(as.Date(opt$date))
 
-query <- paste0("
+query <- glue("USE event;
 SELECT
-  DATE('", opt$date, "') AS date,
-  timestamp AS ts,
-  event_session_id AS session,
-  UPPER(event_country) AS country,
-  event_destination AS destination,
-  event_event_type AS type,
-  event_section_used AS section_used,
+  '${opt$date}' AS date,
+  dt AS ts,
+  event.session_id AS session,
+  UPPER(event.country) AS country,
+  event.destination AS destination,
+  event.event_type AS type,
+  IF(event.section_used IS NULL, 'NA', event.section_used) AS section_used,
   userAgent AS user_agent
-FROM WikipediaPortal_15890769
-WHERE ", date_clause, "
+FROM WikipediaPortal
+WHERE year = ${year} AND month = ${month} AND day = ${day}
   AND (
-    event_cohort IS NULL
-    OR event_cohort IN ('null','baseline')
+    event.cohort IS NULL
+    OR event.cohort IN ('null','baseline')
   )
-  AND event_country != 'US'
-  AND event_event_type IN('landing', 'clickthrough')
-")
+  AND event.country != 'US'
+  AND event.event_type IN('landing', 'clickthrough')
+;", .open = "${")
 
-# Fetch data from MySQL database:
 results <- tryCatch(
-  suppressMessages(wmf::mysql_read(query, "log")),
+  suppressMessages(wmf::query_hive(query)),
   error = function(e) {
     return(data.frame())
   }
@@ -133,8 +138,7 @@ if (nrow(results) == 0) {
   }
 } else {
   results$section_used[is.na(results$section_used)] <- "no action"
-  results$ts <- as.POSIXct(results$ts, format = "%Y%m%d%H%M%S")
-  library(magrittr) # Required for piping
+  results$ts <- lubridate::ymd_hms(results$ts)
   # 'data_w_countryname' is used in calculation of metrics when 'by_country' is enabled
   if (opt$by_country) {
     # Geography data that is common to both outputs:
@@ -143,21 +147,26 @@ if (nrow(results) == 0) {
     ISO_3166_1$Name <- stringi::stri_trans_general(ISO_3166_1$Name, "Latin-ASCII")
     us_other_abb <- c("AS", "GU", "MP", "PR", "VI")
     us_other_mask <- match(us_other_abb, ISO_3166_1$Alpha_2)
-    regions <- data.frame(abb = c(paste0("US:", c(as.character(state.abb), "DC")), us_other_abb),
-                          region = paste0("U.S. (", c(as.character(state.region), "South", rep("Other",5)), ")"),
-                          state = c(state.name, "District of Columbia", ISO_3166_1$Name[us_other_mask]),
-                          stringsAsFactors = FALSE)
+    regions <- data.frame(
+      abb = c(paste0("US:", c(as.character(state.abb), "DC")), us_other_abb),
+      region = paste0("U.S. (", c(as.character(state.region), "South", rep("Other",5)), ")"),
+      state = c(state.name, "District of Columbia", ISO_3166_1$Name[us_other_mask]),
+      stringsAsFactors = FALSE
+    )
     regions$region[regions$region == "U.S. (North Central)"] <- "U.S. (Midwest)"
     regions$region[c(state.division == "Pacific", rep(FALSE, 5))] <- "U.S. (Pacific)" # see https://phabricator.wikimedia.org/T136257#2399411
 
-    all_countries <- data.frame(abb = c(regions$abb, ISO_3166_1$Alpha_2[-us_other_mask]),
-                                name = c(regions$region, ISO_3166_1$Name[-us_other_mask]),
-                                stringsAsFactors = FALSE)
+    all_countries <- data.frame(
+      abb = c(regions$abb, ISO_3166_1$Alpha_2[-us_other_mask]),
+      name = c(regions$region, ISO_3166_1$Name[-us_other_mask]),
+      stringsAsFactors = FALSE
+    )
     data_w_countryname <- results %>%
       dplyr::mutate(country = ifelse(country %in% all_countries$abb, country, "Other")) %>%
       dplyr::left_join(all_countries, by = c("country" = "abb")) %>%
       dplyr::mutate(name = ifelse(is.na(name), "Other", name)) %>%
-      dplyr::select(-country) %>% dplyr::rename(country = name)
+      dplyr::select(-country) %>%
+      dplyr::rename(country = name)
   }
 
   output <- switch(
@@ -165,7 +174,7 @@ if (nrow(results) == 0) {
     clickthrough_rate = {
       results %>%
         dplyr::group_by(date, type) %>%
-        dplyr::summarize(events = n()) %>%
+        dplyr::summarize(events = dplyr::n()) %>%
         dplyr::ungroup()
     },
     clickthrough_sisterprojects = {
@@ -177,7 +186,7 @@ if (nrow(results) == 0) {
         ) %>%
         dplyr::mutate(destination = sub("^https?://(www.)?(.*)/$", "\\2", destination)) %>%
         dplyr::group_by(date, destination) %>%
-        dplyr::summarize(users = length(unique(session)), clicks = n()) %>%
+        dplyr::summarize(users = length(unique(session)), clicks = dplyr::n()) %>%
         dplyr::ungroup()
     },
     clickthrough_breakdown = {
@@ -186,7 +195,7 @@ if (nrow(results) == 0) {
           dplyr::arrange(ts) %>%
           dplyr::filter(!duplicated(session, fromLast = TRUE)) %>%
           dplyr::group_by(date, section_used, country) %>%
-          dplyr::summarize(events = n()) %>%
+          dplyr::summarize(events = dplyr::n()) %>%
           dplyr::mutate(proportion = round(events/sum(events), 4)) %>%
           dplyr::ungroup()
       } else {
@@ -194,14 +203,13 @@ if (nrow(results) == 0) {
           dplyr::arrange(ts) %>%
           dplyr::filter(!duplicated(session, fromLast = TRUE)) %>%
           dplyr::group_by(date, section_used) %>%
-          dplyr::summarize(events = n()) %>%
+          dplyr::summarize(events = dplyr::n()) %>%
           dplyr::ungroup()
       }
     },
     clickthrough_firstvisit = {
       possible_sections <- data.frame(
-        section_used = c("no action", "primary links", "search",
-                         "secondary links", "other languages", "other projects"),
+        section_used = c("no action", "primary links", "search", "secondary links", "other languages", "other projects"),
         stringsAsFactors = FALSE
       )
       if (opt$by_country) {
@@ -211,7 +219,7 @@ if (nrow(results) == 0) {
           dplyr::mutate(visit = cumsum(type == "landing")) %>%
           dplyr::filter(visit == 1) %>%
           dplyr::group_by(date, section_used, country) %>%
-          dplyr::summarize(sessions = n()) %>%
+          dplyr::summarize(sessions = dplyr::n()) %>%
           dplyr::mutate(proportion = round(sessions/sum(sessions), 4)) %>%
           dplyr::ungroup()
       } else {
@@ -221,7 +229,7 @@ if (nrow(results) == 0) {
           dplyr::mutate(visit = cumsum(type == "landing")) %>%
           dplyr::filter(visit == 1) %>%
           dplyr::group_by(section_used) %>%
-          dplyr::summarize(sessions = n()) %>%
+          dplyr::summarize(sessions = dplyr::n()) %>%
           dplyr::mutate(proportion = round(sessions/sum(sessions), 4)) %>%
           dplyr::select(-sessions) %>%
           dplyr::right_join(possible_sections, by = "section_used") %>%
@@ -243,7 +251,7 @@ if (nrow(results) == 0) {
           dplyr::top_n(1, n) %>%
           dplyr::ungroup() %>%
           dplyr::group_by(date, section_used, country) %>%
-          dplyr::summarize(visits = n()) %>%
+          dplyr::summarize(visits = dplyr::n()) %>%
           dplyr::mutate(proportion = round(visits/sum(visits), 4)) %>%
           dplyr::ungroup()
       } else {
@@ -257,25 +265,26 @@ if (nrow(results) == 0) {
           dplyr::top_n(1, n) %>%
           dplyr::ungroup() %>%
           dplyr::group_by(date, section_used) %>%
-          dplyr::summarize(visits = n()) %>%
+          dplyr::summarize(visits = dplyr::n()) %>%
           dplyr::ungroup()
       }
     },
     clickthrough_by_device = {
       results %>%
         cbind(purrr::map_df(.$user_agent, ~ wmf::null2na(jsonlite::fromJSON(.x, simplifyVector = FALSE)))) %>%
-        dplyr::mutate(
-          device = dplyr::if_else(browser_family %in% c("Opera Mini") | grepl("^Symbian", os_family) |
-            os_family %in% c("iOS", "Android", "Firefox OS", "BlackBerry OS", "Chrome OS", "Kindle", "Windows Phone") |
-            grepl("(phone)|(mobile)|(tablet)|(lumia)", device_family, ignore.case = TRUE), "mobile", "desktop")
-        ) %>%
+        dplyr::mutate(device = dplyr::case_when(
+          browser_family %in% c("Opera Mini") | grepl("^Symbian", os_family) ~ "mobile",
+          os_family %in% c("iOS", "Android", "Firefox OS", "BlackBerry OS", "Chrome OS", "Kindle", "Windows Phone") ~ "mobile",
+          grepl("(phone)|(mobile)|(tablet)|(lumia)", device_family, ignore.case = TRUE) ~ "mobile",
+          TRUE ~ "desktop"
+        )) %>%
         dplyr::group_by(date, device, session) %>%
         dplyr::filter("landing" %in% type) %>%
         dplyr::summarize(clickthrough = any(type == "clickthrough")) %>%
         dplyr::summarize(
-          n_sessions = n(),
+          n_sessions = dplyr::n(),
           clickthrough = sum(clickthrough)
-          ) %>%
+        ) %>%
         dplyr::ungroup()
     },
     mobile_use_us_elsewhere = {
@@ -290,7 +299,7 @@ if (nrow(results) == 0) {
         dplyr::group_by(date, region, session) %>%
         dplyr::filter("landing" %in% type) %>%
         dplyr::summarize(is_mobile = all(is_mobile)) %>%
-        dplyr::summarize(n_mobile = sum(is_mobile), n_sessions = n())
+        dplyr::summarize(n_mobile = sum(is_mobile), n_sessions = dplyr::n())
     }
   )
 }

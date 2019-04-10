@@ -1,6 +1,12 @@
 #!/usr/bin/env Rscript
 
-.libPaths("/srv/discovery/r-library"); suppressPackageStartupMessages(library("optparse"))
+source("config.R")
+.libPaths(r_library)
+suppressPackageStartupMessages({
+  library("optparse")
+  library("glue")
+  library("zeallot")
+})
 
 option_list <- list(
   make_option(c("-d", "--date"), default = NA, action = "store", type = "character")
@@ -14,27 +20,25 @@ if (is.na(opt$date)) {
   quit(save = "no", status = 1)
 }
 
-# Build query:
-date_clause <- as.character(as.Date(opt$date), format = "LEFT(timestamp, 8) = '%Y%m%d'")
+c(year, month, day) %<-% wmf::extract_ymd(as.Date(opt$date))
 
-query <- paste0("
+query <- glue("USE event;
 SELECT
-  DATE('", opt$date, "') AS date,
-  timestamp AS ts,
-  event_session_id AS session
-FROM WikipediaPortal_15890769
-WHERE ", date_clause, "
+  '${opt$date}' AS date,
+  dt AS ts,
+  event.session_id AS session
+FROM WikipediaPortal
+WHERE year = ${year} AND month = ${month} AND day = ${day}
   AND (
-    event_cohort IS NULL
-    OR event_cohort IN ('null','baseline')
+    event.cohort IS NULL
+    OR event.cohort IN ('null','baseline')
   )
-  AND event_country != 'US'
-  AND event_event_type IN('landing', 'clickthrough');
-")
+  AND event.country != 'US'
+  AND event.event_type IN('landing', 'clickthrough')
+;", .open = "${")
 
-# Fetch data from MySQL database:
 results <- tryCatch(
-  suppressMessages(data.table::as.data.table(wmf::mysql_read(query, "log"))),
+  suppressMessages(data.table::as.data.table(wmf::query_hive(query))),
   error = function(e) {
     return(data.frame())
   }
@@ -51,9 +55,9 @@ if (nrow(results) == 0) {
   )
 } else {
   # Generate dwell time
-  results$ts <- as.POSIXct(results$ts, format = "%Y%m%d%H%M%S")
+  results$ts <- lubridate::ymd_hms(results$ts)
   dwell_metric <- results[, j = {
-    if(.N > 1){
+    if (.N > 1) {
       sorted_ts <- as.numeric(.SD$ts[order(.SD$ts, decreasing = TRUE)])
       sorted_ts[1] - sorted_ts[2]
     } else {

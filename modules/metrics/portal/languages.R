@@ -1,6 +1,13 @@
 #!/usr/bin/env Rscript
 
-.libPaths("/srv/discovery/r-library"); suppressPackageStartupMessages(library("optparse"))
+source("config.R")
+.libPaths(r_library)
+suppressPackageStartupMessages({
+  library("optparse")
+  library("glue")
+  library("zeallot")
+  library("data.table")
+})
 
 option_list <- list(
   make_option(c("-d", "--date"), default = NA, action = "store", type = "character"),
@@ -17,32 +24,29 @@ if (is.na(opt$date) || is.na(opt$output)) {
 }
 
 # Build query:
-date_clause <- as.character(as.Date(opt$date), format = "LEFT(timestamp, 8) = '%Y%m%d'")
+c(year, month, day) %<-% wmf::extract_ymd(as.Date(opt$date))
 
-query <- paste0("
+query <- glue("USE event;
 SELECT
-  DATE('", opt$date, "') AS date,
-  event_session_id AS session,
-  event_destination AS destination,
-  event_event_type AS type,
-  event_section_used AS section_used,
-  event_selected_language AS selected_language
-FROM WikipediaPortal_15890769
-WHERE ", date_clause, "
+  '${opt$date}' AS date,
+  event.session_id AS session,
+  event.destination AS destination,
+  event.event_type AS type,
+  IF(event.section_used IS NULL, 'NA', event.section_used) AS section_used,
+  IF(event.selected_language IS NULL, 'NA', event.selected_language) AS selected_language
+FROM WikipediaPortal
+WHERE year = ${year} AND month = ${month} AND day = ${day}
   AND (
-    event_cohort IS NULL
-    OR event_cohort IN ('null','baseline')
+    event.cohort IS NULL
+    OR event.cohort IN ('null','baseline')
   )
-  AND event_country != 'US'
-  AND (NOT INSTR(event_destination, 'translate.googleusercontent.com') OR event_destination IS NULL)
-  AND event_event_type IN('landing', 'clickthrough', 'select-language');
-")
+  AND event.country != 'US'
+  AND (NOT INSTR(event.destination, 'translate.googleusercontent.com') > 0 OR event.destination IS NULL)
+  AND event.event_type IN('landing', 'clickthrough', 'select-language');
+;", .open = "${")
 
-suppressPackageStartupMessages(library(data.table))
-
-# Fetch data from MySQL database:
 results <- tryCatch(
-  suppressMessages(as.data.table(wmf::mysql_read(query, "log"))),
+  suppressMessages(as.data.table(wmf::query_hive(query))),
   error = function(e) {
     return(data.frame())
   }

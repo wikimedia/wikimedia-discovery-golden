@@ -1,6 +1,12 @@
 #!/usr/bin/env Rscript
 
-.libPaths("/srv/discovery/r-library"); suppressPackageStartupMessages(library("optparse"))
+source("config.R")
+.libPaths(r_library)
+suppressPackageStartupMessages({
+  library("optparse")
+  library("glue")
+  library("zeallot")
+})
 
 option_list <- list(
   make_option(c("-d", "--date"), default = NA, action = "store", type = "character")
@@ -14,27 +20,26 @@ if (is.na(opt$date)) {
   quit(save = "no", status = 1)
 }
 
-# Build query:
-date_clause <- as.character(as.Date(opt$date), format = "LEFT(timestamp, 8) = '%Y%m%d'")
+c(year, month, day) %<-% wmf::extract_ymd(as.Date(opt$date))
 
-query <- paste0("
-SELECT DISTINCT
-  DATE('", opt$date, "') AS date,
-  event_session_id AS session,
-  userAgent AS user_agent
-FROM WikipediaPortal_15890769
-WHERE ", date_clause, "
+query <- glue("USE event;
+SELECT
+  useragent.browser_family AS browser,
+  IF(useragent.browser_major IS NULL, 'NA', useragent.browser_major) AS browser_major,
+  COUNT(DISTINCT event.session_id) AS amount
+FROM WikipediaPortal
+WHERE year = ${year} AND month = ${month} AND day = ${day}
   AND (
-    event_cohort IS NULL
-    OR event_cohort IN ('null','baseline')
+    event.cohort IS NULL
+    OR event.cohort IN ('null','baseline')
   )
-  AND event_country != 'US'
-  AND event_event_type = 'landing';
-")
+  AND event.country != 'US'
+  AND event.event_type = 'landing'
+GROUP BY useragent.browser_family, useragent.browser_major
+;", .open = "${")
 
-# Fetch data from MySQL database:
 results <- tryCatch(
-  suppressMessages(wmf::mysql_read(query, "log")),
+  suppressMessages(data.table::as.data.table(wmf::query_hive(query))),
   error = function(e) {
     return(data.frame())
   }
@@ -51,21 +56,9 @@ if (nrow(results) == 0) {
   )
 } else {
   # Get user agent data
-  wmf::set_proxies() # To allow for the latest YAML to be retrieved.
-  uaparser::update_regexes()
-  ua_data <- data.table::rbindlist(lapply(results$user_agent, function(x){
-    if (grepl("^\\{", x)){
-      temp <- unlist(jsonlite::fromJSON(x)[c("browser_family", "browser_major")])
-      names(temp)[1] <- "browser"
-      temp <- as.data.frame(as.list(temp))
-      return(temp)
-    } else {
-      return(uaparser::parse_agents(x, fields = c("browser", "browser_major")))
-    }
-  }), fill = TRUE)
-  ua_data <- ua_data[, j = list(amount = .N), by = c("browser", "browser_major")]
-  ua_data$date <- results$date[1]
-  ua_data$percent <- round((ua_data$amount/sum(ua_data$amount)) * 100, 2)
+  ua_data <- results
+  ua_data$date <- opt$date
+  ua_data$percent <- round((ua_data$amount / sum(ua_data$amount)) * 100, 2)
   ua_data <- ua_data[ua_data$percent >= 0.5, c("date", "browser", "browser_major", "percent"), with = FALSE]
   data.table::setnames(ua_data, 3, "version")
 }

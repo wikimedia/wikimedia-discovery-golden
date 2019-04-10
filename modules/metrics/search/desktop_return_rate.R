@@ -6,6 +6,7 @@ suppressPackageStartupMessages({
   library("optparse")
   library("glue")
   library("magrittr")
+  library("zeallot")
 })
 
 option_list <- list(
@@ -20,30 +21,26 @@ if (is.na(opt$date)) {
   quit(save = "no", status = 1)
 }
 
-yyyymmdd <- format(as.Date(opt$date), "%Y%m%d")
-revision_number <- dplyr::case_when(
-  as.Date(opt$date) < "2017-02-10" ~ "15922352",
-  as.Date(opt$date) < "2017-06-29" ~ "16270835",
-  TRUE ~ "16909631"
-)
+c(year, month, day) %<-% wmf::extract_ymd(as.Date(opt$date))
 
-query <- glue("SELECT
-  timestamp,
-  event_uniqueId AS event_id,
-  event_searchSessionId AS session_id,
-  event_pageViewId AS page_id,
+query <- glue("USE event;
+SELECT
+  dt AS timestamp,
+  event.uniqueId AS event_id,
+  event.searchSessionId AS session_id,
+  event.pageViewId AS page_id,
   wiki,
-  event_action AS event,
-  MD5(LOWER(TRIM(event_query))) AS query_hash
-FROM TestSearchSatisfaction2_{revision_number}
-WHERE LEFT(timestamp, 8) = '{yyyymmdd}'
-  AND event_action IN ('searchResultPage', 'click', 'iwclick', 'ssclick')
-  AND (event_subTest IS NULL OR event_subTest IN ('null', 'baseline'))
-  AND event_source = 'fulltext';")
+  event.action AS event,
+  MD5(LOWER(TRIM(event.query))) AS query_hash
+FROM TestSearchSatisfaction2
+WHERE year = ${year} AND month = ${month} AND day = ${day}
+  AND event.action IN ('searchResultPage', 'click', 'iwclick', 'ssclick')
+  AND (event.subTest IS NULL OR event.subTest IN ('null', 'baseline'))
+  AND event.source = 'fulltext'
+;", .open = "${")
 
-# Fetch data from MySQL database:
 results <- tryCatch(
-  suppressMessages(wmf::mysql_read(query, "log")),
+  suppressMessages(wmf::query_hive(query)),
   error = function(e) {
     return(data.frame())
   }
@@ -99,7 +96,7 @@ if (nrow(results) == 0) {
     dplyr::filter(n_click_cumsum > 0) %>% # delete serp before first click
     dplyr::summarize(comeback = "searchResultPage" %in% event | sum(n_click_cumsum > 1)) %>% # comeback to the same serp or make another click
     dplyr::group_by(date) %>%
-    dplyr::summarize(return_to_same_search = sum(comeback), n_search = n())
+    dplyr::summarize(return_to_same_search = sum(comeback), n_search = dplyr::n())
 
   returnRate_to_other_search <-  results %>%
     dplyr::group_by(date, session_id) %>%

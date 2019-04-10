@@ -1,6 +1,12 @@
 #!/usr/bin/env Rscript
 
-.libPaths("/srv/discovery/r-library"); suppressPackageStartupMessages(library("optparse"))
+source("config.R")
+.libPaths(r_library)
+suppressPackageStartupMessages({
+  library("optparse")
+  library("glue")
+  library("zeallot")
+})
 
 option_list <- list(
   make_option(c("-d", "--date"), default = NA, action = "store", type = "character")
@@ -14,18 +20,16 @@ if (is.na(opt$date)) {
   quit(save = "no", status = 1)
 }
 
-# Build query:
-date_clause <- as.character(as.Date(opt$date), format = "year = %Y AND month = %m AND day = %d")
+c(year, month, day) %<-% wmf::extract_ymd(as.Date(opt$date))
 
-query <- paste0("SET mapred.job.queue.name=nice;
-USE wmf;
+query <- glue("USE wmf;
 SELECT
   client_ip,
   COUNT(1) AS pageviews
 FROM webrequest
 WHERE
   webrequest_source = 'text'
-  AND ", date_clause, "
+  AND year = ${year} AND month = ${month} AND day = ${day}
   AND uri_host RLIKE('^(www\\.)?wikipedia.org/*$')
   AND INSTR(uri_path, 'search-redirect.php') = 0
   AND content_type RLIKE('^text/html')
@@ -33,7 +37,8 @@ WHERE
   AND agent_type = 'user'
   AND referer_class != 'unknown'
   AND http_status IN('200', '304')
-GROUP BY client_ip;")
+GROUP BY client_ip
+;", .open = "${")
 
 # Fetch data from database using Hive:
 results <- tryCatch(
@@ -57,11 +62,11 @@ if (nrow(results) == 0) {
   # Split pageview counts:
   `99.99th percentile` <- floor(quantile(results$pageviews, 0.9999))
   results$client_type <- ifelse(results$pageviews < `99.99th percentile`, "low_volume", "high_volume")
-  output <- cbind(date = opt$date,
-                  tidyr::spread(results[, list(pageviews = sum(as.numeric(pageviews))), by = "client_type"],
-                                client_type, pageviews),
-                  threshold = `99.99th percentile`)
-  output$pageviews = output$high_volume + output$low_volume
+  results$date <- opt$date
+  output <- results[, list(pageviews = sum(as.numeric(pageviews))), by = c("date", "client_type")]
+  output <- data.table::dcast(output, date ~ client_type, value.var = "pageviews")
+  output$threshold <- `99.99th percentile`
+  output$pageviews <- output$high_volume + output$low_volume
 }
 
 write.table(output[, c("date", "pageviews", "high_volume", "low_volume", "threshold")],

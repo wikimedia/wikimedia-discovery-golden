@@ -1,25 +1,4 @@
-databases:
-    el:
-        host: db1108.eqiad.wmnet
-        port: 3306
-        creds_file: /etc/mysql/conf.d/discovery-stats-client.cnf
-        db: log
-defaults:
-    db: el
-    group: analytics-search-users
 reports:
-    actions_per_tool:
-        description: Actions broken down by feature (e.g. GeoHack)
-        granularity: days
-        starts: 2015-08-04
-        funnel: true
-        type: sql
-    users_per_feature:
-        description: Counts of users broken down by feature (e.g. GeoHack)
-        granularity: days
-        starts: 2015-08-04
-        funnel: true
-        type: sql
     users_by_country:
         description: Counts of users broken down by top 10 countries
         granularity: days
