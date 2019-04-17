@@ -54,17 +54,11 @@ install.packages(
     # For polloi's datavis functions:
     "shiny", "shinydashboard", "dygraphs", "RColorBrewer",
     # For polloi's data manipulation functions:
-    "xts", "mgcv", "zoo",
-    # For forecasting modules:
-    "bsts", "forecast", "prophet"
-    # ^ see note below
+    "xts", "mgcv", "zoo"
   ),
   repos = c(CRAN = "https://cran.rstudio.com/"),
   lib = lib_path
 )
-
-# 'uaparser' requires C++11, and libyaml-cpp, boost-system, boost-regex C++ libraries
-devtools::install_github("ua-parser/uap-r", configure.args = "-I/usr/include/yaml-cpp -I/usr/include/boost")
 
 # 'ortiz' is needed for Search team's user engagement calculation | https://phabricator.wikimedia.org/diffusion/WDOZ/
 devtools::install_git("https://gerrit.wikimedia.org/r/wikimedia/discovery/ortiz")
@@ -95,9 +89,6 @@ Rscript test.R >> test_`date +%F_%T`.log.md 2>&1
 
 # Alternatively:
 Rscript test.R --start_date=2017-01-01 --end_date=2017-01-02 >> test_`date +%F_%T`.log.md 2>&1
-
-# You can disbale forecasting modules:
-Rscript test.R --disable_forecasts >> test_`date +%F_%T`.log.md 2>&1
 
 # And have it include samples of the existing data (for comparison):
 Rscript test.R --include_samples >> test_`date +%F_%T`.log.md 2>&1
@@ -148,39 +139,10 @@ Rscript test.R --include_samples >> test_`date +%F_%T`.log.md 2>&1
       - [x] [Traffic to sister projects from Wikipedia SRPs](modules/metrics/search/sister_search_traffic)
     - [x] [Article pageviews from full-text search](modules/metrics/search/pageviews_from_fulltext_search)
     - [x] [Full-text SRP views by device and agent type](modules/metrics/search/search_result_pages)
-  - [x] [Wikipedia.org Portal](https://www.mediawiki.org/wiki/Wikipedia.org_Portal) ([configuration](modules/metrics/portal/config.yaml), [T118994](https://phabricator.wikimedia.org/T118994))
-    - [x] [Pageviews](modules/metrics/portal/pageviews) ([T125737](https://phabricator.wikimedia.org/T125737), [T143064](https://phabricator.wikimedia.org/T143064), [T143605](https://phabricator.wikimedia.org/T143605))
-    - [x] [Pageviews by device (mobile vs desktop)](modules/metrics/portal/pageviews_by_device)
-    - [x] [Referers](modules/metrics/portal/referer_data)
-    - [x] [User Agent breakdown](modules/metrics/portal/user_agent_data)
-    - [x] Languages
-        - [x] [Visited](modules/metrics/portal/language_destination) ([T140816](https://phabricator.wikimedia.org/T140816))
-        - [x] [Switching](modules/metrics/portal/language_switching) ([T143149](https://phabricator.wikimedia.org/T143149))
-    - [x] Geographic breakdown of visitors
-        - [x] [Top 10 countries](modules/metrics/portal/country_data) ([T123347](https://phabricator.wikimedia.org/T123347))
-        - [x] [All countries](modules/metrics/portal/all_country_data) ([T138107](https://phabricator.wikimedia.org/T138107))
-    - [x] Engagement
-        - [x] Overall
-            - [x] [Clickthrough rate](modules/metrics/portal/clickthrough_rate)
-            - [x] [Last performed action](modules/metrics/portal/clickthrough_breakdown)
-            - [x] [Clickthrough on first visit](modules/metrics/portal/clickthrough_firstvisit)
-            - [x] [Most commonly clicked section per visit](modules/metrics/portal/most_common_per_visit) ([T141061](https://phabricator.wikimedia.org/T141061))
-            - [x] [Sister-project clickthrough breakdown](modules/metrics/portal/clickthrough_sisterprojects) ([T152617](https://phabricator.wikimedia.org/T152617))
-        - [x] Broken down by user's country ([T138107](https://phabricator.wikimedia.org/T138107))
-            - [x] [Last performed action](modules/metrics/portal/last_action_country)
-            - [x] [Most commonly clicked section per visit](modules/metrics/portal/most_common_country)
-            - [x] [Clickthrough on first visit](modules/metrics/portal/first_visits_country)
-            - [x] [Clickthrough by device (mobile vs desktop)](modules/metrics/portal/clickthrough_by_device)
-            - [x] [Use of mobile devices everywhere vs U.S.](modules/metrics/portal/mobile_use_us_elsewhere)
-        - [x] [Dwell-time](modules/metrics/portal/dwell_metrics) ([T120432](https://phabricator.wikimedia.org/T120432))
-        - [x] [Mobile app links](modules/metrics/portal/app_link_clicks.sql) ([T154634](https://phabricator.wikimedia.org/T154634))
   - [x] [Wikidata Query Service](https://www.mediawiki.org/wiki/Wikidata_query_service) ([configuration](modules/metrics/wdqs/config.yaml))
     - [x] [WDQS homepage traffic and SPARQL endpoint usage](modules/metrics/wdqs/basic_usage) ([T109360](https://phabricator.wikimedia.org/T109360))
     - [x] [WDQS LDF endpoint usage](modules/metrics/wdqs/basic_usage) ([T153936](https://phabricator.wikimedia.org/T153936))
   - [x] [Maps](https://www.mediawiki.org/wiki/Maps) ([configuration](modules/metrics/maps/config.yaml))
-    - [x] GeoFeatures ([T112311](https://phabricator.wikimedia.org/T112311))
-      - [x] [Actions per tool](modules/metrics/maps/actions_per_tool.sql)
-      - [x] [Users per feature](modules/metrics/maps/users_per_feature.sql)
     - [x] Kartotherian usage
       - [x] [Users by country](modules/metrics/maps/users_by_country) ([T119448](https://phabricator.wikimedia.org/T119448))
       - [x] Tile requests ([T113832](https://phabricator.wikimedia.org/T113832))
@@ -189,50 +151,14 @@ Rscript test.R --include_samples >> test_`date +%F_%T`.log.md 2>&1
     - [x] Maps prevalence on wikis ([T170022](https://phabricator.wikimedia.org/T170022))
       - [x] [Maplinks](modules/metrics/maps/maplink_prevalence)
       - [x] [Mapframes](modules/metrics/maps/mapframe_prevalence)
-    - Kartographer usage (planned)
-    - KPIs (planned)
   - [x] External Traffic ([configuration](modules/metrics/external_traffic/config.yaml))
     - [x] [Referer data](modules/metrics/external_traffic/referer_data) ([T116295](https://phabricator.wikimedia.org/T116295), [Change 247601](https://gerrit.wikimedia.org/r/#/c/247601/))
-- [x] **Forecasts** ([modules/forecasts/forecast.R](modules/forecasts/forecast.R), see [T112170](https://phabricator.wikimedia.org/T112170) for more details) (DISABLED)
-  - [x] Search ([configuration](modules/forecasts/search/config.yaml))
-    - [x] Cirrus API usage
-        - [x] [ARIMA-modelled forecasts](modules/forecasts/search/api_cirrus_arima)
-        - [x] [BSTS-modelled forecasts](modules/forecasts/search/api_cirrus_bsts)
-        - [x] [Prophet-modelled forecasts](modules/forecasts/search/api_cirrus_prophet)
-    - [x] Overall zero results rate
-        - [x] [ARIMA-modelled forecasts](modules/forecasts/search/zrr_overall_arima)
-        - [x] [BSTS-modelled forecasts](modules/forecasts/search/zrr_overall_bsts)
-        - [x] [Prophet-modelled forecasts](modules/forecasts/search/zrr_overall_prophet)
-  - Wikipedia.org Portal (planned)
-  - [x] WDQS ([configuration](modules/forecasts/wdqs/config.yaml))
-    - [x] Homepage traffic
-        - [x] [ARIMA-modelled forecasts](modules/forecasts/wdqs/homepage_traffic_arima)
-        - [x] [BSTS-modelled forecasts](modules/forecasts/wdqs/homepage_traffic_bsts)
-        - [x] [Prophet-modelled forecasts](modules/forecasts/wdqs/homepage_traffic_prophet)
-    - [x] SPARQL endpoint usage
-        - [x] [ARIMA-modelled forecasts](modules/forecasts/wdqs/sparql_usage_arima)
-        - [x] [BSTS-modelled forecasts](modules/forecasts/wdqs/sparql_usage_bsts)
-        - [x] [Prophet-modelled forecasts](modules/forecasts/wdqs/sparql_usage_prophet)
 
 ## Adding New Metrics Modules
 
-### MySQL
+### Hive queries
 
-For metrics computed from [event logging](https://wikitech.wikimedia.org/wiki/Analytics/EventLogging) [data stored in MySQL](https://wikitech.wikimedia.org/wiki/Analytics/Data_access#EventLogging_data), try to write pure SQL queries whenever possible, using the conventions described [here](https://wikitech.wikimedia.org/wiki/Analytics/Reportupdater#SQL_Query_conventions). Use the following template to get started:
-
-```sql
-SELECT
-  DATE('{from_timestamp}') AS date,
-  ...,
-  COUNT(*) AS events
-FROM {Schema_Revision}
-WHERE timestamp >= '{from_timestamp}' AND timestamp < '{to_timestamp}'
-GROUP BY date, ...;
-```
-
-### Hive
-
-The scripts that invoke Hive (e.g. the ones that count [web requests](https://wikitech.wikimedia.org/wiki/Analytics/Data/Webrequest)) must follow the conventions described [here](https://wikitech.wikimedia.org/wiki/Analytics/Reportupdater#Script_conventions). Use the following template to get started:
+The scripts that invoke Hive (e.g. the ones that count [web requests](https://wikitech.wikimedia.org/wiki/Analytics/Data/Webrequest) or use [event logging](https://wikitech.wikimedia.org/wiki/Analytics/EventLogging) data in Hadoop) must follow the conventions described [here](https://wikitech.wikimedia.org/wiki/Analytics/Reportupdater#Script_conventions). Use the following template to get started:
 
 ```bash
 #!/bin/bash
@@ -243,8 +169,7 @@ SELECT
   ...,
   COUNT(*) AS requests
 FROM webrequest
-WHERE
-  webrequest_source = 'text' -- also available: 'maps' and 'misc'
+WHERE webrequest_source = 'text' -- also available: 'maps' and 'misc'
   AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) >= '$1'
   AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) < '$2'
   ...
@@ -254,7 +179,22 @@ GROUP BY
 " 2> /dev/null | grep -v parquet.hadoop
 ```
 
-### R
+```bash
+#!/bin/bash
+
+hive -e "USE event;
+SELECT
+  '$1' AS date,
+  ...
+FROM ${SCHEMA_NAME}
+WHERE CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) >= '$1'
+  AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) < '$2'
+  -- optional: specifying revision ID
+  ...;
+" 2> /dev/null | grep -v parquet.hadoop
+```
+
+### R scripts
 
 **A note on paths**: Reportupdater does not `cd` into the query folder. So you'll need to execute scripts relative to the path you're executing Reportupdater from, e.g. `Rscript modules/metrics/search/some_script.R -d $1`
 
@@ -358,38 +298,6 @@ results <- tryCatch(wmf::query_hive(query), error = function(e) {
 
 write.table(results, file = "", append = FALSE, sep = "\t", row.names = FALSE, quote = FALSE)
 ```
-
-## Adding New Forecasting Modules
-
-Forecasting modules assume that all the data is current (hence why they are scheduled to run after the metrics modules in **main.sh**) and the forecast is made for the next day. For example, if backfilling a forecast for 2016-12-01, the model is fit using all available data up to and including 2016-11-30.
-
-There are three model wrappers in [modules/forecasts/models.R](modules/forecasts/models.R):
-- `forecast_arima()` which models the time series via [ARIMA](https://en.wikipedia.org/wiki/Autoregressive_integrated_moving_average) and accepts the following inputs:
-    - `x`: a 1-column `xts` object
-    - `arima_params`: a list w/ order & seasonal components
-    - `bootstrap_ci`: whether prediction intervals are computed using simulation with resampled errors
-    - `bootstrap_npaths`: number of sample paths used in computing simulated prediction intervals
-    - `transformation` = a transformation to apply to the data ("none", "log", "logit", or "in millions"); the function back-transforms the predictions to the original scale depending on the transformation chosen
-- `forecast_bsts()` which models the time series via [BSTS](https://en.wikipedia.org/wiki/Bayesian_structural_time_series) and accepts the following inputs:
-    - `x`: a 1-column `xts` object
-    - `n_iter`: number of MCMC iterations to keep
-    - `burn_in`: number of MCMC iterations to throw away as burn-in,
-    - `transformation`: a transformation to apply to the data ("none", "log", "logit", or "in millions"); the function back-transforms the predictions to the original scale depending on the transformation chosen
-    - `ar_lags`: number of lags ("p") in the AR(p) process, omitted by default so an AR(p) state component is *NOT* added to the state specification
-- `forecast_prophet()` which models the time series via [Facebook's Core Data Science team](https://research.fb.com/category/data-science/)'s open source forecasting procedure [Prophet](https://facebookincubator.github.io/prophet/) and accepts the following inputs:
-    - `x`: a 1-column `xts` object
-    - `n_iter`: number of MCMC samples (default 500). If greater than 0, will perform a full Bayesian inference using [Stan](http://mc-stan.org/) with 4 chains. If 0, will do perform a fast [maximum a posteriori probability (MAP) estimatation](https://en.wikipedia.org/wiki/Maximum_a_posteriori_estimation).
-    - `transformation`: a transformation to apply to the data ("none", "log", "logit", or "in millions"); the function back-transforms the predictions to the original scale depending on the transformation chosen
-
-When adding a new forecasting module, add a script-type report to the respective **config.yaml** and use the following template for the script:
-
-```bash
-#!/bin/bash
-
-Rscript modules/forecasts/forecast.R --date=$1 --metric=[your forecasted metric] --model=[ARIMA [--bootstrap_ci]|BSTS|Prophet]
-```
-
-Change the `--metric` and `--model` arguments accordingly. The actual data-reading and metric-forecasting calls are in a switch statement in [modules/forecasts/forecast.R](modules/forecasts/forecast.R). Don't forget to add the forecasted metric to the `--metric` option's help text at the top of **forecast.R** and don't forget to subset the data after reading it in (e.g. `dplyr::filter(data, date <= as.Date(opt$date))`)
 
 ## Additional Information
 

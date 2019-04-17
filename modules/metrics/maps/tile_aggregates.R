@@ -2,7 +2,12 @@
 
 source("config.R")
 .libPaths(r_library)
-suppressPackageStartupMessages(library("optparse"))
+suppressPackageStartupMessages({
+  library("optparse")
+  library("glue")
+  library("zeallot")
+  library("data.table")
+})
 
 option_list <- list(
   make_option(c("-d", "--date"), default = NA, action = "store", type = "character"),
@@ -18,8 +23,7 @@ if (is.na(opt$date)) {
   quit(save = "no", status = 1)
 }
 
-# Build query:
-date_clause <- as.character(as.Date(opt$date), format = "year = %Y AND month = %m AND day = %d")
+c(year, month, day) %<-% wmf::extract_ymd(as.Date(opt$date))
 
 ## This script extracts Vagrant logs and processes them to summarize server-side maps usage.
 # Specifically, it generates a dataset containing summaries (avg, median, percentiles) of:
@@ -28,17 +32,17 @@ date_clause <- as.character(as.Date(opt$date), format = "year = %Y AND month = %
 # - tile requests per style per zoom, e.g. "osm-z10", "osm-z11", ...
 
 # Get the per-user tile usage:
-query <- paste0("SET mapred.job.queue.name=nice;
+query <- glue("USE wmf;
 SELECT
   date, style, zoom, scale, format, cache, user_id, is_automata, COUNT(1) AS n
 FROM (
   SELECT
-    '", opt$date, "' AS date,
+    '${opt$date}' AS date,
     REGEXP_EXTRACT(uri_path, '^/([^/]+)/([0-9]{1,2})/(-?[0-9]+)/(-?[0-9]+)(@([0-9]\\.?[0-9]?)x)?\\.([a-z]+)$', 1) AS style,
     REGEXP_EXTRACT(uri_path, '^/([^/]+)/([0-9]{1,2})/(-?[0-9]+)/(-?[0-9]+)(@([0-9]\\.?[0-9]?)x)?\\.([a-z]+)$', 2) AS zoom,
     COALESCE(REGEXP_EXTRACT(uri_path, '^/([^/]+)/([0-9]{1,2})/(-?[0-9]+)/(-?[0-9]+)(@([0-9]\\.?[0-9]?)x)?\\.([a-z]+)$', 6), '1') AS scale,
     REGEXP_EXTRACT(uri_path, '^/([^/]+)/([0-9]{1,2})/(-?[0-9]+)/(-?[0-9]+)(@([0-9]\\.?[0-9]?)x)?\\.([a-z]+)$', 7) AS format,
-    CONCAT(user_agent, client_ip) AS user_id,
+    MD5(CONCAT(user_agent, client_ip)) AS user_id,
     cache_status AS cache,
     CASE
       WHEN (
@@ -55,21 +59,21 @@ FROM (
         )
       ) OR agent_type = 'spider' THEN 'TRUE'
       ELSE 'FALSE' END AS is_automata
-  FROM wmf.webrequest
-  WHERE
-    webrequest_source = 'upload'
-    AND ", date_clause, "
+  FROM webrequest
+  WHERE year = ${year} AND month = ${month} AND day = ${day}
+    AND webrequest_source = 'upload'
     AND uri_host = 'maps.wikimedia.org'
     AND http_status IN('200', '304')
     AND uri_path RLIKE '^/([^/]+)/([0-9]{1,2})/(-?[0-9]+)/(-?[0-9]+)(@([0-9]\\.?[0-9]?)x)?\\.([a-z]+)$'
     AND uri_query <> '?loadtesting'
 ) prepared
 WHERE zoom != '' AND style != ''
-GROUP BY date, style, zoom, scale, format, cache, is_automata, user_id;")
+GROUP BY date, style, zoom, scale, format, cache, is_automata, user_id
+;", .open = "${")
 
 # Fetch data from database using Hive:
 results <- tryCatch(
-  data.table::as.data.table(wmf::query_hive(query)),
+  as.data.table(wmf::query_hive(query)),
   error = function(e) {
     return(data.frame())
   }

@@ -7,7 +7,7 @@ umask 002
 rsync -c docs/README.md /srv/published-datasets/discovery/README.md
 
 # Metrics
-for module in "external_traffic" "wdqs" "maps" "search" "portal"
+for module in "external_traffic" "wdqs" "maps" "search"
 do
  echo "Running Reportupdater on ${module} metrics..."
  nice ionice reportupdater/update_reports.py -l info "modules/metrics/${module}" "/srv/published-datasets/discovery/metrics/${module}"

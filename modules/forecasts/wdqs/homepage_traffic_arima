@@ -1,3 +1,0 @@
-#!/bin/bash
-
-Rscript modules/forecasts/forecast.R --date=$1 --metric=wdqs_homepage --model=ARIMA

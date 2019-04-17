@@ -1,12 +1,3 @@
-databases:
-    el:
-        host: db1108.eqiad.wmnet
-        port: 3306
-        creds_file: /etc/mysql/conf.d/discovery-stats-client.cnf
-        db: log
-defaults:
-    db: el
-    group: analytics-search-users
 reports:
     app_event_counts:
         description: Clicks and other events by users searching on Android and iOS apps
@@ -210,7 +201,7 @@ reports:
         granularity: days
         starts: 2017-07-01
         funnel: true
-        type: sql
+        type: script
     srp_survtime:
         description: Estimates (via survival analysis) of how long Wikipedia searchers stay on full-text search results page after getting there from autocomplete search, split by English vs French and Catalan vs other languages.
         granularity: days

@@ -10,10 +10,8 @@ dependencies <- c(
   "tidyverse", "data.table", "plyr",
   "optparse", "yaml", "data.tree",
   "knitr", "glue",
-  # For forecasting modules:
-  "bsts", "forecast", "prophet",
   # For querying, etc.:
-  "ISOcodes", "uaparser", "ortiz", "wmf", "polloi"
+  "ISOcodes", "ortiz", "wmf", "polloi"
 )
 
 installed <- as.data.frame(installed.packages(), stringsAsFactors = FALSE)
@@ -33,24 +31,12 @@ option_list <- list(
   make_option("--omit_times", default = FALSE, action = "store_true",
               help = "Do not include a table of execution times in addition to basic statistics"),
   make_option("--include_samples", default = FALSE, action = "store_true",
-              help = "Whether to print head & tail of existing datasets"),
-  make_option("--disable_metrics", default = FALSE, action = "store_true",
-              help = "Skip metrics modules to make the test run shorter"),
-  make_option("--disable_forecasts", default = TRUE, action = "store_true",
-              help = "Skip forecasting modules to make the test run shorter"),
-  make_option("--forecast_iters", default = 100, action = "store", type = "numeric",
-              help = "Overrides number of MCMC iterations used in BSTS models [default %default]"),
-  make_option("--forecast_burnin", default = 50, action = "store", type = "numeric",
-              help = "Overrides number of MCMC iterations discarded in BSTS models [default %default]")
+              help = "Whether to print head & tail of existing datasets")
 )
 
 # Get command line options, if help option encountered print help and exit,
 # otherwise if options not found on command line then set defaults:
 opt <- parse_args(OptionParser(option_list = option_list))
-
-if (opt$disable_metrics && opt$disable_forecasts) {
-  stop("Cannot run test utility with metrics AND forecasting modules disabled.")
-}
 
 # Other packages used:
 suppressPackageStartupMessages(library(lubridate))
@@ -71,13 +57,6 @@ reports <- reports[order(sub("^(forecasts|metrics)/.*$", "\\1", reports$module),
                          sub("^(forecasts|metrics)/(.*)$", "\\2", reports$module),
                          reports$type, reports$report,
                          decreasing = TRUE), ]
-
-if (opt$disable_metrics) {
-  reports <- reports[!grepl("metrics/", reports$module, fixed = TRUE), ]
-}
-if (opt$disable_forecasts) {
-  reports <- reports[!grepl("forecasts/", reports$module, fixed = TRUE), ]
-}
 
 elapsed_total <- numeric(nrow(reports))
 rownames(reports) <- NULL
@@ -121,31 +100,13 @@ for (i in 1:nrow(reports)) {
   }
   message('1. Executing report "', reports$report[i], '" from the ', reports$module[i], ' module.')
   if (reports$type[i] == "script") {
-    if (grepl("forecasts", reports$module[i], fixed = TRUE) && grepl("_bsts$", reports$path[i])) {
-      # When testing out BSTS forecasting, we need to intercept the command and specify iters and burnin options:
-      command <- grep("^Rscript", readr::read_lines(reports$path[i]), value = TRUE)
-      command <- paste0(command, " --iters=", opt$forecast_iters, " --burnin=", opt$forecast_burnin)
-      command <- sub("$1", opt$end_date, command, fixed = TRUE)
-    } else {
-      command <- paste("sh", reports$path[i], opt$start_date, opt$end_date)
-    }
+    command <- paste("sh", reports$path[i], opt$start_date, opt$end_date)
     message("2. About to run the following command: `", command, "`")
     message("\n**Output**:\n\n```")
     elapsed <- system.time(system(command))["elapsed"]
     message("```")
   } else {
-    message("2. Filling in the timestamp placeholders in the SQL query.")
-    query <- paste0(gsub("{to_timestamp}", gsub("-", "", opt$end_date, fixed = TRUE), gsub("{from_timestamp}", gsub("-", "", opt$start_date, fixed = TRUE), readLines(reports$path[i]), fixed = TRUE), fixed = TRUE), collapse = "\n")
-    message("3. About to run the following query:\n")
-    message("```SQL\n", query, "\n```")
-    elapsed <- system.time(tryCatch({
-      results <- suppressMessages(wmf::mysql_read(query, "log"))
-      message("\n**Output**:\n\n```")
-      write.table(results, file = "", append = FALSE, sep = "\t", row.names = FALSE, quote = FALSE)
-      message("```")
-    }, error = function(e) {
-      message("\n<span style=\"font-weight:bold;color:red;\">Encountered a problem: ", e, "<span>")
-    }))["elapsed"]
+    message("2. <span style=\"font-weight:bold;color:red;\">SQL query testing is no longer supported<span>")
   }
   message("\nIt took ", tolower(seconds_to_period(ceiling(as.numeric(elapsed)))), " to generate this report.")
   elapsed_total[i] <- elapsed

@@ -1,6 +1,16 @@
 # Change Log (Patch Notes)
 All notable changes to this project will be documented in this file.
 
+## 2019/04/17
+- Disable Wikipedia.org Portal metrics
+- Remove forecasting scripts (previously just disabled)
+- Fixed scripts & queries
+- Updated testing script
+- metrics::search::sister_search_prevalence (SQL->Hive)
+
+## 2019/04/07
+- Move queries from SQL to Hive
+
 ## 2019/02/15
 - Change metrics/portal/app_link_clicks query from SQL to Hive
 

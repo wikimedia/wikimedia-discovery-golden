@@ -4,17 +4,20 @@ reports:
         granularity: days
         starts: 2016-02-06
         funnel: true
+        max_data_points: 730 # there are a lot of rows per day so let's max out at 2 years of data at least for YoY
         type: script
     tile_aggregates_with_automata:
         description: Tile counts by style, zoom level, etc.
         granularity: days
         starts: 2015-08-28
         funnel: true
+        max_data_points: 730 # there are a lot of rows per day so let's max out at 2 years of data at least for YoY
         type: script
     tile_aggregates_no_automata:
         description: Tile counts by style, zoom level, etc., excluding those made by bots/tools
         granularity: days
         starts: 2015-12-10
+        max_data_points: 730 # there are a lot of rows per day so let's max out at 2 years of data at least for YoY
         funnel: true
         type: script
     mapframe_prevalence:

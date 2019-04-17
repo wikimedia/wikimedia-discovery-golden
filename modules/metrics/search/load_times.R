@@ -127,7 +127,7 @@ if (nrow(results) == 0) {
   # Here we make the script output tab-separated
   # column names, as required by Reportupdater:
   if (opt$platform == "app") {
-    output <- dplyr::data_frame(
+    output <- dplyr::tibble(
       date = character(),
       platform = character(),
       Median = numeric(),
@@ -135,7 +135,7 @@ if (nrow(results) == 0) {
       `99th percentile` = numeric()
     )
   } else {
-    output <- dplyr::data_frame(
+    output <- dplyr::tibble(
       date = character(),
       Median = numeric(),
       `95th percentile` = numeric(),

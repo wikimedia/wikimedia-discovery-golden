@@ -8,7 +8,7 @@ retrieval codebase that executes daily and uses
 infrastructure. These datasets provide the metrics that are used by
 [Discovery’s Dashboards](https://discovery.wmflabs.org/)
 
-Last updated on 02 November 2017
+Last updated on 17 April 2019
 
 Daily Metrics
 -------------
@@ -24,10 +24,6 @@ external\_traffic/
 maps/
 -----
 
--   **actions\_per\_tool.tsv**: Actions broken down by feature
-    (e.g. GeoHack)
--   **users\_per\_feature.tsv**: Counts of users broken down by feature
-    (e.g. GeoHack)
 -   **users\_by\_country.tsv**: Counts of users broken down by top 10
     countries
 -   **tile\_aggregates\_with\_automata.tsv**: Tile counts by style, zoom
@@ -38,60 +34,6 @@ maps/
     have a mapframe
 -   **maplink\_prevalence.tsv**: Proportion of articles on a wiki that
     have a maplink
-
-portal/
--------
-
--   **pageviews.tsv**: Wikipedia.org Portal pageviews, broken down by
-    high-volume clients vs. low-volume clients
--   **referer\_data.tsv**: Pageviews broken down by referrer class
-    (e.g. internal vs external)
--   **user\_agent\_data.tsv**: Wikipedia.org Portal visitors’ browsers
--   **dwell\_metrics.tsv**: Wikipedia.org Portal visitors’ dwell-time
-    metrics
--   **language\_destination.tsv**: The language of the Wikipedia that
-    the Portal visitors went to
--   **language\_switching.tsv**: Number of times users switched the
-    language of the search box on Wikipedia.org Portal
--   **country\_data.tsv**: Sampled traffic to Wikipedia.org Portal from
-    top 10 countries
--   **all\_country\_data.tsv**: Sampled traffic to Wikipedia.org Portal,
-    broken down by country
--   **all\_country\_data\_history.tsv**: Sampled traffic to
-    Wikipedia.org Portal, broken down by country. Historical data store.
--   **app\_link\_clicks.tsv**: Clicks to Wikipedia mobile apps and list
-    of apps
--   **last\_action\_country.tsv**: Last action performed on
-    Wikipedia.org Portal per user session
--   **last\_action\_country\_history.tsv**: Last action performed on
-    Wikipedia.org Portal per user session. Historical data store.
--   **most\_common\_country.tsv**: Most common action performed on
-    Wikipedia.org Portal per user session, broken down by country
--   **most\_common\_country\_history.tsv**: Most common action performed
-    on Wikipedia.org Portal per user session, broken down by country.
-    Historical data store.
--   **first\_visits\_country.tsv**: Action performed on Wikipedia.org
-    Portal on each user’s initial visit, broken down by country
--   **first\_visits\_country\_history.tsv**: Action performed on
-    Wikipedia.org Portal on each user’s initial visit, broken down by
-    country. Historical data store.
--   **clickthrough\_rate.tsv**: Last action (no action vs clickthrough)
-    by Wikipedia.org Portal visitors
--   **clickthrough\_sisterprojects.tsv**: Clicks to Wikimedia projects
-    from Wikipedia.org Portal
--   **clickthrough\_firstvisit.tsv**: Action performed on Wikipedia.org
-    Portal on each user’s initial visit
--   **clickthrough\_breakdown.tsv**: Last action (no action vs
-    clickthrough) by Wikipedia.org Portal visitors, broken down by
-    section
--   **most\_common\_per\_visit.tsv**: Most common action performed on
-    Wikipedia.org Portal per user session
--   **pageviews\_by\_device.tsv**: Pageviews broken down by device
-    (desktop vs mobile)
--   **clickthrough\_by\_device.tsv**: Clickthroughs from Wikipedia.org
-    Portal, broken down by device (desktop vs mobile)
--   **mobile\_use\_us\_elsewhere.tsv**: Number of Wikipedia.org Portal
-    visitors on mobile devices in U.S. vs everywhere else
 
 search/
 -------

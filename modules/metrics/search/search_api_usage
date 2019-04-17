@@ -7,10 +7,9 @@ SELECT
   '$1' AS date,
   search_classify(uri_path, uri_query) AS api,
   referer_class,
-  COUNT(*) AS calls
+  COUNT(1) AS calls
 FROM webrequest
-WHERE
-  webrequest_source = 'text'
+WHERE webrequest_source = 'text'
   AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) >= '$1'
   AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) < '$2'
   AND http_status = '200'
