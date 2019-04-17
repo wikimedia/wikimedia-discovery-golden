@@ -69,7 +69,7 @@ if (nrow(results) == 0) {
     opt$output,
     output = data.frame(
       date = character(),
-      event_source = character(),
+      source = character(),
       pow_1 = numeric(),
       pow_2 = numeric(),
       pow_3 = numeric(),
