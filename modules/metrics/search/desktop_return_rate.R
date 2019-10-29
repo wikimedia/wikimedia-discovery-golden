@@ -32,7 +32,7 @@ SELECT
   wiki,
   event.action AS event,
   MD5(LOWER(TRIM(event.query))) AS query_hash
-FROM TestSearchSatisfaction2
+FROM SearchSatisfaction
 WHERE year = ${year} AND month = ${month} AND day = ${day}
   AND event.action IN ('searchResultPage', 'click', 'iwclick', 'ssclick')
   AND (event.subTest IS NULL OR event.subTest IN ('null', 'baseline'))

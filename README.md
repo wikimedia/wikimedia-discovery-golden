@@ -4,9 +4,8 @@
 This repository contains aggregation/acquisition scripts for extracting data from the MySQL/Hive databases for computing metrics for [various teams](https://www.mediawiki.org/wiki/Wikimedia_Discovery#The_team) within [Discovery](https://www.mediawiki.org/wiki/Wikimedia_Discovery). It uses Analytics' [Reportupdater infrastructure](https://wikitech.wikimedia.org/wiki/Analytics/Reportupdater). This codebase is maintained by [Product Analytics team](https://www.mediawiki.org/wiki/Product_Analytics):
 
 - [Mikhail Popov](https://meta.wikimedia.org/wiki/User:MPopov_(WMF)) (Data Analyst)
-- [Chelsy Xie](https://meta.wikimedia.org/wiki/User:CXie_(WMF)) (Data Analyst)
 
-For questions and comments, contact [Mikhail](mailto:mikhail@wikimedia.org), or [Chelsy](mailto:cxie@wikimedia.org).
+For questions and comments, contact [Mikhail](mailto:mikhail@wikimedia.org)
 
 ## Table of Contents
 
@@ -24,7 +23,7 @@ For questions and comments, contact [Mikhail](mailto:mikhail@wikimedia.org), or 
 
 ## Setup and Usage
 
-As of [T170494](https://phabricator.wikimedia.org/T170494), the setup and daily runs are Puppetized on [stat1005](https://wikitech.wikimedia.org/wiki/Stat1005) via the [statistics::discovery](https://phabricator.wikimedia.org/diffusion/OPUP/browse/production/modules/statistics/manifests/discovery.pp) module (also mirrored on [GitHub](https://github.com/wikimedia/operations-puppet/blob/production/modules/statistics/manifests/discovery.pp)).
+As of [T170494](https://phabricator.wikimedia.org/T170494), the setup and daily runs are Puppetized on [stat1007](https://wikitech.wikimedia.org/wiki/Stat1007) via the [statistics::discovery](https://phabricator.wikimedia.org/diffusion/OPUP/browse/production/modules/statistics/manifests/discovery.pp) module (also mirrored on [GitHub](https://github.com/wikimedia/operations-puppet/blob/production/modules/statistics/manifests/discovery.pp)).
 
 ## Dependencies
 
@@ -32,7 +31,7 @@ As of [T170494](https://phabricator.wikimedia.org/T170494), the setup and daily 
 pip install -r reportupdater/requirements.txt
 ```
 
-Some of the R packages require C++ libraries, which are installed on [stat1002](https://wikitech.wikimedia.org/wiki/Stat1002) -- that use [compute.pp](https://phabricator.wikimedia.org/diffusion/OPUP/browse/production/modules/statistics/manifests/compute.pp) ([GitHub](https://github.com/wikimedia/operations-puppet/blob/production/modules/statistics/manifests/compute.pp)) -- by being listed in [packages](https://phabricator.wikimedia.org/diffusion/OPUP/browse/production/modules/statistics/manifests/packages.pp) ([GitHub](https://github.com/wikimedia/operations-puppet/blob/production/modules/statistics/manifests/packages.pp)). See [operations-puppet/modules/statistics/manifests/packages.pp](https://phabricator.wikimedia.org/diffusion/OPUP/browse/production/modules/statistics/manifests/packages.pp;45fb6c9c7fbab57f204772a5da2c0cf923aea8c2$28-31) ([GitHub](https://github.com/wikimedia/operations-puppet/blob/45fb6c9c7fbab57f204772a5da2c0cf923aea8c2/modules/statistics/manifests/packages.pp#L28--L31)) for example.
+Some of the R packages require C++ libraries, which are installed on [stat1007](https://wikitech.wikimedia.org/wiki/Stat1007) -- that use [compute.pp](https://phabricator.wikimedia.org/diffusion/OPUP/browse/production/modules/statistics/manifests/compute.pp) ([GitHub](https://github.com/wikimedia/operations-puppet/blob/production/modules/statistics/manifests/compute.pp)) -- by being listed in [packages](https://phabricator.wikimedia.org/diffusion/OPUP/browse/production/modules/statistics/manifests/packages.pp) ([GitHub](https://github.com/wikimedia/operations-puppet/blob/production/modules/statistics/manifests/packages.pp)). See [operations-puppet/modules/statistics/manifests/packages.pp](https://phabricator.wikimedia.org/diffusion/OPUP/browse/production/modules/statistics/manifests/packages.pp;45fb6c9c7fbab57f204772a5da2c0cf923aea8c2$28-31) ([GitHub](https://github.com/wikimedia/operations-puppet/blob/45fb6c9c7fbab57f204772a5da2c0cf923aea8c2/modules/statistics/manifests/packages.pp#L28--L31)) for example.
 
 ```R
 # Set WMF proxies:

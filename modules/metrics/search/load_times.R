@@ -47,7 +47,7 @@ query <- switch(
       event.uniqueId AS event_id,
       CASE WHEN event.msToDisplayResults <= 0 THEN NULL
            ELSE event.msToDisplayResults END AS load_time
-    FROM TestSearchSatisfaction2
+    FROM SearchSatisfaction
     WHERE year = ${year} AND month = ${month} AND day = ${day}
       AND event.action = 'searchResultPage'
       AND (event.subTest IS NULL OR event.subTest IN('null', 'baseline'))
@@ -55,7 +55,7 @@ query <- switch(
   ) AS all
   RIGHT JOIN (
     SELECT event.uniqueId AS event_id, MIN(dt) AS dt
-    FROM TestSearchSatisfaction2
+    FROM SearchSatisfaction
     WHERE year = ${year} AND month = ${month} AND day = ${day}
       AND event.action = 'searchResultPage'
       AND (event.subTest IS NULL OR event.subTest IN('null', 'baseline'))

@@ -1,3 +1,0 @@
-#!/bin/bash
-
-Rscript modules/metrics/portal/engagement.R -d $1 -o clickthrough_by_device

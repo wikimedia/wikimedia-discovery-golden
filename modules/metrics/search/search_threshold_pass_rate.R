@@ -32,7 +32,7 @@ SELECT
   event.searchSessionId AS session_id,
   wiki,
   event.action AS action
-FROM TestSearchSatisfaction2
+FROM SearchSatisfaction
 WHERE year = ${year} AND month = ${month} AND day = ${day}
   AND event.action IN('searchResultPage', 'visitPage', 'checkin', 'click')
   AND (event.subTest IS NULL OR event.subTest IN('null', 'baseline'))

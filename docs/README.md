@@ -8,7 +8,7 @@ retrieval codebase that executes daily and uses
 infrastructure. These datasets provide the metrics that are used by
 [Discovery’s Dashboards](https://discovery.wmflabs.org/)
 
-Last updated on 17 April 2019
+Last updated on 29 October 2019
 
 Daily Metrics
 -------------

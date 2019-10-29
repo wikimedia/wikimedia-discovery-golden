@@ -45,7 +45,7 @@ FROM (
     event.position AS position,
     event.pageViewId AS view_id,
     event.query AS query
-  FROM TestSearchSatisfaction2
+  FROM SearchSatisfaction
   WHERE year = ${year} AND month = ${month} AND day = ${day}
     AND event.action IN('searchResultPage', 'click')
     AND IF(event.source = 'autocomplete' AND event.action = 'searchResultPage', event.inputLocation = 'header', TRUE)

@@ -31,7 +31,7 @@ SELECT
   event.pageViewId AS page_id,
   event.action AS event,
   IF(event.checkin IS NULL, 'NA', event.checkin) AS checkin
-FROM TestSearchSatisfaction2
+FROM SearchSatisfaction
 WHERE year = ${year} AND month = ${month} AND day = ${day}
   AND wiki RLIKE 'wiki$'
   AND NOT wiki RLIKE '^(arbcom)|(be_x_old)'

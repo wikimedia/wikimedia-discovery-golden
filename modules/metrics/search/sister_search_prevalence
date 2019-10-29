@@ -8,7 +8,7 @@ WITH deduplicated AS (
     event.searchSessionId AS session_id,
     MD5(LOWER(TRIM(event.query))) AS query_hash,
     INSTR(event.extraParams, '\"iw\":') > 0 AS has_iw -- sister project results shown
-  FROM TestSearchSatisfaction2
+  FROM SearchSatisfaction
   WHERE CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) >= '$1'
     AND CONCAT(year, '-', LPAD(month, 2, '0'), '-', LPAD(day, 2, '0')) < '$2'
     AND event.source = 'fulltext'

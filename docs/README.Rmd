@@ -1,7 +1,7 @@
 ---
 output: md_document
 note: >
-  Needs to be knit into Markdown and rsync'd to stat1005:/srv/published-datasets/discovery/README.md
+  Needs to be knit into Markdown and rsync'd to stat1007:/srv/published-datasets/discovery/README.md
 ---
 
 # Discovery Datasets
