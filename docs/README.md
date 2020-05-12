@@ -8,7 +8,7 @@ retrieval codebase that executes daily and uses
 infrastructure. These datasets provide the metrics that are used by
 [Discovery’s Dashboards](https://discovery.wmflabs.org/)
 
-Last updated on 29 October 2019
+Last updated on 12 May 2020
 
 Daily Metrics
 -------------
@@ -21,22 +21,10 @@ external\_traffic/
 -   **referer\_nonbot\_data.tsv**: User-made pageviews broken down by
     referrer class (e.g. internal vs external) and search engine
 
-maps/
------
-
--   **users\_by\_country.tsv**: Counts of users broken down by top 10
-    countries
--   **tile\_aggregates\_with\_automata.tsv**: Tile counts by style, zoom
-    level, etc.
--   **tile\_aggregates\_no\_automata.tsv**: Tile counts by style, zoom
-    level, etc., excluding those made by bots/tools
--   **mapframe\_prevalence.tsv**: Proportion of articles on a wiki that
-    have a mapframe
--   **maplink\_prevalence.tsv**: Proportion of articles on a wiki that
-    have a maplink
-
 search/
 -------
+
+**Notice**: these metrics are no longer being generated [as of 2020-05-07](https://gerrit.wikimedia.org/r/c/wikimedia/discovery/golden/+/594894)
 
 -   **app\_event\_counts.tsv**: Clicks and other events by users
     searching on Android and iOS apps
