@@ -2,7 +2,7 @@
 
 hive -S --hiveconf mapred.job.queue.name=nice -e "USE wmf;
 SELECT
-  '$1' AS date,
+  '$1' AS \`date\`,
   IF(uri_path = '/sparql', '/bigdata/namespace/wdq/sparql', uri_path) AS path,
   UPPER(http_status IN('200','304')) as http_success,
   CASE

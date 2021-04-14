@@ -5,7 +5,7 @@ CREATE TEMPORARY FUNCTION is_external_search AS 'org.wikimedia.analytics.refiner
 CREATE TEMPORARY FUNCTION get_engine AS 'org.wikimedia.analytics.refinery.hive.IdentifySearchEngineUDF';
 USE wmf;
 SELECT
-  '$1' AS date,
+  '$1' AS \`date\`,
   IF(is_external_search(referer), 'TRUE', 'FALSE') AS is_search,
   referer_class,
   get_engine(referer) as search_engine,

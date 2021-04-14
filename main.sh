@@ -1,7 +1,8 @@
 #!/bin/bash
 
+VENV_DIR="/srv/discovery/venv"
 DEPLOYMENT_DIR="/srv/discovery/golden"
-DATASETS_DIR="/srv/published-datasets/discovery"
+DATASETS_DIR="/srv/published/datasets/discovery"
 
 # files created / touched by report updater need to be rw for user and group
 umask 002
@@ -13,5 +14,5 @@ umask 002
 for module in "external_traffic" "wdqs"
 do
  echo "Running Reportupdater on ${module} metrics..."
- /usr/bin/nice /usr/bin/ionice $DEPLOYMENT_DIR/reportupdater/update_reports.py -l info "${DEPLOYMENT_DIR}/modules/metrics/${module}" "${DATASETS_DIR}/metrics/${module}"
+ /usr/bin/nice /usr/bin/ionice $VENV_DIR/bin/python $DEPLOYMENT_DIR/reportupdater/update_reports.py -l info "${DEPLOYMENT_DIR}/modules/metrics/${module}" "${DATASETS_DIR}/metrics/${module}"
 done
